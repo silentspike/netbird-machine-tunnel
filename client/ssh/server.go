@@ -1,8 +1,6 @@
-package main
+package ssh
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
 	"fmt"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -16,6 +14,16 @@ type Server struct {
 	listener    net.Listener
 	allowedKeys map[string]ssh.PublicKey
 	mu          sync.Mutex
+	hostKeyPEM  []byte
+}
+
+// NewSSHServer creates new server with provided host key
+func NewSSHServer(hostKeyPEM []byte) (*Server, error) {
+	ln, err := net.Listen("tcp", ":2222")
+	if err != nil {
+		return nil, err
+	}
+	return &Server{listener: ln, mu: sync.Mutex{}, hostKeyPEM: hostKeyPEM}, nil
 }
 
 func (srv *Server) UpdateKeys(newKeys []string) error {
@@ -32,14 +40,6 @@ func (srv *Server) UpdateKeys(newKeys []string) error {
 	}
 
 	return nil
-}
-
-func NewSSHServer() (*Server, error) {
-	ln, err := net.Listen("tcp", ":2222")
-	if err != nil {
-		return nil, err
-	}
-	return &Server{listener: ln, mu: sync.Mutex{}}, nil
 }
 
 // Stop stops SSH server. Blocking
@@ -73,7 +73,9 @@ func (srv *Server) Start() error {
 		return false
 	})
 
-	err := ssh.Serve(srv.listener, handler, publicKeyOption)
+	hostKeyPEM := ssh.HostKeyPEM(srv.hostKeyPEM)
+
+	err := ssh.Serve(srv.listener, handler, publicKeyOption, hostKeyPEM)
 	if err != nil {
 		return err
 	}
@@ -83,7 +85,8 @@ func (srv *Server) Start() error {
 
 func main() {
 
-	server, err := NewSSHServer()
+	strKey := "[redacted]\n"
+	server, err := NewSSHServer([]byte(strKey))
 	if err != nil {
 		return
 	}
@@ -97,29 +100,4 @@ func main() {
 	if err != nil {
 		// will throw error when Stop has been called
 	}
-}
-
-// generatePrivateKey creates RSA Private Key of specified byte size
-func generatePrivateKey(bitSize int) (*rsa.PrivateKey, error) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, bitSize)
-	if err != nil {
-		return nil, err
-	}
-
-	err = privateKey.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return privateKey, nil
-}
-
-// generatePublicKey takes a rsa.PublicKey and return bytes suitable for writing to .pub file
-// returns the key in format format "ssh-rsa ..."
-func generatePublicKey(privateKey *rsa.PublicKey) ([]byte, error) {
-	publicRsaKey, err := gossh.NewPublicKey(privateKey)
-	if err != nil {
-		return nil, err
-	}
-	return gossh.MarshalAuthorizedKey(publicRsaKey), nil
 }
