@@ -82,22 +82,3 @@ func (srv *Server) Start() error {
 
 	return nil
 }
-
-func main() {
-
-	strKey := "[redacted]\n"
-	server, err := NewSSHServer([]byte(strKey))
-	if err != nil {
-		return
-	}
-
-	err = server.UpdateKeys([]string{"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIwAoefixS03tYDfNuFfNRMO2syYfkw/C/76m8LS8xum"})
-	if err != nil {
-		return
-	}
-
-	err = server.Start()
-	if err != nil {
-		// will throw error when Stop has been called
-	}
-}
