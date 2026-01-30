@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
 	"github.com/netbirdio/netbird/management/server/idp"
+	mgmtProto "github.com/netbirdio/netbird/shared/management/proto"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/metric"
 	"golang.org/x/crypto/acme/autocert"
@@ -398,6 +400,17 @@ func (s *BaseServer) startMTLSServer(ctx context.Context) error {
 		return fmt.Errorf("failed to create mTLS server: %w", err)
 	}
 
+	// Initialize mTLS domain-account mapping (CRITICAL for multi-tenant isolation)
+	if len(s.Config.HttpConfig.MTLSDomainAccountMapping) > 0 {
+		SetMTLSConfig(&MTLSConfig{
+			DomainAccountMapping:  s.Config.HttpConfig.MTLSDomainAccountMapping,
+			AccountAllowedDomains: s.Config.HttpConfig.MTLSAccountAllowedDomains,
+			AccountAllowedIssuers: s.Config.HttpConfig.MTLSAccountAllowedIssuers,
+		})
+	} else {
+		log.WithContext(ctx).Warn("mTLS server: no MTLSDomainAccountMapping configured - domain validation will use fallback mode")
+	}
+
 	// Initialize mTLS validator config with account-issuer mappings
 	if len(s.Config.HttpConfig.MTLSAccountAllowedIssuers) > 0 {
 		InitMTLSValidatorConfig(s.Config.HttpConfig.MTLSAccountAllowedIssuers)
@@ -406,10 +419,13 @@ func (s *BaseServer) startMTLSServer(ctx context.Context) error {
 	// Create gRPC server with mTLS credentials
 	grpcServer := s.mtlsServer.CreateGRPCServer()
 
-	// Register Machine-only services on mTLS port
-	// Note: These services will be registered by the caller after this method returns
-	// The grpcServer is available via s.mtlsServer.GetServer()
-	_ = grpcServer // Services registered externally
+	// Register ManagementService on mTLS port (RegisterMachinePeer, SyncMachinePeer etc.)
+	srv, err := nbgrpc.NewServer(s.Config, s.AccountManager(), s.SettingsManager(), s.SecretsManager(), s.Metrics(), s.AuthManager(), s.IntegratedValidator(), s.NetworkMapController(), s.OAuthConfigProvider())
+	if err != nil {
+		return fmt.Errorf("failed to create management server for mTLS port: %w", err)
+	}
+	mgmtProto.RegisterManagementServiceServer(grpcServer, srv)
+	log.WithContext(ctx).Info("ManagementService registered on mTLS port")
 
 	// Start the mTLS server
 	if err := s.mtlsServer.Start(ctx); err != nil {

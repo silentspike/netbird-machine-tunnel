@@ -101,13 +101,6 @@ func (s *Server) RegisterMachinePeer(ctx context.Context, req *proto.MachineRegi
 		UserID:   "",
 	})
 	if err != nil {
-		// Check if this is a "no auth method" error and provide better message
-		if err.Error() == "no peer auth method provided, please use a setup key or interactive SSO login" {
-			log.WithContext(ctx).Errorf("LoginPeer rejected mTLS auth - mTLS context not recognized. "+
-				"This may indicate AddPeer needs mTLS support. Error: %v", err)
-			return nil, status.Errorf(codes.Internal,
-				"machine peer registration not fully implemented - AddPeer needs mTLS support")
-		}
 		log.WithContext(ctx).Errorf("Failed to register machine peer: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to register peer: %v", err)
 	}
