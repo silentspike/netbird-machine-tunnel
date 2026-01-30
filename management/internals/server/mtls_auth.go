@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/idna"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -318,9 +319,16 @@ func extractMTLSIdentity(ctx context.Context) (*MTLSIdentity, error) {
 	var validationErr error
 
 	for _, dnsName := range clientCert.DNSNames {
-		hostname, domain, err := splitDNSName(dnsName)
+		// Canonicalize SAN: lowercase, IDNA, strip trailing dot, validate RFC 1123
+		canonicalName, err := canonicalizeSAN(dnsName)
 		if err != nil {
 			log.Debugf("Skipping invalid SAN DNSName %q: %v", dnsName, err)
+			continue
+		}
+
+		hostname, domain, err := splitDNSName(canonicalName)
+		if err != nil {
+			log.Debugf("Skipping invalid SAN DNSName %q: %v", canonicalName, err)
 			continue
 		}
 
@@ -341,7 +349,7 @@ func extractMTLSIdentity(ctx context.Context) (*MTLSIdentity, error) {
 		}
 
 		// Found valid SAN!
-		validDNSName = dnsName
+		validDNSName = canonicalName
 		validHostname = hostname
 		validDomain = domain
 		accountID = accID
@@ -403,6 +411,69 @@ func extractMTLSIdentity(ctx context.Context) (*MTLSIdentity, error) {
 	}
 
 	return identity, nil
+}
+
+// canonicalizeSAN normalizes a SAN DNSName for consistent matching:
+// 1. Reject wildcards (not valid for machine identity)
+// 2. Lowercase normalization
+// 3. Strip trailing dot (DNS root marker)
+// 4. IDNA normalization (internationalized domain names)
+// 5. RFC 1123 DNS label validation (1-63 chars, alphanumeric start/end)
+func canonicalizeSAN(dnsName string) (string, error) {
+	if dnsName == "" {
+		return "", fmt.Errorf("empty SAN DNSName")
+	}
+
+	// Reject wildcards — machine certs must not use wildcard SANs
+	if strings.Contains(dnsName, "*") {
+		return "", fmt.Errorf("wildcard SAN not allowed for machine identity: %s", dnsName)
+	}
+
+	// Lowercase normalization
+	name := strings.ToLower(dnsName)
+
+	// Strip trailing dot (DNS root marker, e.g. "host.domain.local.")
+	name = strings.TrimSuffix(name, ".")
+
+	// IDNA normalization (handles internationalized domain names)
+	normalized, err := idna.Lookup.ToASCII(name)
+	if err != nil {
+		return "", fmt.Errorf("IDNA normalization failed for %q: %w", dnsName, err)
+	}
+	name = normalized
+
+	// RFC 1123 DNS label validation
+	labels := strings.Split(name, ".")
+	if len(labels) < 2 {
+		return "", fmt.Errorf("SAN must be FQDN (at least hostname.domain): %s", dnsName)
+	}
+
+	for _, label := range labels {
+		if len(label) == 0 || len(label) > 63 {
+			return "", fmt.Errorf("DNS label length invalid (must be 1-63): %q in %s", label, dnsName)
+		}
+		// Must start with alphanumeric
+		if !isAlphanumeric(label[0]) {
+			return "", fmt.Errorf("DNS label must start with alphanumeric: %q in %s", label, dnsName)
+		}
+		// Must end with alphanumeric
+		if !isAlphanumeric(label[len(label)-1]) {
+			return "", fmt.Errorf("DNS label must end with alphanumeric: %q in %s", label, dnsName)
+		}
+		// Interior characters: alphanumeric or hyphen
+		for i := 1; i < len(label)-1; i++ {
+			if !isAlphanumeric(label[i]) && label[i] != '-' {
+				return "", fmt.Errorf("DNS label contains invalid character %q: %q in %s", label[i], label, dnsName)
+			}
+		}
+	}
+
+	return name, nil
+}
+
+// isAlphanumeric returns true if b is a-z, A-Z, or 0-9.
+func isAlphanumeric(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9')
 }
 
 // splitDNSName splits a FQDN into hostname and domain parts.

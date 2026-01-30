@@ -147,6 +147,75 @@ func TestExtractMTLSIdentityNoSAN(t *testing.T) {
 	t.Logf("✅ Correctly rejected cert without SAN: %v", err)
 }
 
+// TestCanonicalizeSAN tests SAN DNS name canonicalization.
+func TestCanonicalizeSAN(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    string
+		wantErr bool
+	}{
+		// Valid cases
+		{"standard FQDN", "win10-pc.corp.local", "win10-pc.corp.local", false},
+		{"uppercase normalization", "WIN10-PC.CORP.LOCAL", "win10-pc.corp.local", false},
+		{"mixed case", "Desktop-2G62OLC.test.local", "desktop-2g62olc.test.local", false},
+		{"trailing dot stripped", "host.domain.local.", "host.domain.local", false},
+		{"uppercase with trailing dot", "HOST.DOMAIN.LOCAL.", "host.domain.local", false},
+		{"multi-level domain", "srv01.sub.corp.example.com", "srv01.sub.corp.example.com", false},
+		{"numeric hostname", "pc123.domain.local", "pc123.domain.local", false},
+		{"hyphenated labels", "my-host.my-domain.local", "my-host.my-domain.local", false},
+		// Error cases
+		{"empty string", "", "", true},
+		{"wildcard rejected", "*.corp.local", "", true},
+		{"wildcard in hostname", "host*.corp.local", "", true},
+		{"single label not FQDN", "hostname", "", true},
+		{"label too long (64 chars)", "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmn.domain.local", "", true},
+		{"label starts with hyphen", "-host.domain.local", "", true},
+		{"label ends with hyphen", "host-.domain.local", "", true},
+		{"empty label (double dot)", "host..domain.local", "", true},
+		{"underscore in label", "my_host.domain.local", "", true},
+		{"space in label", "my host.domain.local", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := canonicalizeSAN(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("canonicalizeSAN(%q) = %q, expected error", tt.input, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("canonicalizeSAN(%q) unexpected error: %v", tt.input, err)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("canonicalizeSAN(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestIsAlphanumeric tests the helper function.
+func TestIsAlphanumeric(t *testing.T) {
+	for _, b := range []byte("abcdefghijklmnopqrstuvwxyz0123456789") {
+		if !isAlphanumeric(b) {
+			t.Errorf("isAlphanumeric(%q) = false, want true", b)
+		}
+	}
+	for _, b := range []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+		if !isAlphanumeric(b) {
+			t.Errorf("isAlphanumeric(%q) = false, want true", b)
+		}
+	}
+	for _, b := range []byte("-_.! @") {
+		if isAlphanumeric(b) {
+			t.Errorf("isAlphanumeric(%q) = true, want false", b)
+		}
+	}
+}
+
 // TestSplitDNSName tests the FQDN splitting function.
 func TestSplitDNSName(t *testing.T) {
 	tests := []struct {
