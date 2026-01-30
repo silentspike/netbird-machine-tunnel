@@ -393,9 +393,12 @@ func (s *BaseServer) startMTLSServer(ctx context.Context) error {
 		port = MTLSServerPort
 	}
 
-	// Create mTLS server
+	// Create mTLS server with identity extraction interceptor
 	var err error
-	s.mtlsServer, err = NewMTLSServer(certFile, keyFile, caDir, caCertFile, port, nil)
+	mtlsInterceptors := []grpc.UnaryServerInterceptor{
+		MTLSUnaryInterceptor(true), // strictMode=true: all methods on mTLS port require client cert
+	}
+	s.mtlsServer, err = NewMTLSServer(certFile, keyFile, caDir, caCertFile, port, mtlsInterceptors)
 	if err != nil {
 		return fmt.Errorf("failed to create mTLS server: %w", err)
 	}
