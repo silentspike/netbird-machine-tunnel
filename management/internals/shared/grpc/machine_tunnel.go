@@ -60,12 +60,22 @@ func (s *Server) RegisterMachinePeer(ctx context.Context, req *proto.MachineRegi
 	}
 
 	// Parse WireGuard public key from request
-	if len(req.GetWgPubKey()) == 0 {
+	// wg_pub_key is a bytes field containing the raw 32-byte key OR a base64-encoded string
+	wgPubKeyBytes := req.GetWgPubKey()
+	if len(wgPubKeyBytes) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "WireGuard public key is required")
 	}
-	peerKey, err := wgtypes.ParseKey(string(req.GetWgPubKey()))
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid WireGuard public key: %v", err)
+	var peerKey wgtypes.Key
+	var wgErr error
+	if len(wgPubKeyBytes) == wgtypes.KeyLen {
+		// Raw 32-byte key (from protobuf bytes field)
+		peerKey, wgErr = wgtypes.NewKey(wgPubKeyBytes)
+	} else {
+		// Base64-encoded string (fallback for compatibility)
+		peerKey, wgErr = wgtypes.ParseKey(string(wgPubKeyBytes))
+	}
+	if wgErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid WireGuard public key: %v", wgErr)
 	}
 
 	// Add peer and account info to context for logging
