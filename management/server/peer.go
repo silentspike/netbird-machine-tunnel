@@ -632,6 +632,10 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 				if err != nil {
 					log.WithContext(ctx).Debugf("failed to update user last login: %v", err)
 				}
+			} else if addedByMTLS {
+				// Machine Tunnel Fork: mTLS peers don't use setup keys
+				// No setup key usage to increment, no user login to save
+				log.WithContext(ctx).Debugf("mTLS peer added without setup key: %s", newPeer.DNSLabel)
 			} else {
 				sk, err := transaction.GetSetupKeyBySecret(ctx, store.LockingStrengthUpdate, encodedHashedKey)
 				if err != nil {
