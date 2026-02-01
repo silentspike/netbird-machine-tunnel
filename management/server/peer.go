@@ -418,7 +418,11 @@ func (am *DefaultAccountManager) GetPeerNetwork(ctx context.Context, peerID stri
 // Each new Peer will be assigned a new next net.IP from the Account.Network and Account.Network.LastIP will be updated (IP's are not reused).
 // The peer property is just a placeholder for the Peer properties to pass further
 func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKey, userID string, peer *nbpeer.Peer, temporary bool) (*nbpeer.Peer, *types.NetworkMap, []*posture.Checks, error) {
-	if setupKey == "" && userID == "" {
+	// Machine Tunnel Fork: mTLS as third auth method (alongside setup key and user/SSO)
+	mTLSIdentity := mtls.GetIdentity(ctx)
+	addedByMTLS := mTLSIdentity != nil && setupKey == "" && userID == ""
+
+	if setupKey == "" && userID == "" && !addedByMTLS {
 		// no auth method provided => reject access
 		return nil, nil, nil, status.Errorf(status.Unauthenticated, "no peer auth method provided, please use a setup key or interactive SSO login")
 	}
@@ -449,7 +453,17 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 	var ephemeral bool
 	var groupsToAdd []string
 	var allowExtraDNSLabels bool
-	if addedByUser {
+	switch {
+	case addedByMTLS:
+		// Machine Tunnel Fork: mTLS-authenticated machine peer
+		accountID = mTLSIdentity.AccountID
+		opEvent.InitiatorID = mTLSIdentity.DNSName
+		opEvent.Activity = activity.PeerAddedWithMTLS
+		groupsToAdd = nil
+		ephemeral = false
+		log.WithContext(ctx).Infof("Adding machine peer via mTLS: DNS=%s, Account=%s",
+			mTLSIdentity.DNSName, mTLSIdentity.AccountID)
+	case addedByUser:
 		user, err := am.Store.GetUserByUserID(ctx, store.LockingStrengthNone, userID)
 		if err != nil {
 			return nil, nil, nil, status.Errorf(status.NotFound, "failed adding new peer: user not found")
@@ -472,7 +486,7 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 		}
 		opEvent.InitiatorID = userID
 		opEvent.Activity = activity.PeerAddedByUser
-	} else {
+	default:
 		// Validate the setup key
 		sk, err := am.Store.GetSetupKeyBySecret(ctx, store.LockingStrengthNone, encodedHashedKey)
 		if err != nil {
@@ -614,12 +628,17 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 				return fmt.Errorf("failed adding peer to All group: %w", err)
 			}
 
-			if addedByUser {
+			switch {
+			case addedByUser:
 				err := transaction.SaveUserLastLogin(ctx, accountID, userID, newPeer.GetLastLogin())
 				if err != nil {
 					log.WithContext(ctx).Debugf("failed to update user last login: %v", err)
 				}
-			} else {
+			case addedByMTLS:
+				// Machine Tunnel Fork: mTLS peers don't use setup keys
+				// No setup key usage to increment, no user login to save
+				log.WithContext(ctx).Debugf("mTLS peer added without setup key: %s", newPeer.DNSLabel)
+			default:
 				sk, err := transaction.GetSetupKeyBySecret(ctx, store.LockingStrengthUpdate, encodedHashedKey)
 				if err != nil {
 					return fmt.Errorf("failed to get setup key: %w", err)
