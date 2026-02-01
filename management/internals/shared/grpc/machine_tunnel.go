@@ -60,12 +60,22 @@ func (s *Server) RegisterMachinePeer(ctx context.Context, req *proto.MachineRegi
 	}
 
 	// Parse WireGuard public key from request
-	if len(req.GetWgPubKey()) == 0 {
+	// wg_pub_key is a bytes field containing the raw 32-byte key OR a base64-encoded string
+	wgPubKeyBytes := req.GetWgPubKey()
+	if len(wgPubKeyBytes) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "WireGuard public key is required")
 	}
-	peerKey, err := wgtypes.ParseKey(string(req.GetWgPubKey()))
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid WireGuard public key: %v", err)
+	var peerKey wgtypes.Key
+	var wgErr error
+	if len(wgPubKeyBytes) == wgtypes.KeyLen {
+		// Raw 32-byte key (from protobuf bytes field)
+		peerKey, wgErr = wgtypes.NewKey(wgPubKeyBytes)
+	} else {
+		// Base64-encoded string (fallback for compatibility)
+		peerKey, wgErr = wgtypes.ParseKey(string(wgPubKeyBytes))
+	}
+	if wgErr != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid WireGuard public key: %v", wgErr)
 	}
 
 	// Add peer and account info to context for logging
@@ -101,13 +111,6 @@ func (s *Server) RegisterMachinePeer(ctx context.Context, req *proto.MachineRegi
 		UserID:   "",
 	})
 	if err != nil {
-		// Check if this is a "no auth method" error and provide better message
-		if err.Error() == "no peer auth method provided, please use a setup key or interactive SSO login" {
-			log.WithContext(ctx).Errorf("LoginPeer rejected mTLS auth - mTLS context not recognized. "+
-				"This may indicate AddPeer needs mTLS support. Error: %v", err)
-			return nil, status.Errorf(codes.Internal,
-				"machine peer registration not fully implemented - AddPeer needs mTLS support")
-		}
 		log.WithContext(ctx).Errorf("Failed to register machine peer: %v", err)
 		return nil, status.Errorf(codes.Internal, "failed to register peer: %v", err)
 	}

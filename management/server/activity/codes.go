@@ -195,6 +195,9 @@ const (
 	DNSRecordUpdated Activity = 100
 	DNSRecordDeleted Activity = 101
 
+	// Machine Tunnel Fork: mTLS peer registration activity
+	PeerAddedWithMTLS Activity = 102
+
 	AccountDeleted Activity = 99999
 )
 
@@ -319,6 +322,9 @@ var activityMap = map[Activity]Code{
 	DNSRecordCreated: {"DNS zone record created", "dns.zone.record.create"},
 	DNSRecordUpdated: {"DNS zone record updated", "dns.zone.record.update"},
 	DNSRecordDeleted: {"DNS zone record deleted", "dns.zone.record.delete"},
+
+	// Machine Tunnel Fork
+	PeerAddedWithMTLS: {"Machine peer added via mTLS", "peer.mtls.add"},
 }
 
 // StringCode returns a string code of the activity
