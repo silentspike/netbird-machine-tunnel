@@ -453,7 +453,8 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 	var ephemeral bool
 	var groupsToAdd []string
 	var allowExtraDNSLabels bool
-	if addedByMTLS {
+	switch {
+	case addedByMTLS:
 		// Machine Tunnel Fork: mTLS-authenticated machine peer
 		accountID = mTLSIdentity.AccountID
 		opEvent.InitiatorID = mTLSIdentity.DNSName
@@ -462,7 +463,7 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 		ephemeral = false
 		log.WithContext(ctx).Infof("Adding machine peer via mTLS: DNS=%s, Account=%s",
 			mTLSIdentity.DNSName, mTLSIdentity.AccountID)
-	} else if addedByUser {
+	case addedByUser:
 		user, err := am.Store.GetUserByUserID(ctx, store.LockingStrengthNone, userID)
 		if err != nil {
 			return nil, nil, nil, status.Errorf(status.NotFound, "failed adding new peer: user not found")
@@ -485,7 +486,7 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 		}
 		opEvent.InitiatorID = userID
 		opEvent.Activity = activity.PeerAddedByUser
-	} else {
+	default:
 		// Validate the setup key
 		sk, err := am.Store.GetSetupKeyBySecret(ctx, store.LockingStrengthNone, encodedHashedKey)
 		if err != nil {
@@ -627,16 +628,17 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 				return fmt.Errorf("failed adding peer to All group: %w", err)
 			}
 
-			if addedByUser {
+			switch {
+			case addedByUser:
 				err := transaction.SaveUserLastLogin(ctx, accountID, userID, newPeer.GetLastLogin())
 				if err != nil {
 					log.WithContext(ctx).Debugf("failed to update user last login: %v", err)
 				}
-			} else if addedByMTLS {
+			case addedByMTLS:
 				// Machine Tunnel Fork: mTLS peers don't use setup keys
 				// No setup key usage to increment, no user login to save
 				log.WithContext(ctx).Debugf("mTLS peer added without setup key: %s", newPeer.DNSLabel)
-			} else {
+			default:
 				sk, err := transaction.GetSetupKeyBySecret(ctx, store.LockingStrengthUpdate, encodedHashedKey)
 				if err != nil {
 					return fmt.Errorf("failed to get setup key: %w", err)
