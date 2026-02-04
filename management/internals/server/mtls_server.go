@@ -25,16 +25,17 @@ const MTLSServerPort = 33074
 
 // MTLSServer holds the mTLS-only gRPC server for Machine Tunnel clients
 type MTLSServer struct {
-	server       *grpc.Server
-	listener     net.Listener
-	caPool       *x509.CertPool
-	tlsConfig    *tls.Config
-	port         int
-	interceptors []grpc.UnaryServerInterceptor
+	server             *grpc.Server
+	listener           net.Listener
+	caPool             *x509.CertPool
+	tlsConfig          *tls.Config
+	port               int
+	interceptors       []grpc.UnaryServerInterceptor
+	streamInterceptors []grpc.StreamServerInterceptor
 }
 
 // NewMTLSServer creates a new mTLS-only server for Machine Tunnel clients
-func NewMTLSServer(certFile, keyFile, caDir, caCertFile string, port int, interceptors []grpc.UnaryServerInterceptor) (*MTLSServer, error) {
+func NewMTLSServer(certFile, keyFile, caDir, caCertFile string, port int, interceptors []grpc.UnaryServerInterceptor, streamInterceptors []grpc.StreamServerInterceptor) (*MTLSServer, error) {
 	if port == 0 {
 		port = MTLSServerPort
 	}
@@ -62,10 +63,11 @@ func NewMTLSServer(certFile, keyFile, caDir, caCertFile string, port int, interc
 	log.Infof("mTLS server configured: port=%d, CA pool loaded with %d certificates", port, countCertsInPool(caPool))
 
 	return &MTLSServer{
-		caPool:       caPool,
-		tlsConfig:    tlsConfig,
-		port:         port,
-		interceptors: interceptors,
+		caPool:             caPool,
+		tlsConfig:          tlsConfig,
+		port:               port,
+		interceptors:       interceptors,
+		streamInterceptors: streamInterceptors,
 	}, nil
 }
 
@@ -75,9 +77,14 @@ func (s *MTLSServer) CreateGRPCServer() *grpc.Server {
 		grpc.Creds(credentials.NewTLS(s.tlsConfig)),
 	}
 
-	// Add interceptors if provided
+	// Add unary interceptors (for RegisterMachinePeer, GetMachineRoutes, ReportMachineStatus)
 	if len(s.interceptors) > 0 {
 		opts = append(opts, grpc.ChainUnaryInterceptor(s.interceptors...))
+	}
+
+	// Add stream interceptors (for SyncMachinePeer server-streaming RPC)
+	if len(s.streamInterceptors) > 0 {
+		opts = append(opts, grpc.ChainStreamInterceptor(s.streamInterceptors...))
 	}
 
 	s.server = grpc.NewServer(opts...)
