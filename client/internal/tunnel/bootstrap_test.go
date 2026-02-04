@@ -102,8 +102,10 @@ func TestHasMachineCert_ExpiredCert(t *testing.T) {
 			ClientCertKeyPath: keyPath,
 		},
 		MachineCert: auth.MachineCertConfig{
-			Enabled: true,
+			Enabled:      true,
+			SANMustMatch: true,
 		},
+		Hostname: "test-machine",
 	}
 
 	assert.False(t, hasMachineCert(cfg))
