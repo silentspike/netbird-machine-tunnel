@@ -144,19 +144,30 @@ func DiscoverCertificate(config *CertDiscoveryConfig) (*LoadedCertificate, error
 	if config.MachineCert.ThumbprintOverride != "" {
 		cert, err := discoverByThumbprint(config)
 		if err == nil {
-			return cert, nil
+			if valErr := validateCertificate(cert, config); valErr != nil {
+				log.WithError(valErr).Warn("Certificate found by thumbprint failed validation")
+			} else {
+				return cert, nil
+			}
+		} else {
+			log.WithError(err).Warn("Failed to find certificate by thumbprint")
 		}
-		log.WithError(err).Warn("Failed to find certificate by thumbprint")
 	}
 
 	// Priority 2: Windows Certificate Store
 	cert, err := discoverFromWindowsStore(config)
 	if err == nil {
-		return cert, nil
+		if valErr := validateCertificate(cert, config); valErr != nil {
+			log.WithError(valErr).Debug("Windows Store certificate failed validation")
+		} else {
+			return cert, nil
+		}
+	} else {
+		log.WithError(err).Debug("Windows Certificate Store discovery failed")
 	}
-	log.WithError(err).Debug("Windows Certificate Store discovery failed")
 
 	// Priority 3: File-based certificate (fallback)
+	// Note: discoverFromFile already calls validateCertificate internally
 	if config.FallbackCertPath != "" && config.FallbackKeyPath != "" {
 		cert, err := discoverFromFile(config)
 		if err == nil {
