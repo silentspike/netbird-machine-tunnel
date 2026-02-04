@@ -391,7 +391,7 @@ func (s *Server) GetMachineRoutes(ctx context.Context, req *proto.MachineRoutesR
 	accountID := identity.AccountID
 
 	// SyncPeer to get current NetworkMap (read-only, does not mark connected)
-	peer, netMap, _, _, err := s.accountManager.SyncPeer(ctx, types.PeerSync{
+	_, netMap, _, _, err := s.accountManager.SyncPeer(ctx, types.PeerSync{
 		WireGuardPubKey: peer.Key,
 	}, accountID)
 	if err != nil {

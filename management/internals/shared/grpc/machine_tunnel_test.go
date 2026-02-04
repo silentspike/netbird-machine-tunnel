@@ -135,37 +135,6 @@ func (m *mockNetworkMapController) GetDNSDomain(s *types.Settings) string {
 	return "test.local"
 }
 
-// --- Mock Secrets Manager ---
-
-type mockSecretsManager struct {
-	wgKey        interface{} // unused but matches struct
-	refreshCalls map[string]bool
-}
-
-func newMockSecretsManager() *mockSecretsManager {
-	return &mockSecretsManager{refreshCalls: make(map[string]bool)}
-}
-
-func (m *mockSecretsManager) GenerateTurnToken() (*Token, error) {
-	return &Token{Payload: "turn-test", Signature: "sig"}, nil
-}
-
-func (m *mockSecretsManager) GenerateRelayToken() (*Token, error) {
-	return &Token{Payload: "relay-test", Signature: "sig"}, nil
-}
-
-func (m *mockSecretsManager) SetupRefresh(_ context.Context, _ string, peerKey string) {
-	m.refreshCalls[peerKey] = true
-}
-
-func (m *mockSecretsManager) CancelRefresh(peerKey string) {
-	delete(m.refreshCalls, peerKey)
-}
-
-func (m *mockSecretsManager) GetWGKey() (interface{}, error) {
-	return nil, nil
-}
-
 // --- Mock Settings Manager ---
 
 type mockSettingsManager struct {
@@ -824,7 +793,7 @@ func TestHandleMachineUpdates_SendsUpdate(t *testing.T) {
 		defer wg.Done()
 		defer func() {
 			if r := recover(); r != nil {
-				// Expected due to unimplemented OnPeerDisconnected
+				t.Logf("Expected panic from unimplemented OnPeerDisconnected: %v", r)
 			}
 		}()
 		_ = srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream)
