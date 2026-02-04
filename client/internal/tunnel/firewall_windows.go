@@ -14,11 +14,10 @@ import (
 )
 
 const (
-	// FirewallRulePrefix is the prefix for Machine Tunnel firewall rules
+	// FirewallRulePrefix is the prefix for Machine Tunnel firewall rules.
+	// Rules are identified by this name prefix for cleanup since netsh
+	// does not support group-based rule management.
 	FirewallRulePrefix = "NetBird-Machine-"
-
-	// FirewallGroupName is the group name for Machine Tunnel firewall rules
-	FirewallGroupName = "NetBird Machine Tunnel"
 )
 
 // FirewallManager handles Windows Firewall rules for DC traffic
@@ -66,7 +65,10 @@ func (m *FirewallManager) addRule(ruleName, direction, remoteIP string) error {
 
 	// Build netsh command
 	// netsh advfirewall firewall add rule name="..." dir=in/out action=allow
-	//   remoteip=... localip=any protocol=any interface="wg-nb-machine"
+	//   remoteip=... localip=any protocol=any interfacetype=any
+	// Note: netsh 'add rule' does not support the 'group' parameter -
+	// that is only available via PowerShell's New-NetFirewallRule.
+	// Rules are identified by name prefix (NetBird-Machine-) for cleanup.
 	args := []string{
 		"advfirewall", "firewall", "add", "rule",
 		fmt.Sprintf("name=%s", ruleName),
@@ -76,7 +78,6 @@ func (m *FirewallManager) addRule(ruleName, direction, remoteIP string) error {
 		"localip=any",
 		"protocol=any",
 		"interfacetype=any",
-		fmt.Sprintf("group=%s", FirewallGroupName),
 	}
 
 	cmd := exec.Command("netsh", args...)
@@ -123,7 +124,6 @@ func (m *FirewallManager) EnableDenyDefault() error {
 		"localip=any",
 		"remoteip=any",
 		"protocol=any",
-		fmt.Sprintf("group=%s", FirewallGroupName),
 	}
 
 	cmd := exec.Command("netsh", argsIn...)
@@ -141,7 +141,6 @@ func (m *FirewallManager) EnableDenyDefault() error {
 		"localip=any",
 		"remoteip=any",
 		"protocol=any",
-		fmt.Sprintf("group=%s", FirewallGroupName),
 	}
 
 	cmd = exec.Command("netsh", argsOut...)
@@ -154,37 +153,44 @@ func (m *FirewallManager) EnableDenyDefault() error {
 	return nil
 }
 
-// RemoveAllRules removes all Machine Tunnel firewall rules
+// RemoveAllRules removes all Machine Tunnel firewall rules.
+// Since netsh 'delete rule' does not support the 'group' parameter,
+// we enumerate rules by name prefix and delete each individually.
 func (m *FirewallManager) RemoveAllRules() error {
 	log.Info("Removing all Machine Tunnel firewall rules")
 
-	// Delete rules by group name
-	args := []string{
-		"advfirewall", "firewall", "delete", "rule",
-		fmt.Sprintf("group=%s", FirewallGroupName),
-	}
-
-	cmd := exec.Command("netsh", args...)
-	output, err := cmd.CombinedOutput()
+	rules, err := m.ListRules()
 	if err != nil {
-		// Check if error is "No rules match the specified criteria"
-		outputStr := string(output)
-		if strings.Contains(outputStr, "No rules match") {
-			log.Debug("No firewall rules to remove")
-			return nil
-		}
-		return fmt.Errorf("netsh delete rules failed: %w, output: %s", err, outputStr)
+		return fmt.Errorf("list rules for cleanup: %w", err)
 	}
 
-	log.Info("All Machine Tunnel firewall rules removed")
+	if len(rules) == 0 {
+		log.Debug("No firewall rules to remove")
+		return nil
+	}
+
+	var errs []string
+	for _, ruleName := range rules {
+		if err := m.deleteRule(ruleName); err != nil {
+			errs = append(errs, fmt.Sprintf("delete %s: %v", ruleName, err))
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to delete some rules: %s", strings.Join(errs, "; "))
+	}
+
+	log.WithField("count", len(rules)).Info("All Machine Tunnel firewall rules removed")
 	return nil
 }
 
-// ListRules lists all Machine Tunnel firewall rules
+// ListRules lists all Machine Tunnel firewall rules.
+// Uses 'show rule name=all' and filters by name prefix since
+// netsh 'show rule' does not support the 'group' parameter.
 func (m *FirewallManager) ListRules() ([]string, error) {
 	args := []string{
 		"advfirewall", "firewall", "show", "rule",
-		fmt.Sprintf("group=%s", FirewallGroupName),
+		"name=all",
 	}
 
 	cmd := exec.Command("netsh", args...)
@@ -197,7 +203,7 @@ func (m *FirewallManager) ListRules() ([]string, error) {
 		return nil, fmt.Errorf("netsh show rules failed: %w, output: %s", err, outputStr)
 	}
 
-	// Parse output to extract rule names
+	// Parse output to extract rule names matching our prefix
 	var rules []string
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
