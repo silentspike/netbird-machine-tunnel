@@ -140,18 +140,20 @@ func DiscoverCertificate(config *CertDiscoveryConfig) (*LoadedCertificate, error
 		return nil, fmt.Errorf("machine certificate not enabled")
 	}
 
-	// Priority 1: Explicit thumbprint override (for debugging)
+	// Priority 1: Explicit thumbprint override
+	// When a specific thumbprint is requested, ONLY search for that exact cert.
+	// Do not fall through to generic store/file search if thumbprint is not found.
 	if config.MachineCert.ThumbprintOverride != "" {
 		cert, err := discoverByThumbprint(config)
-		if err == nil {
-			if valErr := validateCertificate(cert, config); valErr != nil {
-				log.WithError(valErr).Warn("Certificate found by thumbprint failed validation")
-			} else {
-				return cert, nil
-			}
-		} else {
-			log.WithError(err).Warn("Failed to find certificate by thumbprint")
+		if err != nil {
+			return nil, fmt.Errorf("certificate with thumbprint %s not found: %w",
+				config.MachineCert.ThumbprintOverride, err)
 		}
+		if valErr := validateCertificate(cert, config); valErr != nil {
+			return nil, fmt.Errorf("certificate with thumbprint %s failed validation: %w",
+				config.MachineCert.ThumbprintOverride, valErr)
+		}
+		return cert, nil
 	}
 
 	// Priority 2: Windows Certificate Store
