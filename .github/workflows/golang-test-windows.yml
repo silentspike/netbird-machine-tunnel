@@ -77,27 +77,33 @@ jobs:
       # for fewer packages but exceeds cmd.exe's 8191 char limit with our
       # additional Machine Tunnel packages. Same test flags are preserved:
       # -tags=devcert -timeout 10m -p 1 (serialized execution).
+      #
+      # CRITICAL: Output redirect must happen INSIDE the PsExec/SYSTEM session
+      # via cmd.exe /c "... >> test-out.txt 2>&1". PowerShell capture
+      # ($output = & PsExec64 ...) loses go test stdout because PsExec does
+      # not relay the child process output to the calling process reliably.
+      # This matches upstream's pattern: PsExec64 -s ... cmd.exe /c "... > test-out.txt 2>&1"
       - name: test
         run: |
-          # Read packages and test in batches to avoid cmd.exe command line length limit
           $goPath = "C:\hostedtoolcache\windows\go\${{ steps.go.outputs.go-version }}\x64\bin\go.exe"
           $packages = Get-Content packages.txt | Where-Object { $_.Trim() -ne "" }
           $batchSize = 30
           $exitCode = 0
 
-          # Clear output file
-          "" | Out-File -FilePath test-out.txt -Encoding utf8
+          # Ensure clean output file
+          if (Test-Path test-out.txt) { Remove-Item test-out.txt }
 
           for ($i = 0; $i -lt $packages.Count; $i += $batchSize) {
             $batch = $packages[$i..([Math]::Min($i + $batchSize - 1, $packages.Count - 1))]
+            $batchNum = [Math]::Floor($i / $batchSize) + 1
             $batchStr = $batch -join " "
-            Write-Host "Testing batch $([Math]::Floor($i / $batchSize) + 1) ($($batch.Count) packages)..."
+            Write-Host "Testing batch $batchNum ($($batch.Count) packages)..."
 
-            $output = & PsExec64 -s -w ${{ github.workspace }} $goPath test -tags=devcert -timeout 10m -p 1 $batch 2>&1
-            $output | Out-File -FilePath test-out.txt -Encoding utf8 -Append
+            # Redirect INSIDE PsExec session so go test output is captured
+            & PsExec64 -s -w ${{ github.workspace }} cmd.exe /c "$goPath test -tags=devcert -timeout 10m -p 1 $batchStr >> test-out.txt 2>&1"
 
             if ($LASTEXITCODE -ne 0) {
-              Write-Host "Batch failed with exit code $LASTEXITCODE"
+              Write-Host "Batch $batchNum failed with exit code $LASTEXITCODE"
               $exitCode = $LASTEXITCODE
             }
           }
