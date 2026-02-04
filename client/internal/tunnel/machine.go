@@ -333,10 +333,19 @@ func (t *MachineTunnel) connectionLoop() {
 //   - Setup key is loaded from SecureConfig or MachineTunnelConfig (fallback)
 //   - After first successful bootstrap, keys are persisted to SecureConfig
 func (t *MachineTunnel) toMachineConfig() (*MachineConfig, error) {
-	// Parse management URL
+	// Parse management URL and add default port if missing
+	// (matches standard client behavior in profilemanager/config.go:parseURL)
 	mgmtURL, err := url.Parse(t.config.ManagementURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse management URL: %w", err)
+	}
+	if mgmtURL.Port() == "" {
+		switch mgmtURL.Scheme {
+		case "https":
+			mgmtURL.Host += ":443"
+		case "http":
+			mgmtURL.Host += ":80"
+		}
 	}
 
 	var wgKeyStr string

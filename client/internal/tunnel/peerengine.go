@@ -427,6 +427,18 @@ func (pe *PeerEngine) ConnectPeer(ctx context.Context, remotePeerKey string, all
 		return nil, fmt.Errorf("create peer conn: %w", err)
 	}
 
+	// Register peer in statusRecorder BEFORE opening connection.
+	// This prevents "peer doesn't exist" warnings when conn.Open() triggers
+	// state updates via UpdatePeerState/UpdatePeerICEState.
+	// (matches engine.go pattern: createPeerConn → AddPeer → Open)
+	peerIP := ""
+	if len(allowedIPs) > 0 {
+		peerIP = allowedIPs[0]
+	}
+	if err := pe.statusRecorder.AddPeer(remotePeerKey, "", peerIP); err != nil {
+		log.WithField("peer", remotePeerKey[:8]).Debugf("peer already in status recorder: %v", err)
+	}
+
 	if err := conn.Open(ctx); err != nil {
 		return nil, fmt.Errorf("open peer conn: %w", err)
 	}
