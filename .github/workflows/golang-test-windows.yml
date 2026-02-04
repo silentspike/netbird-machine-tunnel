@@ -17,8 +17,30 @@ jobs:
     name: "Client / Unit"
     runs-on: windows-latest
     steps:
+      - name: Enable long paths
+        run: git config --system core.longpaths true
+
+      - name: Clean workspace
+        run: |
+          if (Test-Path "${{ github.workspace }}\.git") {
+            Write-Host "Removing stale .git directory..."
+            Remove-Item -Recurse -Force "${{ github.workspace }}\.git" -ErrorAction SilentlyContinue
+          }
+
       - name: Checkout code
+        id: checkout
         uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          clean: true
+          persist-credentials: false
+
+      - name: Retry checkout on failure
+        if: steps.checkout.outcome == 'failure'
+        uses: actions/checkout@v4
+        with:
+          clean: true
+          persist-credentials: false
 
       - name: Install Go
         uses: actions/setup-go@v5
