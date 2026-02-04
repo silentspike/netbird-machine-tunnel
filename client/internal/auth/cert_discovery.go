@@ -1,6 +1,6 @@
 // Machine Tunnel Fork - Certificate Discovery
-// This file provides certificate discovery for machine authentication.
-// It supports both Windows Certificate Store and file-based certificates.
+// Provides certificate discovery for machine authentication.
+// Supports both Windows Certificate Store and file-based certificates.
 
 package auth
 
