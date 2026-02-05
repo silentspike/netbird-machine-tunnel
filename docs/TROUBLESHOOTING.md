@@ -28,7 +28,9 @@ Get-Service NetBirdMachine
 Get-NetAdapter | Where-Object { $_.Name -like "wg-nb*" -or $_.Description -like "WireGuard*" }
 
 # NRPT rules (DNS routing)
-Get-DnsClientNrptRule | Where-Object { $_.Comment -like "NetBird*" }
+# Check registry for NetBird NRPT rules (more reliable than Get-DnsClientNrptRule)
+Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\DnsPolicyConfig" -ErrorAction SilentlyContinue |
+    Where-Object { $_.PSChildName -like "NetBird-Machine-*" }
 
 # Firewall rules
 Get-NetFirewallRule -Group "NetBird Machine Tunnel" -ErrorAction SilentlyContinue |
@@ -64,8 +66,8 @@ Get-WinEvent -FilterHashtable @{LogName='System'; ProviderName='Service Control 
     Where-Object { $_.Message -like "*NetBird*" }
 
 # Verify config file exists and is valid
-Test-Path "C:\ProgramData\NetBird\config.yaml"
-Get-Content "C:\ProgramData\NetBird\config.yaml"
+Test-Path "C:\ProgramData\NetBird\machine-config.yaml"
+Get-Content "C:\ProgramData\NetBird\machine-config.yaml"
 
 # Check binary permissions
 icacls "C:\Program Files\NetBird Machine\netbird-machine.exe"
@@ -75,7 +77,7 @@ icacls "C:\Program Files\NetBird Machine\netbird-machine.exe"
 
 | Cause | Solution |
 |-------|----------|
-| Config file missing | Create `C:\ProgramData\NetBird\config.yaml` with required settings |
+| Config file missing | Create `C:\ProgramData\NetBird\machine-config.yaml` with required settings |
 | Invalid YAML syntax | Validate YAML syntax (indentation, quotes) |
 | Missing management_url | Add `management_url: "https://your-server:443"` to config |
 | Binary not found | Reinstall: `netbird-machine.exe install` |
@@ -94,7 +96,7 @@ Test-NetConnection -ComputerName "your-management-server" -Port 443
 Test-NetConnection -ComputerName "your-management-server" -Port 33074  # mTLS port
 
 # Check if Setup Key or Certificate is configured
-Select-String -Path "C:\ProgramData\NetBird\config.yaml" -Pattern "setup_key|machine_cert"
+Select-String -Path "C:\ProgramData\NetBird\machine-config.yaml" -Pattern "setup_key|machine_cert"
 ```
 
 ---
@@ -173,7 +175,9 @@ The Machine Tunnel uses Windows Name Resolution Policy Table (NRPT) to route AD 
 Get-DnsClientNrptRule
 
 # List only NetBird Machine Tunnel rules
-Get-DnsClientNrptRule | Where-Object { $_.Comment -like "NetBird*" }
+# Check registry for NetBird NRPT rules (more reliable than Get-DnsClientNrptRule)
+Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\DnsPolicyConfig" -ErrorAction SilentlyContinue |
+    Where-Object { $_.PSChildName -like "NetBird-Machine-*" }
 
 # Check registry directly (authoritative)
 Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\DnsPolicyConfig" |
@@ -199,7 +203,7 @@ Get-Service Dnscache
 Select-String -Path "C:\ProgramData\NetBird\machine-tunnel.log" -Pattern "NRPT|nrpt|dns" -Context 2
 
 # Verify config has NRPT settings
-Select-String -Path "C:\ProgramData\NetBird\config.yaml" -Pattern "nrpt"
+Select-String -Path "C:\ProgramData\NetBird\machine-config.yaml" -Pattern "nrpt"
 ```
 
 **Solutions:**
@@ -278,7 +282,7 @@ netsh advfirewall firewall show rule group="NetBird Machine Tunnel"
 Select-String -Path "C:\ProgramData\NetBird\machine-tunnel.log" -Pattern "firewall|rule" -Context 2
 
 # Verify config has firewall settings
-Select-String -Path "C:\ProgramData\NetBird\config.yaml" -Pattern "firewall"
+Select-String -Path "C:\ProgramData\NetBird\machine-config.yaml" -Pattern "firewall"
 ```
 
 **Solutions:**
@@ -456,10 +460,9 @@ New-EventLog -LogName Application -Source "NetBirdMachine" -ErrorAction Silently
 
 | File | Path | Description |
 |------|------|-------------|
-| Config | `C:\ProgramData\NetBird\config.yaml` | Main configuration |
-| Secure Config | `C:\ProgramData\NetBird\machine-config.yaml` | DPAPI-encrypted keys |
+| Config | `C:\ProgramData\NetBird\machine-config.yaml` | Configuration with DPAPI-encrypted secrets |
 | Log File | `C:\ProgramData\NetBird\machine-tunnel.log` | Application log |
-| Binary | `C:\Program Files\NetBird Machine\netbird-machine.exe` | Service executable |
+| Binary | (install location) | Service executable (path used during `install`) |
 
 ### Registry Locations
 
@@ -470,7 +473,7 @@ New-EventLog -LogName Application -Source "NetBirdMachine" -ErrorAction Silently
 
 ### Log Levels
 
-Set in `config.yaml`:
+Set in `machine-config.yaml`:
 
 ```yaml
 log_level: "debug"  # debug | info | warn | error
@@ -480,7 +483,7 @@ log_level: "debug"  # debug | info | warn | error
 
 ```powershell
 # Edit config
-notepad C:\ProgramData\NetBird\config.yaml
+notepad C:\ProgramData\NetBird\machine-config.yaml
 # Change: log_level: "debug"
 
 # Restart service
