@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sys/windows/registry"
@@ -82,8 +83,9 @@ func (m *NRPTManager) AddRule(namespace string, dnsServers []string) error {
 		return fmt.Errorf("failed to set Name: %w", err)
 	}
 
-	// Set GenericDNSServers (REG_MULTI_SZ - DC IPs)
-	if err := ruleKey.SetStringsValue("GenericDNSServers", dnsServers); err != nil {
+	// Set GenericDNSServers (REG_SZ - semicolon-separated DNS server IPs)
+	// Windows NRPT expects this as REG_SZ, not REG_MULTI_SZ
+	if err := ruleKey.SetStringValue("GenericDNSServers", strings.Join(dnsServers, ";")); err != nil {
 		return fmt.Errorf("failed to set GenericDNSServers: %w", err)
 	}
 

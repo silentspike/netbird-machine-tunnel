@@ -27,6 +27,7 @@ import (
 
 	"github.com/netbirdio/netbird/client/iface"
 	"github.com/netbirdio/netbird/client/internal/auth"
+	"github.com/netbirdio/netbird/client/internal/ntp"
 	"github.com/netbirdio/netbird/client/internal/profilemanager"
 	"github.com/netbirdio/netbird/client/internal/routemanager/systemops"
 	"github.com/netbirdio/netbird/client/ssh"
@@ -520,6 +521,23 @@ func (t *MachineTunnel) persistKeys(managementURL, wgKey, sshKey, setupKey strin
 func (t *MachineTunnel) connect() error {
 	log.Info("Machine Tunnel connecting...")
 
+	// Step 0: Clean up stale resources from previous sessions (e.g. after crash).
+	// After a forced service termination (taskkill /f), the cleanup handler doesn't run,
+	// leaving firewall deny-default rules that block management server connectivity.
+	t.cleanupStaleResources()
+
+	// Step 0.5: Ensure time is synchronized before mTLS/TLS authentication (T-4.7).
+	// Time drift causes TLS handshake failures. Uses public NTP (pre-tunnel).
+	ntpMgr, err := ntp.NewManager(&ntp.ManagerConfig{})
+	if err != nil {
+		log.WithError(err).Warn("Failed to create NTP manager, skipping time sync check")
+	} else {
+		if err := ntpMgr.EnsureTimeSync(t.ctx); err != nil {
+			log.WithError(err).Warn("NTP time sync failed, continuing with local time")
+		}
+		ntpMgr.Close()
+	}
+
 	// Step 1: Bootstrap - authenticate and get peer configuration
 	machineConfig, err := t.toMachineConfig()
 	if err != nil {
@@ -638,18 +656,13 @@ func (t *MachineTunnel) setupWireGuardInterface(result *BootstrapResult, machine
 
 // configureNRPT sets up Name Resolution Policy Table rules for AD DNS
 func (t *MachineTunnel) configureNRPT(result *BootstrapResult) error {
-	if result.DNSConfig == nil {
-		log.Debug("No DNS config in bootstrap result, skipping NRPT")
-		return nil
-	}
-
 	log.Info("Configuring NRPT rules for AD DNS routing")
 
-	// Extract DNS servers and namespaces from config
+	// Extract DNS servers and namespaces from config file first,
+	// then fall back to bootstrap result
 	var dnsServers []string
 	var namespaces []string
 
-	// Use config from bootstrap result or fall back to MachineTunnelConfig
 	if len(t.config.DNSServers) > 0 {
 		dnsServers = t.config.DNSServers
 	}
@@ -657,8 +670,9 @@ func (t *MachineTunnel) configureNRPT(result *BootstrapResult) error {
 		namespaces = t.config.DNSNamespaces
 	}
 
-	if len(dnsServers) == 0 || len(namespaces) == 0 {
-		log.Debug("No DNS servers or namespaces configured, skipping NRPT")
+	// If not configured, try bootstrap result
+	if (len(dnsServers) == 0 || len(namespaces) == 0) && result.DNSConfig == nil {
+		log.Debug("No DNS servers or namespaces configured and no DNS config in bootstrap result, skipping NRPT")
 		return nil
 	}
 
@@ -1218,6 +1232,22 @@ func (t *MachineTunnel) maintainConnection() {
 		log.Info("Connection maintenance stopped: context cancelled")
 	case <-t.unhealthyCh:
 		log.Warn("Connection maintenance stopped: health check failed")
+	}
+}
+
+// cleanupStaleResources removes leftover NRPT and firewall rules from a previous
+// session that didn't shut down cleanly (e.g. after taskkill /f or system crash).
+// This ensures the deny-default firewall rules don't block management server connectivity
+// during the new bootstrap sequence.
+func (t *MachineTunnel) cleanupStaleResources() {
+	nrptMgr := NewNRPTManager()
+	if err := nrptMgr.RemoveAllRules(); err != nil {
+		log.WithError(err).Warn("Failed to clean up stale NRPT rules")
+	}
+
+	fwMgr := NewFirewallManager(t.config.InterfaceName)
+	if err := fwMgr.RemoveAllRules(); err != nil {
+		log.WithError(err).Warn("Failed to clean up stale firewall rules")
 	}
 }
 
