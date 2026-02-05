@@ -5,6 +5,13 @@ on:
     - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
   workflow_dispatch:      # Manual trigger
 
+# Required permissions for pushing branches and creating PRs
+permissions:
+  contents: write
+  pull-requests: write
+  workflows: write
+  issues: write
+
 jobs:
   check-upstream:
     runs-on: ubuntu-latest
@@ -15,7 +22,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -28,8 +34,8 @@ jobs:
           git remote add upstream https://github.com/netbirdio/netbird.git || true
           git fetch upstream --tags
 
-          # Get latest upstream tag
-          UPSTREAM_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1 upstream/main) 2>/dev/null || echo "unknown")
+          # Get latest upstream release tag (vX.Y.Z format)
+          UPSTREAM_VERSION=$(git tag -l 'v*' --sort=-v:refname | head -1)
           echo "Latest upstream version: $UPSTREAM_VERSION"
           echo "upstream_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
 
@@ -46,6 +52,10 @@ jobs:
     needs: check-upstream
     if: needs.check-upstream.outputs.needs_sync == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      merge_status: ${{ steps.sync.outputs.merge_status }}
+      branch_name: ${{ steps.sync.outputs.branch_name }}
+      conflict_files: ${{ steps.sync.outputs.conflict_files }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,6 +76,8 @@ jobs:
           VERSION="${{ needs.check-upstream.outputs.upstream_version }}"
           BRANCH_NAME="sync/upstream-${VERSION}"
 
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
           # Check if branch already exists
           if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
             echo "Branch $BRANCH_NAME already exists"
@@ -75,57 +87,94 @@ jobs:
 
           git checkout -b "$BRANCH_NAME"
 
-          # Attempt merge
-          if git merge upstream/main --no-edit; then
+          # Attempt merge - capture conflict info
+          if git merge upstream/main --no-edit 2>&1; then
             echo "merge_status=clean" >> $GITHUB_OUTPUT
+            echo "conflict_files=" >> $GITHUB_OUTPUT
           else
             echo "merge_status=conflicts" >> $GITHUB_OUTPUT
-            # Stage conflicted state for manual resolution
+
+            # List conflicted files
+            CONFLICTS=$(git diff --name-only --diff-filter=U | tr '\n' ' ')
+            echo "conflict_files=$CONFLICTS" >> $GITHUB_OUTPUT
+            echo "Conflicted files: $CONFLICTS"
+
+            # Stage everything including conflicts for commit
             git add -A
-            git commit -m "sync: Upstream NetBird $VERSION (CONFLICTS - needs manual resolution)" || true
+            git commit -m "sync: Upstream NetBird $VERSION (CONFLICTS - needs manual resolution)" --no-verify || true
           fi
 
+          # Push the branch
           git push -u origin "$BRANCH_NAME"
-          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         if: steps.sync.outputs.branch_exists != 'true'
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.sync.outputs.branch_name }}
-          base: main
-          title: "sync: Upstream NetBird ${{ needs.check-upstream.outputs.upstream_version }}"
-          labels: upstream-sync,automated
-          body: |
-            ## Automated Upstream Sync
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.check-upstream.outputs.upstream_version }}"
+          BRANCH="${{ steps.sync.outputs.branch_name }}"
+          STATUS="${{ steps.sync.outputs.merge_status }}"
+          CONFLICTS="${{ steps.sync.outputs.conflict_files }}"
 
-            New NetBird version detected: **${{ needs.check-upstream.outputs.upstream_version }}**
+          if [ "$STATUS" = "clean" ]; then
+            STATUS_TEXT="✅ Clean merge - ready for review"
+            CONFLICT_SECTION=""
+          else
+            STATUS_TEXT="⚠️ CONFLICTS - Manual resolution required"
+            CONFLICT_SECTION="### Conflicted Files
 
-            ### Merge Status: ${{ steps.sync.outputs.merge_status == 'clean' && '✅ Clean merge' || '⚠️ CONFLICTS - Manual resolution required' }}
+          \`\`\`
+          $CONFLICTS
+          \`\`\`
 
-            ${{ steps.sync.outputs.merge_status == 'conflicts' && '### Conflict Resolution
+          ### How to Resolve
 
-            1. Check out this branch locally: `git checkout sync/upstream-' || '' }}${{ steps.sync.outputs.merge_status == 'conflicts' && needs.check-upstream.outputs.upstream_version || '' }}${{ steps.sync.outputs.merge_status == 'conflicts' && '`
-            2. Look for `// === MACHINE-TUNNEL-FORK` markers in conflicted files
-            3. Resolve conflicts, keeping our marked sections
-            4. Push and wait for CI' || '' }}
+          1. Check out this branch locally:
+             \`\`\`bash
+             git fetch origin
+             git checkout $BRANCH
+             \`\`\`
 
-            ### Review Checklist
+          2. Look for \`// === MACHINE-TUNNEL-FORK\` markers in conflicted files
 
-            - [ ] CI passes (all tests green)
-            - [ ] Changes in `management/server/` reviewed (our mTLS code intact)
-            - [ ] Windows VM test passed (if server changes)
-            - [ ] No regressions in Machine Tunnel functionality
+          3. Resolve conflicts, keeping our marked sections
 
-            ### Files to Watch
+          4. Commit and push:
+             \`\`\`bash
+             git add -A
+             git commit -m \"resolve: Merge conflicts for $VERSION\"
+             git push
+             \`\`\`"
+          fi
 
-            Our modifications are marked with `// === MACHINE-TUNNEL-FORK` comments:
-            - `management/server/server.go` - mTLS server initialization
-            - `management/server/peer.go` - AddMachinePeer function
+          gh pr create \
+            --title "sync: Upstream NetBird $VERSION" \
+            --label "upstream-sync" \
+            --label "automated" \
+            --body "## Automated Upstream Sync
 
-            ---
-            *This PR was created automatically by the upstream-sync workflow.*
+          New NetBird version detected: **$VERSION**
+
+          ### Merge Status: $STATUS_TEXT
+
+          $CONFLICT_SECTION
+
+          ### Review Checklist
+
+          - [ ] CI passes (all tests green)
+          - [ ] Changes in \`management/server/\` reviewed (our mTLS code intact)
+          - [ ] Windows VM test passed (if server changes)
+          - [ ] No regressions in Machine Tunnel functionality
+
+          ### Our Modified Files (preserve these!)
+
+          Files marked with \`// === MACHINE-TUNNEL-FORK\`:
+          - \`management/internals/server/server.go\` - mTLS server initialization
+          - \`management/server/peer.go\` - mTLS auth + DNS labels
+
+          ---
+          *This PR was created automatically by the upstream-sync workflow.*"
 
   notify-on-failure:
     needs: [check-upstream, create-sync-pr]
@@ -133,8 +182,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Issue on Failure
-        uses: peter-evans/create-issue-from-file@v4
-        with:
-          title: "⚠️ Upstream sync failed for ${{ needs.check-upstream.outputs.upstream_version }}"
-          content-filepath: .github/UPSTREAM_SYNC_FAILED.md
-          labels: upstream-sync,bug,needs-attention
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.check-upstream.outputs.upstream_version }}"
+
+          gh issue create \
+            --title "⚠️ Upstream sync failed for $VERSION" \
+            --label "upstream-sync" \
+            --label "bug" \
+            --body "## Upstream Sync Workflow Failed
+
+          The automated upstream sync workflow failed for version **$VERSION**.
+
+          ### What to do
+
+          1. Check the [workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details
+          2. Manually sync if needed:
+             \`\`\`bash
+             git fetch upstream
+             git checkout -b sync/upstream-$VERSION
+             git merge upstream/main
+             # Resolve conflicts
+             git push -u origin sync/upstream-$VERSION
+             \`\`\`
+
+          ### Common Issues
+
+          - **Permission denied**: Check workflow permissions
+          - **Merge conflicts**: Need manual resolution
+          - **Branch exists**: Delete old sync branch first"
