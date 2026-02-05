@@ -1383,10 +1383,11 @@ func (t *MachineTunnel) cleanupStaleWireGuardInterface() error {
 
 	// Check if interface exists by trying to get its status
 	checkCmd := exec.Command("netsh", "interface", "show", "interface", interfaceName)
-	if err := checkCmd.Run(); err != nil {
-		// Interface doesn't exist, nothing to clean up
+	checkErr := checkCmd.Run()
+	if checkErr != nil {
+		// Interface doesn't exist (command failed), nothing to clean up
 		log.WithField("interface", interfaceName).Debug("No stale WireGuard interface found")
-		return nil
+		return nil //nolint:nilerr // intentional: command failure means interface doesn't exist
 	}
 
 	log.WithField("interface", interfaceName).Info("Found stale WireGuard interface, removing...")
