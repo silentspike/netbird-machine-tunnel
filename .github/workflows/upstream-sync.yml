@@ -6,10 +6,11 @@ on:
   workflow_dispatch:      # Manual trigger
 
 # Required permissions for pushing branches and creating PRs
+# Note: 'workflows' permission requires PAT, not available via GITHUB_TOKEN
+# Workflow file conflicts must be resolved manually
 permissions:
   contents: write
   pull-requests: write
-  workflows: write
   issues: write
 
 jobs:
@@ -98,6 +99,20 @@ jobs:
             CONFLICTS=$(git diff --name-only --diff-filter=U | tr '\n' ' ')
             echo "conflict_files=$CONFLICTS" >> $GITHUB_OUTPUT
             echo "Conflicted files: $CONFLICTS"
+
+            # Check if any conflicts are in .github/workflows (can't push those)
+            WORKFLOW_CONFLICTS=$(echo "$CONFLICTS" | grep -o '.github/workflows/[^ ]*' || true)
+            if [ -n "$WORKFLOW_CONFLICTS" ]; then
+              echo "workflow_conflicts=true" >> $GITHUB_OUTPUT
+              echo "::warning::Workflow files have conflicts - these need manual resolution with PAT"
+              # Reset workflow files to our version (keep ours)
+              for f in $WORKFLOW_CONFLICTS; do
+                if [ -f "$f" ]; then
+                  git checkout --ours "$f" 2>/dev/null || true
+                  git add "$f"
+                fi
+              done
+            fi
 
             # Stage everything including conflicts for commit
             git add -A
