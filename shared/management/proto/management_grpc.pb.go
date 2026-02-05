@@ -27,6 +27,7 @@ const (
 	ManagementService_GetPKCEAuthorizationFlow_FullMethodName   = "/management.ManagementService/GetPKCEAuthorizationFlow"
 	ManagementService_SyncMeta_FullMethodName                   = "/management.ManagementService/SyncMeta"
 	ManagementService_Logout_FullMethodName                     = "/management.ManagementService/Logout"
+	ManagementService_Job_FullMethodName                        = "/management.ManagementService/Job"
 	ManagementService_RegisterMachinePeer_FullMethodName        = "/management.ManagementService/RegisterMachinePeer"
 	ManagementService_SyncMachinePeer_FullMethodName            = "/management.ManagementService/SyncMachinePeer"
 	ManagementService_GetMachineRoutes_FullMethodName           = "/management.ManagementService/GetMachineRoutes"
@@ -69,7 +70,8 @@ type ManagementServiceClient interface {
 	SyncMeta(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*Empty, error)
 	// Logout logs out the peer and removes it from the management server
 	Logout(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*Empty, error)
-<<<<<<< HEAD
+	// Executes a job on a target peer (e.g., debug bundle)
+	Job(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[EncryptedMessage, EncryptedMessage], error)
 	// RegisterMachinePeer registers a machine peer using mTLS certificate authentication.
 	// The machine identity is extracted from the client certificate SAN DNSName.
 	// Requires: Valid machine certificate with SAN DNSName = "{hostname}.{domain}"
@@ -83,10 +85,6 @@ type ManagementServiceClient interface {
 	// ReportMachineStatus reports machine tunnel health and status.
 	// Used for monitoring and troubleshooting machine tunnels.
 	ReportMachineStatus(ctx context.Context, in *MachineStatusRequest, opts ...grpc.CallOption) (*MachineStatusResponse, error)
-=======
-	// Executes a job on a target peer (e.g., debug bundle)
-	Job(ctx context.Context, opts ...grpc.CallOption) (ManagementService_JobClient, error)
->>>>>>> upstream/main
 }
 
 type managementServiceClient struct {
@@ -186,6 +184,19 @@ func (c *managementServiceClient) Logout(ctx context.Context, in *EncryptedMessa
 	return out, nil
 }
 
+func (c *managementServiceClient) Job(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[EncryptedMessage, EncryptedMessage], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &ManagementService_ServiceDesc.Streams[1], ManagementService_Job_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[EncryptedMessage, EncryptedMessage]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ManagementService_JobClient = grpc.BidiStreamingClient[EncryptedMessage, EncryptedMessage]
+
 func (c *managementServiceClient) RegisterMachinePeer(ctx context.Context, in *MachineRegisterRequest, opts ...grpc.CallOption) (*MachineRegisterResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MachineRegisterResponse)
@@ -198,7 +209,7 @@ func (c *managementServiceClient) RegisterMachinePeer(ctx context.Context, in *M
 
 func (c *managementServiceClient) SyncMachinePeer(ctx context.Context, in *MachineSyncRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MachineSyncResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &ManagementService_ServiceDesc.Streams[1], ManagementService_SyncMachinePeer_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &ManagementService_ServiceDesc.Streams[2], ManagementService_SyncMachinePeer_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -233,37 +244,6 @@ func (c *managementServiceClient) ReportMachineStatus(ctx context.Context, in *M
 		return nil, err
 	}
 	return out, nil
-}
-
-func (c *managementServiceClient) Job(ctx context.Context, opts ...grpc.CallOption) (ManagementService_JobClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ManagementService_ServiceDesc.Streams[1], "/management.ManagementService/Job", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &managementServiceJobClient{stream}
-	return x, nil
-}
-
-type ManagementService_JobClient interface {
-	Send(*EncryptedMessage) error
-	Recv() (*EncryptedMessage, error)
-	grpc.ClientStream
-}
-
-type managementServiceJobClient struct {
-	grpc.ClientStream
-}
-
-func (x *managementServiceJobClient) Send(m *EncryptedMessage) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *managementServiceJobClient) Recv() (*EncryptedMessage, error) {
-	m := new(EncryptedMessage)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
 }
 
 // ManagementServiceServer is the server API for ManagementService service.
@@ -302,7 +282,8 @@ type ManagementServiceServer interface {
 	SyncMeta(context.Context, *EncryptedMessage) (*Empty, error)
 	// Logout logs out the peer and removes it from the management server
 	Logout(context.Context, *EncryptedMessage) (*Empty, error)
-<<<<<<< HEAD
+	// Executes a job on a target peer (e.g., debug bundle)
+	Job(grpc.BidiStreamingServer[EncryptedMessage, EncryptedMessage]) error
 	// RegisterMachinePeer registers a machine peer using mTLS certificate authentication.
 	// The machine identity is extracted from the client certificate SAN DNSName.
 	// Requires: Valid machine certificate with SAN DNSName = "{hostname}.{domain}"
@@ -316,10 +297,6 @@ type ManagementServiceServer interface {
 	// ReportMachineStatus reports machine tunnel health and status.
 	// Used for monitoring and troubleshooting machine tunnels.
 	ReportMachineStatus(context.Context, *MachineStatusRequest) (*MachineStatusResponse, error)
-=======
-	// Executes a job on a target peer (e.g., debug bundle)
-	Job(ManagementService_JobServer) error
->>>>>>> upstream/main
 	mustEmbedUnimplementedManagementServiceServer()
 }
 
@@ -354,6 +331,9 @@ func (UnimplementedManagementServiceServer) SyncMeta(context.Context, *Encrypted
 func (UnimplementedManagementServiceServer) Logout(context.Context, *EncryptedMessage) (*Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method Logout not implemented")
 }
+func (UnimplementedManagementServiceServer) Job(grpc.BidiStreamingServer[EncryptedMessage, EncryptedMessage]) error {
+	return status.Error(codes.Unimplemented, "method Job not implemented")
+}
 func (UnimplementedManagementServiceServer) RegisterMachinePeer(context.Context, *MachineRegisterRequest) (*MachineRegisterResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegisterMachinePeer not implemented")
 }
@@ -365,9 +345,6 @@ func (UnimplementedManagementServiceServer) GetMachineRoutes(context.Context, *M
 }
 func (UnimplementedManagementServiceServer) ReportMachineStatus(context.Context, *MachineStatusRequest) (*MachineStatusResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReportMachineStatus not implemented")
-}
-func (UnimplementedManagementServiceServer) Job(ManagementService_JobServer) error {
-	return status.Errorf(codes.Unimplemented, "method Job not implemented")
 }
 func (UnimplementedManagementServiceServer) mustEmbedUnimplementedManagementServiceServer() {}
 func (UnimplementedManagementServiceServer) testEmbeddedByValue()                           {}
@@ -527,7 +504,13 @@ func _ManagementService_Logout_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-<<<<<<< HEAD
+func _ManagementService_Job_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ManagementServiceServer).Job(&grpc.GenericServerStream[EncryptedMessage, EncryptedMessage]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type ManagementService_JobServer = grpc.BidiStreamingServer[EncryptedMessage, EncryptedMessage]
+
 func _ManagementService_RegisterMachinePeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MachineRegisterRequest)
 	if err := dec(in); err != nil {
@@ -591,32 +574,6 @@ func _ManagementService_ReportMachineStatus_Handler(srv interface{}, ctx context
 		return srv.(ManagementServiceServer).ReportMachineStatus(ctx, req.(*MachineStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
-=======
-func _ManagementService_Job_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ManagementServiceServer).Job(&managementServiceJobServer{stream})
-}
-
-type ManagementService_JobServer interface {
-	Send(*EncryptedMessage) error
-	Recv() (*EncryptedMessage, error)
-	grpc.ServerStream
-}
-
-type managementServiceJobServer struct {
-	grpc.ServerStream
-}
-
-func (x *managementServiceJobServer) Send(m *EncryptedMessage) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *managementServiceJobServer) Recv() (*EncryptedMessage, error) {
-	m := new(EncryptedMessage)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
->>>>>>> upstream/main
 }
 
 // ManagementService_ServiceDesc is the grpc.ServiceDesc for ManagementService service.
@@ -674,16 +631,15 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 			ServerStreams: true,
 		},
 		{
-<<<<<<< HEAD
-			StreamName:    "SyncMachinePeer",
-			Handler:       _ManagementService_SyncMachinePeer_Handler,
-			ServerStreams: true,
-=======
 			StreamName:    "Job",
 			Handler:       _ManagementService_Job_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
->>>>>>> upstream/main
+		},
+		{
+			StreamName:    "SyncMachinePeer",
+			Handler:       _ManagementService_SyncMachinePeer_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "shared/management/proto/management.proto",

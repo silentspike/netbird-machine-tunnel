@@ -49,13 +49,14 @@ service ManagementService {
   // Logout logs out the peer and removes it from the management server
   rpc Logout(EncryptedMessage) returns (Empty) {}
 
-<<<<<<< HEAD
-  // ==========================================
-  // Machine Tunnel Fork - mTLS-authenticated RPCs
+  // Executes a job on a target peer (e.g., debug bundle)
+  rpc Job(stream EncryptedMessage) returns (stream EncryptedMessage) {}
+
+  // === MACHINE-TUNNEL-FORK START ===
+  // mTLS-authenticated RPCs for Machine Tunnel
   // These methods require client certificate authentication (AD CS machine certs).
   // Unlike standard RPCs, these do NOT use EncryptedMessage because
   // authentication is handled at the TLS layer via mTLS.
-  // ==========================================
 
   // RegisterMachinePeer registers a machine peer using mTLS certificate authentication.
   // The machine identity is extracted from the client certificate SAN DNSName.
@@ -73,10 +74,7 @@ service ManagementService {
   // ReportMachineStatus reports machine tunnel health and status.
   // Used for monitoring and troubleshooting machine tunnels.
   rpc ReportMachineStatus(MachineStatusRequest) returns (MachineStatusResponse) {}
-=======
-  // Executes a job on a target peer (e.g., debug bundle)
-  rpc Job(stream EncryptedMessage) returns (stream EncryptedMessage) {}
->>>>>>> upstream/main
+  // === MACHINE-TUNNEL-FORK END ===
 }
 
 message EncryptedMessage {
