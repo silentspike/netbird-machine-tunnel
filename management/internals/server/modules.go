@@ -69,7 +69,14 @@ func (s *BaseServer) UsersManager() users.Manager {
 func (s *BaseServer) SettingsManager() settings.Manager {
 	return Create(s, func() settings.Manager {
 		extraSettingsManager := integrations.NewManager(s.EventStore())
-		return settings.NewManager(s.Store(), s.UsersManager(), extraSettingsManager, s.PermissionsManager())
+
+		idpConfig := settings.IdpConfig{}
+		if s.Config.EmbeddedIdP != nil && s.Config.EmbeddedIdP.Enabled {
+			idpConfig.EmbeddedIdpEnabled = true
+			idpConfig.LocalAuthDisabled = s.Config.EmbeddedIdP.LocalAuthDisabled
+		}
+
+		return settings.NewManager(s.Store(), s.UsersManager(), extraSettingsManager, s.PermissionsManager(), idpConfig)
 	})
 }
 
@@ -87,7 +94,7 @@ func (s *BaseServer) PeersManager() peers.Manager {
 
 func (s *BaseServer) AccountManager() account.Manager {
 	return Create(s, func() account.Manager {
-		accountManager, err := server.BuildManager(context.Background(), s.Config, s.Store(), s.NetworkMapController(), s.IdpManager(), s.mgmtSingleAccModeDomain, s.EventStore(), s.GeoLocationManager(), s.userDeleteFromIDPEnabled, s.IntegratedValidator(), s.Metrics(), s.ProxyController(), s.SettingsManager(), s.PermissionsManager(), s.Config.DisableDefaultPolicy)
+		accountManager, err := server.BuildManager(context.Background(), s.Config, s.Store(), s.NetworkMapController(), s.JobManager(), s.IdpManager(), s.mgmtSingleAccModeDomain, s.EventStore(), s.GeoLocationManager(), s.userDeleteFromIDPEnabled, s.IntegratedValidator(), s.Metrics(), s.ProxyController(), s.SettingsManager(), s.PermissionsManager(), s.Config.DisableDefaultPolicy)
 		if err != nil {
 			log.Fatalf("failed to create account manager: %v", err)
 		}
