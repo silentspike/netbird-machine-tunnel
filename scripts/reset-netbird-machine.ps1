@@ -1,311 +1,251 @@
+#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    Reset NetBird Machine Tunnel for testing purposes.
-    Safely removes service, interface, NRPT rules, and firewall rules.
+    Removes all NetBird Machine Tunnel artifacts for clean re-installation.
 
 .DESCRIPTION
-    This script performs a complete cleanup of the NetBird Machine Tunnel:
-    1. Stops and removes the NetBird Machine service
-    2. Removes the WireGuard tunnel interface
-    3. Removes ONLY NetBird-specific NRPT rules (scoped by registry key hash)
-    4. Removes NetBird-specific firewall rules
-    5. Optionally cleans up configuration files
+    This script removes all NetBird Machine Tunnel components:
+    - Windows Service (NetBirdMachine)
+    - WireGuard interface (wg-nb-machine)
+    - NRPT rules (Registry-based, both paths)
+    - Firewall rules (NetBird Machine Tunnel group)
+    - Configuration directory (C:\ProgramData\NetBird)
+    - Optionally: Machine certificates
 
-    IMPORTANT: This script uses scoped cleanup - it will NOT remove other
-    NRPT rules or firewall rules that are not NetBird-related.
+    v3.6: Registry-based NRPT removal (consistent with service implementation)
 
 .PARAMETER Force
     Skip confirmation prompts.
 
-.PARAMETER KeepConfig
-    Keep configuration files (useful for re-testing with same config).
+.PARAMETER RemoveCerts
+    Also remove machine certificates from LocalMachine\My store.
 
-.PARAMETER Verbose
-    Show detailed progress information.
+.PARAMETER WhatIf
+    Show what would be removed without actually removing anything.
+
+.EXAMPLE
+    .\reset-netbird-machine.ps1
+    # Interactive mode with confirmation prompts
 
 .EXAMPLE
     .\reset-netbird-machine.ps1 -Force
-    Performs full reset without prompts.
+    # Non-interactive mode, no prompts
 
 .EXAMPLE
-    .\reset-netbird-machine.ps1 -KeepConfig
-    Reset but keep config files for next test.
+    .\reset-netbird-machine.ps1 -WhatIf
+    # Dry-run mode, shows what would be removed
 
 .NOTES
-    Requires: Administrator privileges
-    Author: NetBird Machine Tunnel Fork
+    Author: NetBird Machine Tunnel Fork (Test-Lab Scripts)
+    Purpose: Development/Testing - clean reset between test runs
     Version: 1.0.0
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
 param(
-    [Parameter(Mandatory = $false)]
     [switch]$Force,
-
-    [Parameter(Mandatory = $false)]
-    [switch]$KeepConfig
+    [switch]$RemoveCerts
 )
 
-$ErrorActionPreference = 'Continue'  # Continue on errors to ensure full cleanup
+# Strict mode
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
 
-# Configuration
-$ServiceName = "NetBirdMachine"
-$InterfaceName = "wg-nb-machine"
-$ConfigPath = "$env:ProgramData\NetBird"
-$NRPTRegistryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\DnsPolicyConfig"
-$NRPTKeyPrefix = "NetBird-Machine-"
-$FirewallRulePrefix = "NetBird-Machine-"
+Write-Host ""
+Write-Host "=== NetBird Machine Tunnel Reset ===" -ForegroundColor Cyan
+Write-Host ""
 
-#region Helper Functions
-
-function Write-Step {
-    param([string]$Message)
-    Write-Host "`n>> $Message" -ForegroundColor Cyan
+if ($WhatIfPreference) {
+    Write-Host "[DRY-RUN MODE] No changes will be made." -ForegroundColor Yellow
+    Write-Host ""
 }
 
-function Write-Success {
-    param([string]$Message)
-    Write-Host "   [OK] $Message" -ForegroundColor Green
-}
-
-function Write-Skipped {
-    param([string]$Message)
-    Write-Host "   [--] $Message" -ForegroundColor Gray
-}
-
-function Write-Warning {
-    param([string]$Message)
-    Write-Host "   [!!] $Message" -ForegroundColor Yellow
-}
-
-function Write-Failure {
-    param([string]$Message)
-    Write-Host "   [XX] $Message" -ForegroundColor Red
-}
-
-function Test-Administrator {
-    $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-    return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-#endregion
-
-#region Main Script
-
-# Check administrator
-if (-not (Test-Administrator)) {
-    Write-Error "This script must be run as Administrator"
-    exit 1
-}
-
-Write-Host @"
-
-╔═══════════════════════════════════════════════════════════════════╗
-║          NetBird Machine Tunnel Reset Script                      ║
-║                                                                   ║
-║  Safely removes service, interface, NRPT, and firewall rules      ║
-╚═══════════════════════════════════════════════════════════════════╝
-
-"@ -ForegroundColor Cyan
-
-# Confirmation
-if (-not $Force) {
-    $confirm = Read-Host "This will reset the NetBird Machine Tunnel. Continue? (y/N)"
-    if ($confirm -ne 'y' -and $confirm -ne 'Y') {
-        Write-Host "Aborted." -ForegroundColor Yellow
+# Confirmation prompt (unless -Force or -WhatIf)
+if (-not $Force -and -not $WhatIfPreference) {
+    Write-Host "This will remove ALL NetBird Machine Tunnel artifacts:" -ForegroundColor Yellow
+    Write-Host "  - Service (NetBirdMachine)"
+    Write-Host "  - WireGuard interface (wg-nb-machine)"
+    Write-Host "  - NRPT rules"
+    Write-Host "  - Firewall rules"
+    Write-Host "  - Config directory (C:\ProgramData\NetBird)"
+    if ($RemoveCerts) {
+        Write-Host "  - Machine certificates" -ForegroundColor Red
+    }
+    Write-Host ""
+    $confirm = Read-Host "Continue? (y/N)"
+    if ($confirm -ne "y" -and $confirm -ne "Y") {
+        Write-Host "Aborted." -ForegroundColor Gray
         exit 0
     }
+    Write-Host ""
 }
 
-# ============================================
-# Step 1: Stop and Remove Service
-# ============================================
-Write-Step "Step 1: Stopping and removing service"
-
-$service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+# Step 1: Stop Service
+Write-Host "Step 1: Stopping service..." -ForegroundColor Yellow
+$service = Get-Service -Name "NetBirdMachine" -ErrorAction SilentlyContinue
 if ($service) {
-    if ($service.Status -eq 'Running') {
-        if ($PSCmdlet.ShouldProcess($ServiceName, "Stop service")) {
-            Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue
+    if ($service.Status -eq "Running") {
+        if ($PSCmdlet.ShouldProcess("NetBirdMachine", "Stop service")) {
+            Stop-Service -Name "NetBirdMachine" -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
-            Write-Success "Service stopped"
+            Write-Host "  Service stopped" -ForegroundColor Green
         }
     } else {
-        Write-Skipped "Service already stopped"
-    }
-
-    # Remove service using sc.exe
-    if ($PSCmdlet.ShouldProcess($ServiceName, "Remove service")) {
-        $result = sc.exe delete $ServiceName 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "Service removed"
-        } else {
-            Write-Warning "Service removal returned: $result"
-        }
+        Write-Host "  Service already stopped" -ForegroundColor Gray
     }
 } else {
-    Write-Skipped "Service not installed"
+    Write-Host "  Service not found" -ForegroundColor Gray
 }
 
-# ============================================
-# Step 2: Remove WireGuard Interface
-# ============================================
-Write-Step "Step 2: Removing WireGuard interface"
-
-$adapter = Get-NetAdapter -Name $InterfaceName -ErrorAction SilentlyContinue
+# Step 2: Remove WireGuard Interface (by name, consistent with service)
+Write-Host "`nStep 2: Removing WireGuard interface..." -ForegroundColor Yellow
+$interfaceName = "wg-nb-machine"
+$adapter = Get-NetAdapter -Name $interfaceName -ErrorAction SilentlyContinue
 if ($adapter) {
-    if ($PSCmdlet.ShouldProcess($InterfaceName, "Remove network adapter")) {
-        # Disable first
-        Disable-NetAdapter -Name $InterfaceName -Confirm:$false -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 1
-
-        # Remove via netsh (works for WireGuard interfaces)
-        $result = netsh interface delete interface name="$InterfaceName" 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "Interface removed via netsh"
-        } else {
-            # Try WireGuard-specific removal if available
-            $wgExe = "C:\Program Files\WireGuard\wireguard.exe"
-            if (Test-Path $wgExe) {
-                & $wgExe /uninstalltunnelservice $InterfaceName 2>&1 | Out-Null
-                Write-Success "Interface removed via WireGuard"
-            } else {
-                Write-Warning "Interface may require manual removal"
-            }
-        }
+    if ($PSCmdlet.ShouldProcess($interfaceName, "Remove interface")) {
+        # Remove IP addresses first
+        Remove-NetIPAddress -InterfaceAlias $interfaceName -Confirm:$false -ErrorAction SilentlyContinue
+        # Disable adapter (triggers cleanup)
+        netsh interface set interface $interfaceName admin=disable 2>&1 | Out-Null
+        Start-Sleep -Milliseconds 500
+        Write-Host "  Interface removed: $interfaceName (GUID: $($adapter.InterfaceGuid))" -ForegroundColor Green
     }
 } else {
-    Write-Skipped "Interface not present"
+    Write-Host "  No WireGuard interface found" -ForegroundColor Gray
 }
 
-# ============================================
-# Step 3: Remove NRPT Rules (Scoped!)
-# ============================================
-Write-Step "Step 3: Removing NetBird NRPT rules (scoped)"
-
-# CRITICAL: Only remove rules with our prefix - NOT all NRPT rules!
-if (Test-Path $NRPTRegistryPath) {
-    $removedCount = 0
-    $nrptKeys = Get-ChildItem $NRPTRegistryPath -ErrorAction SilentlyContinue
-
-    foreach ($key in $nrptKeys) {
-        $keyName = Split-Path $key.Name -Leaf
-        if ($keyName.StartsWith($NRPTKeyPrefix)) {
-            if ($PSCmdlet.ShouldProcess($keyName, "Remove NRPT rule")) {
-                Remove-Item -Path $key.PSPath -Recurse -Force -ErrorAction SilentlyContinue
-                $removedCount++
-            }
-        }
-    }
-
-    if ($removedCount -gt 0) {
-        Write-Success "Removed $removedCount NetBird NRPT rule(s)"
-
-        # Flush DNS cache to apply changes
-        Clear-DnsClientCache -ErrorAction SilentlyContinue
-        Write-Success "DNS cache flushed"
-    } else {
-        Write-Skipped "No NetBird NRPT rules found"
-    }
-} else {
-    Write-Skipped "NRPT registry path not present"
-}
-
-# Also check the alternative NRPT path
-$NRPTAltPath = "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\DnsPolicyConfig"
-if (Test-Path $NRPTAltPath) {
-    $altKeys = Get-ChildItem $NRPTAltPath -ErrorAction SilentlyContinue | Where-Object {
-        (Split-Path $_.Name -Leaf).StartsWith($NRPTKeyPrefix)
-    }
-    if ($altKeys) {
-        foreach ($key in $altKeys) {
-            Remove-Item -Path $key.PSPath -Recurse -Force -ErrorAction SilentlyContinue
-        }
-        Write-Success "Removed NetBird NRPT rules from alternate path"
-    }
-}
-
-# ============================================
-# Step 4: Remove Firewall Rules (Scoped!)
-# ============================================
-Write-Step "Step 4: Removing NetBird firewall rules (scoped)"
-
-# CRITICAL: Only remove rules with our prefix - NOT all firewall rules!
-$fwRules = Get-NetFirewallRule -DisplayName "$FirewallRulePrefix*" -ErrorAction SilentlyContinue
-
-if ($fwRules) {
-    $ruleCount = ($fwRules | Measure-Object).Count
-    if ($PSCmdlet.ShouldProcess("$ruleCount firewall rules", "Remove")) {
-        $fwRules | Remove-NetFirewallRule -ErrorAction SilentlyContinue
-        Write-Success "Removed $ruleCount firewall rule(s)"
-    }
-} else {
-    Write-Skipped "No NetBird firewall rules found"
-}
-
-# ============================================
-# Step 5: Clean Configuration (Optional)
-# ============================================
-Write-Step "Step 5: Cleaning configuration"
-
-if (-not $KeepConfig) {
-    if (Test-Path $ConfigPath) {
-        if ($PSCmdlet.ShouldProcess($ConfigPath, "Remove configuration directory")) {
-            # Backup config first
-            $backupPath = "$env:TEMP\netbird-config-backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-            Copy-Item -Path $ConfigPath -Destination $backupPath -Recurse -ErrorAction SilentlyContinue
-            Write-Success "Config backed up to: $backupPath"
-
-            # Remove config
-            Remove-Item -Path $ConfigPath -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Success "Configuration removed"
-        }
-    } else {
-        Write-Skipped "Configuration directory not present"
-    }
-} else {
-    Write-Skipped "Configuration kept (--KeepConfig)"
-}
-
-# ============================================
-# Step 6: Clean Registry Keys
-# ============================================
-Write-Step "Step 6: Cleaning registry keys"
-
-$registryPaths = @(
-    "HKLM:\SOFTWARE\NetBird\Machine",
-    "HKLM:\SOFTWARE\WOW6432Node\NetBird\Machine"
+# Step 3: Remove NRPT Rules (Registry-based - v3.6)
+Write-Host "`nStep 3: Removing NRPT rules (Registry)..." -ForegroundColor Yellow
+$nrptPaths = @(
+    "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\DnsPolicyConfig",
+    "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient\DnsPolicyConfig"
 )
 
-foreach ($regPath in $registryPaths) {
-    if (Test-Path $regPath) {
-        if ($PSCmdlet.ShouldProcess($regPath, "Remove registry key")) {
-            Remove-Item -Path $regPath -Recurse -Force -ErrorAction SilentlyContinue
-            Write-Success "Removed: $regPath"
+$removedNrpt = 0
+foreach ($basePath in $nrptPaths) {
+    if (-not (Test-Path $basePath)) { continue }
+
+    $rules = Get-ChildItem -Path $basePath -ErrorAction SilentlyContinue
+    foreach ($rule in $rules) {
+        if ($rule.PSChildName -like "NetBird-Machine-*") {
+            if ($PSCmdlet.ShouldProcess($rule.PSChildName, "Remove NRPT rule")) {
+                Remove-Item -Path $rule.PSPath -Recurse -Force
+                Write-Host "    Removed: $($rule.PSChildName)" -ForegroundColor Gray
+                $removedNrpt++
+            }
         }
     }
 }
 
-# ============================================
-# Summary
-# ============================================
-Write-Host @"
+if ($removedNrpt -gt 0) {
+    Write-Host "  Removed $removedNrpt NRPT rule(s)" -ForegroundColor Green
+    if ($PSCmdlet.ShouldProcess("DNS Cache", "Flush")) {
+        ipconfig /flushdns 2>&1 | Out-Null
+        Write-Host "  DNS cache flushed" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  No NetBird NRPT rules found" -ForegroundColor Gray
+}
 
-╔═══════════════════════════════════════════════════════════════════╗
-║                        Reset Complete                             ║
-╚═══════════════════════════════════════════════════════════════════╝
+# Step 4: Remove Firewall Rules
+Write-Host "`nStep 4: Removing firewall rules..." -ForegroundColor Yellow
+$fwRules = Get-NetFirewallRule -Group "NetBird Machine Tunnel" -ErrorAction SilentlyContinue
+if ($fwRules) {
+    if ($PSCmdlet.ShouldProcess("NetBird Machine Tunnel", "Remove firewall rules")) {
+        $fwRules | Remove-NetFirewallRule -ErrorAction SilentlyContinue
+        Write-Host "  Removed $($fwRules.Count) firewall rule(s)" -ForegroundColor Green
+    }
+} else {
+    # Try legacy group name
+    $fwRulesLegacy = Get-NetFirewallRule -Group "NetBird Machine" -ErrorAction SilentlyContinue
+    if ($fwRulesLegacy) {
+        if ($PSCmdlet.ShouldProcess("NetBird Machine", "Remove firewall rules (legacy)")) {
+            $fwRulesLegacy | Remove-NetFirewallRule -ErrorAction SilentlyContinue
+            Write-Host "  Removed $($fwRulesLegacy.Count) firewall rule(s) (legacy)" -ForegroundColor Green
+        }
+    } else {
+        Write-Host "  No NetBird firewall rules found" -ForegroundColor Gray
+    }
+}
 
-The following have been cleaned up:
-- NetBird Machine service
-- WireGuard interface ($InterfaceName)
-- NetBird-specific NRPT rules (prefix: $NRPTKeyPrefix)
-- NetBird-specific firewall rules (prefix: $FirewallRulePrefix)
-$(if (-not $KeepConfig) { "- Configuration files (backed up to $backupPath)" })
+# Step 5: Remove Service Registration
+Write-Host "`nStep 5: Removing service registration..." -ForegroundColor Yellow
+$service = Get-Service -Name "NetBirdMachine" -ErrorAction SilentlyContinue
+if ($service) {
+    if ($PSCmdlet.ShouldProcess("NetBirdMachine", "Delete service")) {
+        sc.exe delete NetBirdMachine 2>&1 | Out-Null
+        Write-Host "  Service registration removed" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  Service not registered" -ForegroundColor Gray
+}
 
-To reinstall, run:
-  .\netbird-machine.exe install
-  Start-Service $ServiceName
+# Step 6: Kill any remaining NetBird processes
+Write-Host "`nStep 6: Killing remaining processes..." -ForegroundColor Yellow
+$procs = @(Get-Process -Name "netbird*" -ErrorAction SilentlyContinue)
+if ($procs.Count -gt 0) {
+    if ($PSCmdlet.ShouldProcess("netbird processes", "Kill")) {
+        $procs | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+        Write-Host "  Killed $($procs.Count) process(es)" -ForegroundColor Green
+    }
+} else {
+    Write-Host "  No NetBird processes running" -ForegroundColor Gray
+}
 
-"@ -ForegroundColor Green
+# Step 7: Remove Config Directory
+Write-Host "`nStep 7: Removing config directory..." -ForegroundColor Yellow
+$configPath = "C:\ProgramData\NetBird"
+if (Test-Path $configPath) {
+    if ($PSCmdlet.ShouldProcess($configPath, "Remove directory")) {
+        # Retry with delay if file is locked
+        $retries = 3
+        for ($i = 0; $i -lt $retries; $i++) {
+            try {
+                Remove-Item -Path $configPath -Recurse -Force -ErrorAction Stop
+                Write-Host "  Config removed: $configPath" -ForegroundColor Green
+                break
+            } catch {
+                if ($i -lt $retries - 1) {
+                    Write-Host "  Retrying in 2 seconds..." -ForegroundColor Gray
+                    Start-Sleep -Seconds 2
+                } else {
+                    Write-Host "  Failed to remove config: $_" -ForegroundColor Red
+                }
+            }
+        }
+    }
+} else {
+    Write-Host "  No config directory found" -ForegroundColor Gray
+}
 
-#endregion
+# Step 8: Optional - Remove Certificates
+if ($RemoveCerts) {
+    Write-Host "`nStep 8: Removing machine certificates..." -ForegroundColor Yellow
+    $certs = Get-ChildItem Cert:\LocalMachine\My -ErrorAction SilentlyContinue | Where-Object {
+        # Match certificates with NetBird-related attributes
+        $_.Subject -like "*NetBird*" -or
+        $_.FriendlyName -like "*NetBird*" -or
+        ($_.Extensions | Where-Object { $_.Oid.FriendlyName -eq "Certificate Template Name" })
+    }
+
+    if ($certs) {
+        foreach ($cert in $certs) {
+            if ($PSCmdlet.ShouldProcess($cert.Subject, "Remove certificate")) {
+                Remove-Item $cert.PSPath -Force
+                Write-Host "    Removed: $($cert.Subject)" -ForegroundColor Gray
+            }
+        }
+        Write-Host "  Removed $($certs.Count) certificate(s)" -ForegroundColor Green
+    } else {
+        Write-Host "  No NetBird certificates found" -ForegroundColor Gray
+    }
+}
+
+Write-Host ""
+Write-Host "=== Reset Complete ===" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Next steps:" -ForegroundColor Yellow
+Write-Host "  1. Run verify-nrpt-cleanup.ps1 to confirm cleanup"
+Write-Host "  2. Reinstall: .\netbird-machine.exe install"
+Write-Host ""
