@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+<<<<<<< HEAD
 // waitForServerReady waits for the SSH server to be ready to accept SSH connections.
 // It uses a lightweight TCP banner check (reading SSH-2.0 banner) to verify the server
 // is accepting connections and responding properly.
@@ -36,6 +37,24 @@ func waitForServerReady(addr string, timeout time.Duration) error {
 		banner, err := reader.ReadString('\n')
 		if err != nil {
 			return fmt.Errorf("read banner: %w", err)
+=======
+// StartTestServer starts the SSH server and returns the address it's listening on.
+func StartTestServer(t *testing.T, server *Server) string {
+	started := make(chan string, 1)
+	errChan := make(chan error, 1)
+
+	go func() {
+		addrPort := netip.MustParseAddrPort("127.0.0.1:0")
+		if err := server.Start(context.Background(), addrPort); err != nil {
+			errChan <- err
+			return
+		}
+
+		actualAddr := server.Addr()
+		if actualAddr == nil {
+			errChan <- fmt.Errorf("server started but no listener address available")
+			return
+>>>>>>> upstream/main
 		}
 
 		if !strings.HasPrefix(banner, "SSH-") {

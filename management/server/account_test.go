@@ -35,6 +35,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/http/testing/testing_tools"
 	"github.com/netbirdio/netbird/management/server/idp"
 	"github.com/netbirdio/netbird/management/server/integrations/port_forwarding"
+	"github.com/netbirdio/netbird/management/server/job"
 	resourceTypes "github.com/netbirdio/netbird/management/server/networks/resources/types"
 	routerTypes "github.com/netbirdio/netbird/management/server/networks/routers/types"
 	networkTypes "github.com/netbirdio/netbird/management/server/networks/types"
@@ -1960,6 +1961,61 @@ func TestDefaultAccountManager_MarkPeerConnected_PeerLoginExpiration(t *testing.
 	}
 }
 
+func TestDefaultAccountManager_OnPeerDisconnected_LastSeenCheck(t *testing.T) {
+	manager, _, err := createManager(t)
+	require.NoError(t, err, "unable to create account manager")
+
+	accountID, err := manager.GetAccountIDByUserID(context.Background(), auth.UserAuth{UserId: userID})
+	require.NoError(t, err, "unable to create an account")
+
+	key, err := wgtypes.GenerateKey()
+	require.NoError(t, err, "unable to generate WireGuard key")
+	peerPubKey := key.PublicKey().String()
+
+	_, _, _, err = manager.AddPeer(context.Background(), "", "", userID, &nbpeer.Peer{
+		Key:  peerPubKey,
+		Meta: nbpeer.PeerSystemMeta{Hostname: "test-peer"},
+	}, false)
+	require.NoError(t, err, "unable to add peer")
+
+	t.Run("disconnect peer when streamStartTime is after LastSeen", func(t *testing.T) {
+		err = manager.MarkPeerConnected(context.Background(), peerPubKey, true, nil, accountID)
+		require.NoError(t, err, "unable to mark peer connected")
+
+		peer, err := manager.Store.GetPeerByPeerPubKey(context.Background(), store.LockingStrengthNone, peerPubKey)
+		require.NoError(t, err, "unable to get peer")
+		require.True(t, peer.Status.Connected, "peer should be connected")
+
+		streamStartTime := time.Now().UTC()
+
+		err = manager.OnPeerDisconnected(context.Background(), accountID, peerPubKey, streamStartTime)
+		require.NoError(t, err)
+
+		peer, err = manager.Store.GetPeerByPeerPubKey(context.Background(), store.LockingStrengthNone, peerPubKey)
+		require.NoError(t, err)
+		require.False(t, peer.Status.Connected, "peer should be disconnected")
+	})
+
+	t.Run("skip disconnect when LastSeen is after streamStartTime (zombie stream protection)", func(t *testing.T) {
+		err = manager.MarkPeerConnected(context.Background(), peerPubKey, true, nil, accountID)
+		require.NoError(t, err, "unable to mark peer connected")
+
+		peer, err := manager.Store.GetPeerByPeerPubKey(context.Background(), store.LockingStrengthNone, peerPubKey)
+		require.NoError(t, err)
+		require.True(t, peer.Status.Connected, "peer should be connected")
+
+		streamStartTime := peer.Status.LastSeen.Add(-1 * time.Hour)
+
+		err = manager.OnPeerDisconnected(context.Background(), accountID, peerPubKey, streamStartTime)
+		require.NoError(t, err)
+
+		peer, err = manager.Store.GetPeerByPeerPubKey(context.Background(), store.LockingStrengthNone, peerPubKey)
+		require.NoError(t, err)
+		require.True(t, peer.Status.Connected,
+			"peer should remain connected because LastSeen > streamStartTime (zombie stream protection)")
+	})
+}
+
 func TestDefaultAccountManager_UpdateAccountSettings_PeerLoginExpiration(t *testing.T) {
 	manager, _, err := createManager(t)
 	require.NoError(t, err, "unable to create account manager")
@@ -3023,13 +3079,14 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 		AnyTimes()
 
 	permissionsManager := permissions.NewManager(store)
+	peersManager := peers.NewManager(store, permissionsManager)
 
 	ctx := context.Background()
 
 	updateManager := update_channel.NewPeersUpdateManager(metrics)
 	requestBuffer := NewAccountRequestBuffer(ctx, store)
 	networkMapController := controller.NewController(ctx, store, metrics, updateManager, requestBuffer, MockIntegratedValidator{}, settingsMockManager, "netbird.cloud", port_forwarding.NewControllerMock(), ephemeral_manager.NewEphemeralManager(store, peers.NewManager(store, permissionsManager)), &config.Config{})
-	manager, err := BuildManager(ctx, &config.Config{}, store, networkMapController, nil, "", eventStore, nil, false, MockIntegratedValidator{}, metrics, port_forwarding.NewControllerMock(), settingsMockManager, permissionsManager, false)
+	manager, err := BuildManager(ctx, &config.Config{}, store, networkMapController, job.NewJobManager(nil, store, peersManager), nil, "", eventStore, nil, false, MockIntegratedValidator{}, metrics, port_forwarding.NewControllerMock(), settingsMockManager, permissionsManager, false)
 	if err != nil {
 		return nil, nil, err
 	}

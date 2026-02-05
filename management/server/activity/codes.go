@@ -195,8 +195,19 @@ const (
 	DNSRecordUpdated Activity = 100
 	DNSRecordDeleted Activity = 101
 
+<<<<<<< HEAD
 	// Machine Tunnel Fork: mTLS peer registration activity
 	PeerAddedWithMTLS Activity = 102
+=======
+	JobCreatedByUser Activity = 102
+
+	UserPasswordChanged Activity = 103
+
+	UserInviteLinkCreated     Activity = 104
+	UserInviteLinkAccepted    Activity = 105
+	UserInviteLinkRegenerated Activity = 106
+	UserInviteLinkDeleted     Activity = 107
+>>>>>>> upstream/main
 
 	AccountDeleted Activity = 99999
 )
@@ -323,8 +334,19 @@ var activityMap = map[Activity]Code{
 	DNSRecordUpdated: {"DNS zone record updated", "dns.zone.record.update"},
 	DNSRecordDeleted: {"DNS zone record deleted", "dns.zone.record.delete"},
 
+<<<<<<< HEAD
 	// Machine Tunnel Fork
 	PeerAddedWithMTLS: {"Machine peer added via mTLS", "peer.mtls.add"},
+=======
+	JobCreatedByUser: {"Create Job for peer", "peer.job.create"},
+
+	UserPasswordChanged: {"User password changed", "user.password.change"},
+
+	UserInviteLinkCreated:     {"User invite link created", "user.invite.link.create"},
+	UserInviteLinkAccepted:    {"User invite link accepted", "user.invite.link.accept"},
+	UserInviteLinkRegenerated: {"User invite link regenerated", "user.invite.link.regenerate"},
+	UserInviteLinkDeleted:     {"User invite link deleted", "user.invite.link.delete"},
+>>>>>>> upstream/main
 }
 
 // StringCode returns a string code of the activity

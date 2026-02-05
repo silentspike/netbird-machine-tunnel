@@ -17,6 +17,7 @@ import (
 	nbcontext "github.com/netbirdio/netbird/management/server/context"
 	"github.com/netbirdio/netbird/management/server/groups"
 	nbpeer "github.com/netbirdio/netbird/management/server/peer"
+	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/shared/management/http/api"
 	"github.com/netbirdio/netbird/shared/management/http/util"
@@ -26,24 +27,122 @@ import (
 // Handler is a handler that returns peers of the account
 type Handler struct {
 	accountManager       account.Manager
+	permissionsManager   permissions.Manager
 	networkMapController network_map.Controller
 }
 
-func AddEndpoints(accountManager account.Manager, router *mux.Router, networkMapController network_map.Controller) {
-	peersHandler := NewHandler(accountManager, networkMapController)
+func AddEndpoints(accountManager account.Manager, router *mux.Router, networkMapController network_map.Controller, permissionsManager permissions.Manager) {
+	peersHandler := NewHandler(accountManager, networkMapController, permissionsManager)
 	router.HandleFunc("/peers", peersHandler.GetAllPeers).Methods("GET", "OPTIONS")
 	router.HandleFunc("/peers/{peerId}", peersHandler.HandlePeer).
 		Methods("GET", "PUT", "DELETE", "OPTIONS")
 	router.HandleFunc("/peers/{peerId}/accessible-peers", peersHandler.GetAccessiblePeers).Methods("GET", "OPTIONS")
 	router.HandleFunc("/peers/{peerId}/temporary-access", peersHandler.CreateTemporaryAccess).Methods("POST", "OPTIONS")
+	router.HandleFunc("/peers/{peerId}/jobs", peersHandler.ListJobs).Methods("GET", "OPTIONS")
+	router.HandleFunc("/peers/{peerId}/jobs", peersHandler.CreateJob).Methods("POST", "OPTIONS")
+	router.HandleFunc("/peers/{peerId}/jobs/{jobId}", peersHandler.GetJob).Methods("GET", "OPTIONS")
 }
 
 // NewHandler creates a new peers Handler
-func NewHandler(accountManager account.Manager, networkMapController network_map.Controller) *Handler {
+func NewHandler(accountManager account.Manager, networkMapController network_map.Controller, permissionsManager permissions.Manager) *Handler {
 	return &Handler{
 		accountManager:       accountManager,
 		networkMapController: networkMapController,
+		permissionsManager:   permissionsManager,
 	}
+}
+
+func (h *Handler) CreateJob(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userAuth, err := nbcontext.GetUserAuthFromContext(ctx)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	vars := mux.Vars(r)
+	peerID := vars["peerId"]
+
+	req := &api.JobRequest{}
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		util.WriteErrorResponse("couldn't parse JSON request", http.StatusBadRequest, w)
+		return
+	}
+
+	job, err := types.NewJob(userAuth.UserId, userAuth.AccountId, peerID, req)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+	if err := h.accountManager.CreatePeerJob(ctx, userAuth.AccountId, peerID, userAuth.UserId, job); err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	resp, err := toSingleJobResponse(job)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	util.WriteJSONObject(ctx, w, resp)
+}
+
+func (h *Handler) ListJobs(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userAuth, err := nbcontext.GetUserAuthFromContext(ctx)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	vars := mux.Vars(r)
+	peerID := vars["peerId"]
+
+	jobs, err := h.accountManager.GetAllPeerJobs(ctx, userAuth.AccountId, userAuth.UserId, peerID)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	respBody := make([]*api.JobResponse, 0, len(jobs))
+	for _, job := range jobs {
+		resp, err := toSingleJobResponse(job)
+		if err != nil {
+			util.WriteError(ctx, err, w)
+			return
+		}
+		respBody = append(respBody, resp)
+	}
+
+	util.WriteJSONObject(ctx, w, respBody)
+}
+
+func (h *Handler) GetJob(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userAuth, err := nbcontext.GetUserAuthFromContext(ctx)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	vars := mux.Vars(r)
+	peerID := vars["peerId"]
+	jobID := vars["jobId"]
+
+	job, err := h.accountManager.GetPeerJobByID(ctx, userAuth.AccountId, userAuth.UserId, peerID, jobID)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	resp, err := toSingleJobResponse(job)
+	if err != nil {
+		util.WriteError(ctx, err, w)
+		return
+	}
+
+	util.WriteJSONObject(ctx, w, resp)
 }
 
 func (h *Handler) getPeer(ctx context.Context, accountID, peerID, userID string, w http.ResponseWriter) {
@@ -263,13 +362,19 @@ func (h *Handler) GetAccessiblePeers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, err := h.accountManager.GetAccountByID(r.Context(), accountID, activity.SystemInitiator)
+	user, err := h.accountManager.GetUserByID(r.Context(), userID)
 	if err != nil {
 		util.WriteError(r.Context(), err, w)
 		return
 	}
 
-	user, err := h.accountManager.GetUserByID(r.Context(), userID)
+	err = h.permissionsManager.ValidateAccountAccess(r.Context(), accountID, user, false)
+	if err != nil {
+		util.WriteError(r.Context(), status.NewPermissionDeniedError(), w)
+		return
+	}
+
+	account, err := h.accountManager.GetAccountByID(r.Context(), accountID, activity.SystemInitiator)
 	if err != nil {
 		util.WriteError(r.Context(), err, w)
 		return
@@ -519,6 +624,28 @@ func toPeerListItemResponse(peer *nbpeer.Peer, groupsInfo []api.GroupMinimum, dn
 			ServerSshAllowed:      &peer.Meta.Flags.ServerSSHAllowed,
 		},
 	}
+}
+
+func toSingleJobResponse(job *types.Job) (*api.JobResponse, error) {
+	workload, err := job.BuildWorkloadResponse()
+	if err != nil {
+		return nil, err
+	}
+
+	var failed *string
+	if job.FailedReason != "" {
+		failed = &job.FailedReason
+	}
+
+	return &api.JobResponse{
+		Id:           job.ID,
+		CreatedAt:    job.CreatedAt,
+		CompletedAt:  job.CompletedAt,
+		TriggeredBy:  job.TriggeredBy,
+		Status:       api.JobResponseStatus(job.Status),
+		FailedReason: failed,
+		Workload:     *workload,
+	}, nil
 }
 
 func fqdn(peer *nbpeer.Peer, dnsDomain string) string {

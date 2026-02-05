@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	idpmanager "github.com/netbirdio/netbird/management/server/idp"
 	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
+
+	idpmanager "github.com/netbirdio/netbird/management/server/idp"
 
 	"github.com/netbirdio/management-integrations/integrations"
 	"github.com/netbirdio/netbird/management/internals/controllers/network_map"
@@ -68,6 +69,13 @@ func NewAPIHandler(ctx context.Context, accountManager account.Manager, networks
 	if err := bypass.AddBypassPath("/api/setup"); err != nil {
 		return nil, fmt.Errorf("failed to add bypass path: %w", err)
 	}
+	// Public invite endpoints (tokens start with nbi_)
+	if err := bypass.AddBypassPath("/api/users/invites/nbi_*"); err != nil {
+		return nil, fmt.Errorf("failed to add bypass path: %w", err)
+	}
+	if err := bypass.AddBypassPath("/api/users/invites/nbi_*/accept"); err != nil {
+		return nil, fmt.Errorf("failed to add bypass path: %w", err)
+	}
 
 	var rateLimitingConfig *middleware.RateLimiterConfig
 	if os.Getenv(rateLimitingEnabledKey) == "true" {
@@ -122,16 +130,18 @@ func NewAPIHandler(ctx context.Context, accountManager account.Manager, networks
 		return nil, fmt.Errorf("register integrations endpoints: %w", err)
 	}
 
-	// Check if embedded IdP is enabled
+	// Check if embedded IdP is enabled for instance manager
 	embeddedIdP, embeddedIdpEnabled := idpManager.(*idpmanager.EmbeddedIdPManager)
 	instanceManager, err := nbinstance.NewManager(ctx, accountManager.GetStore(), embeddedIdP)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create instance manager: %w", err)
 	}
 
-	accounts.AddEndpoints(accountManager, settingsManager, embeddedIdpEnabled, router)
-	peers.AddEndpoints(accountManager, router, networkMapController)
+	accounts.AddEndpoints(accountManager, settingsManager, router)
+	peers.AddEndpoints(accountManager, router, networkMapController, permissionsManager)
 	users.AddEndpoints(accountManager, router)
+	users.AddInvitesEndpoints(accountManager, router)
+	users.AddPublicInvitesEndpoints(accountManager, router)
 	setup_keys.AddEndpoints(accountManager, router)
 	policies.AddEndpoints(accountManager, LocationManager, router)
 	policies.AddPostureCheckEndpoints(accountManager, LocationManager, router)
@@ -145,6 +155,7 @@ func NewAPIHandler(ctx context.Context, accountManager account.Manager, networks
 	recordsManager.RegisterEndpoints(router, rManager)
 	idp.AddEndpoints(accountManager, router)
 	instance.AddEndpoints(instanceManager, router)
+	instance.AddVersionEndpoint(instanceManager, router)
 
 	// Mount embedded IdP handler at /oauth2 path if configured
 	if embeddedIdpEnabled {
