@@ -310,6 +310,15 @@ func bootstrapWithSetupKey(ctx context.Context, cfg *MachineConfig) (*BootstrapR
 	if err == nil {
 		// Already registered, login successful
 		log.Info("Setup-Key bootstrap: peer already registered, login successful")
+
+		// Security warning - Setup-Key still in use (T-5.1 requirement)
+		log.Warn("=========================================================")
+		log.Warn("SECURITY: Setup-Key authentication still active (Phase 1)")
+		log.Warn("If Domain-Join and Cert-Enrollment are complete:")
+		log.Warn("  1. Update config to enable machine_cert_enabled: true")
+		log.Warn("  2. REVOKE the setup-key in NetBird Dashboard!")
+		log.Warn("=========================================================")
+
 		return &BootstrapResult{
 			AuthMethod:    AuthMethodSetupKey,
 			PeerConfig:    loginResp.PeerConfig,
@@ -330,6 +339,15 @@ func bootstrapWithSetupKey(ctx context.Context, cfg *MachineConfig) (*BootstrapR
 	}
 
 	log.Info("Setup-Key bootstrap: peer registered successfully")
+
+	// Security warnings for Setup-Key usage (T-5.1 requirement)
+	log.Warn("=========================================================")
+	log.Warn("SECURITY: Setup-Key was used for bootstrap (Phase 1)")
+	log.Warn("ACTION REQUIRED after Domain-Join and Cert-Enrollment:")
+	log.Warn("  1. Update config to enable machine_cert_enabled: true")
+	log.Warn("  2. REVOKE the setup-key in NetBird Dashboard!")
+	log.Warn("=========================================================")
+
 	return &BootstrapResult{
 		AuthMethod:    AuthMethodSetupKey,
 		PeerConfig:    loginResp.PeerConfig,

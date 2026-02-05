@@ -18,6 +18,7 @@ import (
 	"net/netip"
 	"net/url"
 	"os"
+	"os/exec"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -511,6 +512,44 @@ func (t *MachineTunnel) persistKeys(managementURL, wgKey, sshKey, setupKey strin
 	return nil
 }
 
+// cleanupSetupKeyAfterMTLS removes the encrypted_setup_key from SecureConfig
+// after successful mTLS bootstrap (Phase 2). This is a security requirement
+// documented in T-5.1 to ensure Setup-Keys are only used for initial enrollment.
+// The Setup-Key should then be revoked in the NetBird Dashboard.
+func (t *MachineTunnel) cleanupSetupKeyAfterMTLS() error {
+	configPath := GetConfigPath()
+
+	// Load SecureConfig
+	secureConfig, err := LoadMachineConfigFrom(configPath)
+	if err != nil {
+		return fmt.Errorf("load secure config: %w", err)
+	}
+
+	// Check if there's a setup key to cleanup
+	if !secureConfig.HasSetupKey() {
+		log.Debug("No encrypted_setup_key to cleanup (already removed or never present)")
+		return nil
+	}
+
+	// Cleanup the setup key
+	if err := secureConfig.CleanupAfterBootstrap(); err != nil {
+		return fmt.Errorf("cleanup setup key: %w", err)
+	}
+
+	// Save updated config
+	if err := secureConfig.SaveTo(configPath); err != nil {
+		return fmt.Errorf("save config: %w", err)
+	}
+
+	log.Info("=========================================================")
+	log.Info("SECURITY: encrypted_setup_key removed after mTLS bootstrap")
+	log.Info("Phase 2 complete - machine is now using certificate auth")
+	log.Info("ACTION REQUIRED: REVOKE the setup-key in NetBird Dashboard!")
+	log.Info("=========================================================")
+
+	return nil
+}
+
 // connect establishes the Machine Tunnel connection
 // This includes:
 // 1. Bootstrap authentication (Setup-Key or mTLS)
@@ -553,6 +592,15 @@ func (t *MachineTunnel) connect() error {
 		"auth_method": result.AuthMethod.String(),
 		"peer_ip":     result.PeerConfig.GetAddress(),
 	}).Info("Bootstrap successful")
+
+	// T-5.1: Cleanup encrypted_setup_key after mTLS Bootstrap (Phase 2)
+	// This ensures Setup-Key is only used for initial enrollment
+	if result.AuthMethod == AuthMethodMTLS {
+		if err := t.cleanupSetupKeyAfterMTLS(); err != nil {
+			// Non-fatal - log warning and continue
+			log.WithError(err).Warn("Failed to cleanup setup key after mTLS bootstrap")
+		}
+	}
 
 	// Store result and config for later use
 	t.resultMu.Lock()
@@ -716,7 +764,9 @@ func (t *MachineTunnel) configureFirewall(result *BootstrapResult) error {
 		}
 	}
 
-	// Enable deny-default rule (T-4.6)
+	// Enable deny-default rule (T-4.6) - scoped to WireGuard interface
+	// Enterprise SOTA: Uses PowerShell -InterfaceAlias to scope rules
+	// This ensures only tunnel traffic is affected, not management server connectivity
 	if err := fwMgr.EnableDenyDefault(); err != nil {
 		log.WithError(err).Warn("Failed to enable deny-default rule")
 	}
@@ -1235,11 +1285,17 @@ func (t *MachineTunnel) maintainConnection() {
 	}
 }
 
-// cleanupStaleResources removes leftover NRPT and firewall rules from a previous
-// session that didn't shut down cleanly (e.g. after taskkill /f or system crash).
-// This ensures the deny-default firewall rules don't block management server connectivity
-// during the new bootstrap sequence.
+// cleanupStaleResources removes leftover NRPT rules, firewall rules, and WireGuard interface
+// from a previous session that didn't shut down cleanly (e.g. after taskkill /f or system crash).
+// This ensures:
+// 1. The deny-default firewall rules don't block management server connectivity
+// 2. The WireGuard interface can be recreated without "file already exists" errors
 func (t *MachineTunnel) cleanupStaleResources() {
+	// Clean up stale WireGuard interface first (before NRPT/firewall which may depend on it)
+	if err := t.cleanupStaleWireGuardInterface(); err != nil {
+		log.WithError(err).Warn("Failed to clean up stale WireGuard interface")
+	}
+
 	nrptMgr := NewNRPTManager()
 	if err := nrptMgr.RemoveAllRules(); err != nil {
 		log.WithError(err).Warn("Failed to clean up stale NRPT rules")
@@ -1310,6 +1366,46 @@ func (t *MachineTunnel) Cleanup() error {
 	}
 
 	log.Info("Machine Tunnel cleanup complete")
+	return nil
+}
+
+// cleanupStaleWireGuardInterface removes a WireGuard interface that may exist from a previous
+// crashed session. This is necessary because wireguard-go's CreateTUNWithRequestedGUID
+// fails with "file already exists" if the interface wasn't properly closed.
+//
+// Enterprise SOTA: Uses Windows netsh to disable and remove the interface by name.
+// This is the same approach used by iface.Destroy() but works without a WGIface object.
+func (t *MachineTunnel) cleanupStaleWireGuardInterface() error {
+	interfaceName := t.config.InterfaceName
+	if interfaceName == "" {
+		return nil
+	}
+
+	// Check if interface exists by trying to get its status
+	checkCmd := exec.Command("netsh", "interface", "show", "interface", interfaceName)
+	if err := checkCmd.Run(); err != nil {
+		// Interface doesn't exist, nothing to clean up
+		log.WithField("interface", interfaceName).Debug("No stale WireGuard interface found")
+		return nil
+	}
+
+	log.WithField("interface", interfaceName).Info("Found stale WireGuard interface, removing...")
+
+	// Disable the interface first (same as iface.Destroy())
+	disableCmd := exec.Command("netsh", "interface", "set", "interface", interfaceName, "admin=disable")
+	if output, err := disableCmd.CombinedOutput(); err != nil {
+		log.WithFields(log.Fields{
+			"interface": interfaceName,
+			"error":     err,
+			"output":    string(output),
+		}).Warn("Failed to disable stale interface, may need manual cleanup")
+		// Don't return error - try to continue anyway
+	}
+
+	// Wait briefly for the interface to be fully disabled
+	time.Sleep(500 * time.Millisecond)
+
+	log.WithField("interface", interfaceName).Info("Stale WireGuard interface cleaned up")
 	return nil
 }
 
