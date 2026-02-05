@@ -29,38 +29,57 @@ on:
         default: ''
 
 env:
-  TEST_SCRIPT: scripts/tests/Test-TunnelEstablishment.ps1
+  TEST_SCRIPTS: |
+    scripts/tests/Test-TunnelEstablishment.ps1
+    scripts/tests/Test-Baseline.ps1
+    scripts/tests/Test-GoNoGoMatrix.ps1
 
 jobs:
-  validate-script:
+  validate-scripts:
     name: "Validate Test Script Syntax"
     runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate PowerShell syntax
+      - name: Validate PowerShell syntax for all test scripts
         shell: pwsh
         run: |
-          $script = Get-Content "${{ env.TEST_SCRIPT }}" -Raw
-          $errors = $null
-          [System.Management.Automation.PSParser]::Tokenize($script, [ref]$errors)
-          if ($errors.Count -gt 0) {
-            Write-Error "PowerShell syntax errors found:"
-            $errors | ForEach-Object { Write-Error $_.Message }
-            exit 1
+          $scripts = @(
+            "scripts/tests/Test-TunnelEstablishment.ps1",
+            "scripts/tests/Test-Baseline.ps1",
+            "scripts/tests/Test-GoNoGoMatrix.ps1"
+          )
+          $hasErrors = $false
+          foreach ($scriptPath in $scripts) {
+            if (Test-Path $scriptPath) {
+              Write-Host "Validating: $scriptPath"
+              $script = Get-Content $scriptPath -Raw
+              $errors = $null
+              [System.Management.Automation.PSParser]::Tokenize($script, [ref]$errors)
+              if ($errors.Count -gt 0) {
+                Write-Error "Syntax errors in $scriptPath"
+                $errors | ForEach-Object { Write-Error $_.Message }
+                $hasErrors = $true
+              } else {
+                Write-Host "  OK" -ForegroundColor Green
+              }
+            } else {
+              Write-Warning "Script not found: $scriptPath"
+            }
           }
-          Write-Host "PowerShell script syntax is valid"
+          if ($hasErrors) { exit 1 }
+          Write-Host "All PowerShell scripts validated successfully"
 
       - name: Show script help
         shell: pwsh
         run: |
-          Get-Help "${{ env.TEST_SCRIPT }}" -Detailed
+          Get-Help "scripts/tests/Test-TunnelEstablishment.ps1" -Detailed
 
   document-results:
     name: "Document Lab Test Results"
     runs-on: ubuntu-latest
-    needs: validate-script
+    needs: validate-scripts
     if: ${{ github.event.inputs.test_results != '' }}
     steps:
       - name: Create test summary
@@ -102,7 +121,7 @@ jobs:
   instructions:
     name: "Lab Testing Instructions"
     runs-on: ubuntu-latest
-    needs: validate-script
+    needs: validate-scripts
     if: ${{ github.event.inputs.test_results == '' }}
     steps:
       - name: Show testing instructions
@@ -116,39 +135,57 @@ jobs:
           3. NetBird Machine Service installed and configured
           4. Domain Controller at `${{ github.event.inputs.dc_address }}` accessible via tunnel
 
+          ## Test Scripts
+          | Script | Purpose |
+          |--------|---------|
+          | `Test-GoNoGoMatrix.ps1` | Pre-flight checks (run FIRST) |
+          | `Test-Baseline.ps1` | System baseline verification |
+          | `Test-TunnelEstablishment.ps1` | Main tunnel E2E tests |
+
           ## Running Tests
 
-          ### 1. Copy test script to Windows VM
+          ### 1. Copy test scripts to Windows VM
           ```powershell
           # From Linux host
-          scp scripts/tests/Test-TunnelEstablishment.ps1 administrator@<VM-IP>:C:\temp\
+          scp scripts/tests/*.ps1 administrator@<VM-IP>:C:\temp\
           ```
 
-          ### 2. Run tests on Windows VM (as Administrator)
+          ### 2. Run Go/No-Go Matrix (FIRST!)
           ```powershell
           cd C:\temp
+          .\Test-GoNoGoMatrix.ps1 -WithTunnel
+          ```
+
+          ### 3. Run Baseline Checks
+          ```powershell
+          .\Test-Baseline.ps1
+          ```
+
+          ### 4. Run Tunnel E2E Tests
+          ```powershell
           .\Test-TunnelEstablishment.ps1 -DCAddress ${{ github.event.inputs.dc_address }} -DomainName ${{ github.event.inputs.domain_name }} -Verbose
           ```
 
-          ### 3. Capture results
+          ### 5. Capture results
           Save the output and re-run this workflow with the `test_results` input filled in.
 
           ## Expected Output
           ```
-          ============================================================
-            TEST SUMMARY
-          ============================================================
+          === MATRIX SUMMARY ===
+          PASS: 7 | FAIL: 0 | SKIP: 3
+          [GO] Alle Checks bestanden
 
-            Passed:  12
-            Failed:  0
-            Skipped: 0
+          === BASELINE SUMMARY ===
+          [PASS] All baseline checks passed
 
-            Pass Rate: 100%
+          === TEST SUMMARY ===
+          Passed:  13 | Failed:  0 | Skipped: 0
+          Pass Rate: 100%
           ```
 
           ## Troubleshooting
           - **Service not running:** `Start-Service NetBirdMachine`
           - **No WireGuard interface:** Check service logs in Event Viewer
           - **DC not reachable:** Verify tunnel is established, check routes
-          - **No Kerberos TGT:** Run `klist purge` then `gpupdate /force`
+          - **No Kerberos TGT:** Run `klist -li 0x3e7` to check SYSTEM session
           EOF
