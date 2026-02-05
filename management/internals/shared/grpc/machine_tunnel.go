@@ -247,7 +247,7 @@ func (s *Server) SyncMachinePeer(req *proto.MachineSyncRequest, srv proto.Manage
 	updates, err := s.networkMapController.OnPeerConnected(ctx, accountID, peer.ID)
 	if err != nil {
 		log.WithContext(ctx).Errorf("SyncMachinePeer: failed to register for updates: %v", err)
-		s.cancelPeerRoutines(ctx, accountID, peer)
+		s.cancelPeerRoutines(ctx, accountID, peer, reqStart)
 		return err
 	}
 
@@ -260,7 +260,7 @@ func (s *Server) SyncMachinePeer(req *proto.MachineSyncRequest, srv proto.Manage
 	log.WithContext(ctx).Debugf("SyncMachinePeer: initial sync took %s for %s", time.Since(reqStart), identity.DNSName)
 
 	// Enter update loop - blocks until client disconnects or channel closes
-	return s.handleMachineUpdates(ctx, accountID, peer, updates, srv)
+	return s.handleMachineUpdates(ctx, accountID, peer, updates, srv, reqStart)
 }
 
 // sendInitialMachineSync builds and sends the first MachineSyncResponse with MACHINE_UPDATE_FULL.
@@ -302,21 +302,21 @@ func (s *Server) sendInitialMachineSync(ctx context.Context, peer *nbpeer.Peer, 
 
 // handleMachineUpdates streams network map updates to the machine peer.
 // Pattern follows handleUpdates in server.go but sends plaintext MachineSyncResponse.
-func (s *Server) handleMachineUpdates(ctx context.Context, accountID string, peer *nbpeer.Peer, updates chan *network_map.UpdateMessage, srv proto.ManagementService_SyncMachinePeerServer) error {
+func (s *Server) handleMachineUpdates(ctx context.Context, accountID string, peer *nbpeer.Peer, updates chan *network_map.UpdateMessage, srv proto.ManagementService_SyncMachinePeerServer, streamStartTime time.Time) error {
 	log.WithContext(ctx).Debugf("starting machine update loop for peer %s", peer.Key[:8])
 	for {
 		select {
 		case update, open := <-updates:
 			if !open {
 				log.WithContext(ctx).Debugf("updates channel closed for machine peer %s", peer.Key[:8])
-				s.cancelPeerRoutines(ctx, accountID, peer)
+				s.cancelPeerRoutines(ctx, accountID, peer, streamStartTime)
 				return nil
 			}
 
 			machineResp := toMachineSyncResponse(update.Update, proto.MachineUpdateType_MACHINE_UPDATE_FULL, 0)
 			if err := srv.Send(machineResp); err != nil {
 				log.WithContext(ctx).Debugf("failed to send update to machine peer %s: %v", peer.Key[:8], err)
-				s.cancelPeerRoutines(ctx, accountID, peer)
+				s.cancelPeerRoutines(ctx, accountID, peer, streamStartTime)
 				return err
 			}
 
@@ -324,7 +324,7 @@ func (s *Server) handleMachineUpdates(ctx context.Context, accountID string, pee
 
 		case <-srv.Context().Done():
 			log.WithContext(ctx).Debugf("stream closed for machine peer %s", peer.Key[:8])
-			s.cancelPeerRoutines(ctx, accountID, peer)
+			s.cancelPeerRoutines(ctx, accountID, peer, streamStartTime)
 			return srv.Context().Err()
 		}
 	}

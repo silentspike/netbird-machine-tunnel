@@ -432,7 +432,7 @@ func (s *BaseServer) startMTLSServer(ctx context.Context) error {
 	grpcServer := s.mtlsServer.CreateGRPCServer()
 
 	// Register ManagementService on mTLS port (RegisterMachinePeer, SyncMachinePeer etc.)
-	srv, err := nbgrpc.NewServer(s.Config, s.AccountManager(), s.SettingsManager(), s.SecretsManager(), s.Metrics(), s.AuthManager(), s.IntegratedValidator(), s.NetworkMapController(), s.OAuthConfigProvider())
+	srv, err := nbgrpc.NewServer(s.Config, s.AccountManager(), s.SettingsManager(), s.JobManager(), s.SecretsManager(), s.Metrics(), s.AuthManager(), s.IntegratedValidator(), s.NetworkMapController(), s.OAuthConfigProvider())
 	if err != nil {
 		return fmt.Errorf("failed to create management server for mTLS port: %w", err)
 	}

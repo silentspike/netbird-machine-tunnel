@@ -24,12 +24,7 @@ This is a fork of [NetBird](https://github.com/netbirdio/netbird) — an outstan
 
 **When to use upstream NetBird:** If you don't need pre-login Windows AD authentication, the [original NetBird](https://github.com/netbirdio/netbird) is an excellent choice with a larger community and more frequent updates.
 
-<<<<<<< HEAD
 ---
-=======
-### Self-Host NetBird (Video)
-[![Watch the video](https://img.youtube.com/vi/bZAgpT6nzaQ/0.jpg)](https://youtu.be/bZAgpT6nzaQ)
->>>>>>> upstream/main
 
 ## Table of Contents
 
