@@ -725,7 +725,7 @@ func TestHandleMachineUpdates_ChannelClosed(t *testing.T) {
 				t.Logf("Expected panic from unimplemented OnPeerDisconnected: %v", r)
 			}
 		}()
-		_ = srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream)
+		_ = srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream, time.Now())
 	}()
 
 	cancel()
@@ -755,7 +755,7 @@ func TestHandleMachineUpdates_StreamContextDone(t *testing.T) {
 				t.Logf("Expected panic from unimplemented OnPeerDisconnected: %v", r)
 			}
 		}()
-		err := srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream)
+		err := srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream, time.Now())
 		// Context cancelled should return the context error
 		assert.Error(t, err)
 	}()
@@ -796,7 +796,7 @@ func TestHandleMachineUpdates_SendsUpdate(t *testing.T) {
 				t.Logf("Expected panic from unimplemented OnPeerDisconnected: %v", r)
 			}
 		}()
-		_ = srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream)
+		_ = srv.handleMachineUpdates(ctx, testAccountID, peer, updates, stream, time.Now())
 	}()
 	wg.Wait()
 
