@@ -84,3 +84,8 @@ RELEASE-STATUS.html
 
 # Deutsche Investigations/Notizen - nicht fuer Public Repo
 docs/INVESTIGATION-*.md
+
+# Internal maintenance documentation - not for public repo
+MAINTAINING.md
+docs/MAINTAINING.md
+docs/internal/

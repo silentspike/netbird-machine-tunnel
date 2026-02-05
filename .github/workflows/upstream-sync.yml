@@ -1,0 +1,140 @@
+name: Upstream Sync Check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
+  workflow_dispatch:      # Manual trigger
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_sync: ${{ steps.check.outputs.needs_sync }}
+      upstream_version: ${{ steps.check.outputs.upstream_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check for upstream updates
+        id: check
+        run: |
+          git remote add upstream https://github.com/netbirdio/netbird.git || true
+          git fetch upstream --tags
+
+          # Get latest upstream tag
+          UPSTREAM_VERSION=$(git describe --tags $(git rev-list --tags --max-count=1 upstream/main) 2>/dev/null || echo "unknown")
+          echo "Latest upstream version: $UPSTREAM_VERSION"
+          echo "upstream_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
+
+          # Check if we already synced this version
+          if git log --oneline -100 | grep -q "sync: Upstream NetBird $UPSTREAM_VERSION"; then
+            echo "Already synced to $UPSTREAM_VERSION"
+            echo "needs_sync=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version available: $UPSTREAM_VERSION"
+            echo "needs_sync=true" >> $GITHUB_OUTPUT
+          fi
+
+  create-sync-pr:
+    needs: check-upstream
+    if: needs.check-upstream.outputs.needs_sync == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream and create sync branch
+        id: sync
+        run: |
+          git remote add upstream https://github.com/netbirdio/netbird.git || true
+          git fetch upstream --tags
+
+          VERSION="${{ needs.check-upstream.outputs.upstream_version }}"
+          BRANCH_NAME="sync/upstream-${VERSION}"
+
+          # Check if branch already exists
+          if git ls-remote --heads origin "$BRANCH_NAME" | grep -q "$BRANCH_NAME"; then
+            echo "Branch $BRANCH_NAME already exists"
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          git checkout -b "$BRANCH_NAME"
+
+          # Attempt merge
+          if git merge upstream/main --no-edit; then
+            echo "merge_status=clean" >> $GITHUB_OUTPUT
+          else
+            echo "merge_status=conflicts" >> $GITHUB_OUTPUT
+            # Stage conflicted state for manual resolution
+            git add -A
+            git commit -m "sync: Upstream NetBird $VERSION (CONFLICTS - needs manual resolution)" || true
+          fi
+
+          git push -u origin "$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.sync.outputs.branch_exists != 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.sync.outputs.branch_name }}
+          base: main
+          title: "sync: Upstream NetBird ${{ needs.check-upstream.outputs.upstream_version }}"
+          labels: upstream-sync,automated
+          body: |
+            ## Automated Upstream Sync
+
+            New NetBird version detected: **${{ needs.check-upstream.outputs.upstream_version }}**
+
+            ### Merge Status: ${{ steps.sync.outputs.merge_status == 'clean' && '✅ Clean merge' || '⚠️ CONFLICTS - Manual resolution required' }}
+
+            ${{ steps.sync.outputs.merge_status == 'conflicts' && '### Conflict Resolution
+
+            1. Check out this branch locally: `git checkout sync/upstream-' || '' }}${{ steps.sync.outputs.merge_status == 'conflicts' && needs.check-upstream.outputs.upstream_version || '' }}${{ steps.sync.outputs.merge_status == 'conflicts' && '`
+            2. Look for `// === MACHINE-TUNNEL-FORK` markers in conflicted files
+            3. Resolve conflicts, keeping our marked sections
+            4. Push and wait for CI' || '' }}
+
+            ### Review Checklist
+
+            - [ ] CI passes (all tests green)
+            - [ ] Changes in `management/server/` reviewed (our mTLS code intact)
+            - [ ] Windows VM test passed (if server changes)
+            - [ ] No regressions in Machine Tunnel functionality
+
+            ### Files to Watch
+
+            Our modifications are marked with `// === MACHINE-TUNNEL-FORK` comments:
+            - `management/server/server.go` - mTLS server initialization
+            - `management/server/peer.go` - AddMachinePeer function
+
+            ---
+            *This PR was created automatically by the upstream-sync workflow.*
+
+  notify-on-failure:
+    needs: [check-upstream, create-sync-pr]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Issue on Failure
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "⚠️ Upstream sync failed for ${{ needs.check-upstream.outputs.upstream_version }}"
+          content-filepath: .github/UPSTREAM_SYNC_FAILED.md
+          labels: upstream-sync,bug,needs-attention

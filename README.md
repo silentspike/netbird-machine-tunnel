@@ -1,148 +1,482 @@
+# NetBird Machine Tunnel Edition
 
-<div align="center">
-<br/>
-  <br/>
-<p align="center">
-  <img width="234" src="docs/media/logo-full.png"/>
-</p>
-  <p>
-   <a href="https://img.shields.io/badge/license-BSD--3-blue)">
-       <img src="https://sonarcloud.io/api/project_badges/measure?project=netbirdio_netbird&metric=alert_status" />
-     </a> 
-     <a href="https://github.com/netbirdio/netbird/blob/main/LICENSE">
-       <img src="https://img.shields.io/badge/license-BSD--3-blue" />
-     </a> 
-    <br>
-    <a href="https://docs.netbird.io/slack-url">
-        <img src="https://img.shields.io/badge/slack-@netbird-red.svg?logo=slack"/>
-     </a>
-    <a href="https://forum.netbird.io">
-        <img src="https://img.shields.io/badge/community forum-@netbird-red.svg?logo=discourse"/>
-     </a>  
-     <br>
-    <a href="https://gurubase.io/g/netbird">
-        <img src="https://img.shields.io/badge/Gurubase-Ask%20NetBird%20Guru-006BFF"/>
-     </a>    
-  </p>
-</div>
+**Complete NetBird VPN with pre-login Windows support for Active Directory environments.**
 
+---
 
-<p align="center">
-<strong>
-  Start using NetBird at <a href="https://netbird.io/pricing">netbird.io</a>
-  <br/>
-  See <a href="https://netbird.io/docs/">Documentation</a>
-  <br/>
-   Join our <a href="https://docs.netbird.io/slack-url">Slack channel</a> or our <a href="https://forum.netbird.io">Community forum</a>
-  <br/>
- 
-</strong>
-<br>
-<strong>
-  🚀 <a href="https://careers.netbird.io">We are hiring! Join us at careers.netbird.io</a>
-</strong>
-<br>
-<br>
-<a href="https://registry.terraform.io/providers/netbirdio/netbird/latest">
-    New: NetBird terraform provider
-  </a> 
-</p>
+## About This Project
 
-<br>
+This is a fork of [NetBird](https://github.com/netbirdio/netbird) — an outstanding open-source WireGuard-based mesh VPN. We are deeply grateful to the NetBird team for building such an excellent foundation and for making it available under an open-source license.
 
-**NetBird combines a configuration-free peer-to-peer private network and a centralized access control system in a single platform, making it easy to create secure private networks for your organization or home.**
+**This fork is a complete, standalone NetBird deployment** — it includes all standard NetBird functionality (mesh networking, peer-to-peer connections, relay fallback, access controls, etc.) **plus** an additional feature called **Machine Tunnel** for Windows enterprise environments.
 
-**Connect.** NetBird creates a WireGuard-based overlay network that automatically connects your machines over an encrypted tunnel, leaving behind the hassle of opening ports, complex firewall rules, VPN gateways, and so forth.
+### What You Get
 
-**Secure.** NetBird enables secure remote access by applying granular access policies while allowing you to manage them intuitively from a single place. Works universally on any infrastructure.
+| Feature | Included |
+|---------|----------|
+| Full NetBird mesh VPN | ✅ Everything from upstream |
+| Cross-platform clients | ✅ Windows, macOS, Linux, iOS, Android |
+| Management Server | ✅ Complete with dashboard |
+| Signal & Relay servers | ✅ NAT traversal included |
+| **Machine Tunnel** | ✅ Pre-login VPN for Windows AD |
 
-### Open Source Network Security in a Single Platform
+**When to use this fork:** If you need Windows machines to authenticate to Active Directory before user login (the "chicken and egg" problem), this fork solves it while giving you all of NetBird's capabilities.
 
-https://github.com/user-attachments/assets/10cec749-bb56-4ab3-97af-4e38850108d2
+**When to use upstream NetBird:** If you don't need pre-login Windows AD authentication, the [original NetBird](https://github.com/netbirdio/netbird) is an excellent choice with a larger community and more frequent updates.
 
-### NetBird on Lawrence Systems (Video)
-[![Watch the video](https://img.youtube.com/vi/Kwrff6h0rEw/0.jpg)](https://www.youtube.com/watch?v=Kwrff6h0rEw)
+---
 
-### Key features
+## Table of Contents
 
-| Connectivity | Management | Security | Automation| Platforms |
-|----|----|----|----|----|
-| <ul><li>- \[x] Kernel WireGuard</ul></li> | <ul><li>- \[x] [Admin Web UI](https://github.com/netbirdio/dashboard)</ul></li> | <ul><li>- \[x] [SSO & MFA support](https://docs.netbird.io/how-to/installation#running-net-bird-with-sso-login)</ul></li> | <ul><li>- \[x] [Public API](https://docs.netbird.io/api)</ul></li> | <ul><li>- \[x] Linux</ul></li> |
-| <ul><li>- \[x] Peer-to-peer connections</ul></li> | <ul><li>- \[x] Auto peer discovery and configuration</ui></li> | <ul><li>- \[x] [Access control - groups & rules](https://docs.netbird.io/how-to/manage-network-access)</ui></li> | <ul><li>- \[x] [Setup keys for bulk network provisioning](https://docs.netbird.io/how-to/register-machines-using-setup-keys)</ui></li> | <ul><li>- \[x] Mac</ui></li> |
-| <ul><li>- \[x] Connection relay fallback</ui></li> | <ul><li>- \[x] [IdP integrations](https://docs.netbird.io/selfhosted/identity-providers)</ui></li> | <ul><li>- \[x] [Activity logging](https://docs.netbird.io/how-to/audit-events-logging)</ui></li> | <ul><li>- \[x] [Self-hosting quickstart script](https://docs.netbird.io/selfhosted/selfhosted-quickstart)</ui></li> | <ul><li>- \[x] Windows</ui></li> |
-| <ul><li>- \[x] [Routes to external networks](https://docs.netbird.io/how-to/routing-traffic-to-private-networks)</ui></li> | <ul><li>- \[x] [Private DNS](https://docs.netbird.io/how-to/manage-dns-in-your-network)</ui></li> | <ul><li>- \[x] [Device posture checks](https://docs.netbird.io/how-to/manage-posture-checks)</ui></li> | <ul><li>- \[x] IdP groups sync with JWT</ui></li> | <ul><li>- \[x] Android</ui></li> |
-| <ul><li>- \[x] NAT traversal with BPF</ui></li> | <ul><li>- \[x] [Multiuser support](https://docs.netbird.io/how-to/add-users-to-your-network)</ui></li> | <ul><li>- \[x] Peer-to-peer encryption</ui></li> || <ul><li>- \[x] iOS</ui></li> |
-||| <ul><li>- \[x] [Quantum-resistance with Rosenpass](https://netbird.io/knowledge-hub/the-first-quantum-resistant-mesh-vpn)</ui></li> || <ul><li>- \[x] OpenWRT</ui></li> |
-||| <ul><li>- \[x] [Periodic re-authentication](https://docs.netbird.io/how-to/enforce-periodic-user-authentication)</ui></li> || <ul><li>- \[x] [Serverless](https://docs.netbird.io/how-to/netbird-on-faas)</ui></li> |
-||||| <ul><li>- \[x] Docker</ui></li> |
+- [Why This Fork Exists](#why-this-fork-exists)
+- [How It Works](#how-it-works)
+- [For End Users](#for-end-users)
+  - [What You Need to Know](#what-you-need-to-know)
+  - [Checking If It's Working](#checking-if-its-working)
+  - [Common Questions](#common-questions)
+- [For Administrators](#for-administrators)
+  - [Prerequisites](#prerequisites)
+  - [Architecture at a Glance](#architecture-at-a-glance)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+  - [Security Checklist](#security-checklist)
+  - [Verification](#verification)
+  - [Troubleshooting Preview](#troubleshooting-preview)
+- [What This Fork Adds to NetBird](#what-this-fork-adds-to-netbird)
+- [Migration from Upstream NetBird](#migration-from-upstream-netbird)
+- [Testing & Compatibility](#testing--compatibility)
+- [Documentation](#documentation)
+- [Building from Source](#building-from-source)
+- [License](#license)
 
-### Quickstart with NetBird Cloud
+---
 
-- Download and install NetBird at [https://app.netbird.io/install](https://app.netbird.io/install)
-- Follow the steps to sign-up with Google, Microsoft, GitHub or your email address.
-- Check NetBird [admin UI](https://app.netbird.io/).
-- Add more machines.
+## Why This Fork Exists
 
-### Quickstart with self-hosted NetBird
+### The Problem
 
-> This is the quickest way to try self-hosted NetBird. It should take around 5 minutes to get started if you already have a public domain and a VM.
-Follow the [Advanced guide with a custom identity provider](https://docs.netbird.io/selfhosted/selfhosted-guide#advanced-guide-with-a-custom-identity-provider) for installations with different IDPs.
+If you've ever managed remote Windows users who need Active Directory, you've encountered this frustrating loop:
 
-**Infrastructure requirements:**
-- A Linux VM with at least **1CPU** and **2GB** of memory.
-- The VM should be publicly accessible on TCP ports **80** and **443** and UDP port: **3478**.
-- **Public domain** name pointing to the VM.
-
-**Software requirements:**
-- Docker installed on the VM with the docker-compose plugin ([Docker installation guide](https://docs.docker.com/engine/install/)) or docker with docker-compose in version 2 or higher.
-- [jq](https://jqlang.github.io/jq/) installed. In most distributions
-  Usually available in the official repositories and can be installed with `sudo apt install jq` or `sudo yum install jq`
-- [curl](https://curl.se/) installed.
-  Usually available in the official repositories and can be installed with `sudo apt install curl` or `sudo yum install curl`
-
-**Steps**
-- Download and run the installation script:
-```bash
-export NETBIRD_DOMAIN=netbird.example.com; curl -fsSL https://github.com/netbirdio/netbird/releases/latest/download/getting-started.sh | bash
 ```
-- Once finished, you can manage the resources via `docker-compose`
+User wants to log in → Needs Kerberos ticket from Active Directory
+                            ↓
+              Needs network connection to Domain Controller
+                            ↓
+              Needs VPN to reach Domain Controller
+                            ↓
+              VPN needs user to be logged in first
+                            ↓
+                    🔄 Chicken and egg!
+```
 
-### A bit on NetBird internals
--  Every machine in the network runs [NetBird Agent (or Client)](client/) that manages WireGuard.
--  Every agent connects to [Management Service](management/) that holds network state, manages peer IPs, and distributes network updates to agents (peers).
--  NetBird agent uses WebRTC ICE implemented in [pion/ice library](https://github.com/pion/ice) to discover connection candidates when establishing a peer-to-peer connection between machines.
--  Connection candidates are discovered with the help of [STUN](https://en.wikipedia.org/wiki/STUN) servers.
--  Agents negotiate a connection through [Signal Service](signal/) passing p2p encrypted messages with candidates.
--  Sometimes the NAT traversal is unsuccessful due to strict NATs (e.g. mobile carrier-grade NAT) and a p2p connection isn't possible. When this occurs the system falls back to a relay server called [TURN](https://en.wikipedia.org/wiki/Traversal_Using_Relays_around_NAT), and a secure WireGuard tunnel is established via the TURN server. 
- 
-[Coturn](https://github.com/coturn/coturn) is the one that has been successfully used for STUN and TURN in NetBird setups.
+This hits hardest with:
+- **New employees** receiving laptops remotely — they can't log in without AD
+- **Remote workers** whose cached credentials expired
+- **Password resets** that require immediate AD connectivity
 
-<p float="left" align="middle">
-  <img src="https://docs.netbird.io/docs-static/img/about-netbird/high-level-dia.png" width="700"/>
-</p>
+### The Solution
 
-See a complete [architecture overview](https://docs.netbird.io/about-netbird/how-netbird-works#architecture) for details.
+Machine Tunnel breaks this cycle by connecting **before** any user logs in:
 
-### Community projects
--  [NetBird installer script](https://github.com/physk/netbird-installer)
--  [NetBird ansible collection by Dominion Solutions](https://galaxy.ansible.com/ui/repo/published/dominion_solutions/netbird/)
+```
+Computer boots → Machine Tunnel connects automatically (no user needed)
+                            ↓
+              Domain Controller is now reachable
+                            ↓
+              User logs in with Active Directory credentials
+                            ↓
+                    ✅ Problem solved!
+```
 
-**Note**: The `main` branch may be in an *unstable or even broken state* during development.
-For stable versions, see [releases](https://github.com/netbirdio/netbird/releases).
+The secret: instead of user credentials, we use the **computer's own certificate** (issued by Active Directory Certificate Services) to authenticate.
 
-### Support acknowledgement
+---
 
-In November 2022, NetBird joined the [StartUpSecure program](https://www.forschung-it-sicherheit-kommunikationssysteme.de/foerderung/bekanntmachungen/startup-secure) sponsored by The Federal Ministry of Education and Research of The Federal Republic of Germany. Together with [CISPA Helmholtz Center for Information Security](https://cispa.de/en) NetBird brings the security best practices and simplicity to private networking.
+## How It Works
 
-![CISPA_Logo_BLACK_EN_RZ_RGB (1)](https://user-images.githubusercontent.com/700848/203091324-c6d311a0-22b5-4b05-a288-91cbc6cdcc46.png)
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                          │
+│   Remote Laptop                                           Data Center    │
+│   ─────────────                                           ───────────    │
+│                                                                          │
+│   ┌─────────────┐         Encrypted WireGuard          ┌─────────────┐   │
+│   │   Windows   │◄───────────Tunnel───────────────────►│   NetBird   │   │
+│   │   Machine   │                                      │   Server    │   │
+│   │   Tunnel    │                                      │             │   │
+│   └──────┬──────┘                                      └─────────────┘   │
+│          │                                                    │          │
+│          │ Machine Certificate (mTLS)                         │          │
+│          │                                                    │          │
+│          ▼                                                    ▼          │
+│   ┌─────────────┐                                      ┌─────────────┐   │
+│   │   Windows   │      Kerberos, LDAP, DNS, SMB        │   Domain    │   │
+│   │   Login     │◄────────────────────────────────────►│ Controller  │   │
+│   │   Screen    │                                      │             │   │
+│   └─────────────┘                                      └─────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
-### Testimonials
-We use open-source technologies like [WireGuard®](https://www.wireguard.com/), [Pion ICE (WebRTC)](https://github.com/pion/ice), [Coturn](https://github.com/coturn/coturn), and [Rosenpass](https://rosenpass.eu). We very much appreciate the work these guys are doing and we'd greatly appreciate if you could support them in any way (e.g., by giving a star or a contribution).
+**What happens step by step:**
 
-### Legal
-This repository is licensed under BSD-3-Clause license that applies to all parts of the repository except for the directories management/, signal/ and relay/.
-Those directories are licensed under the GNU Affero General Public License version 3.0 (AGPLv3). See the respective LICENSE files inside each directory.
+1. **Computer boots** — Windows starts the Machine Tunnel service automatically
+2. **Certificate authentication** — The service proves identity using the computer's AD CS certificate
+3. **Tunnel established** — Secure WireGuard connection to your NetBird server
+4. **Domain Controller reachable** — AD traffic flows through the tunnel
+5. **User logs in** — Kerberos works, even from a coffee shop halfway around the world
 
-_WireGuard_ and the _WireGuard_ logo are [registered trademarks](https://www.wireguard.com/trademark-policy/) of Jason A. Donenfeld.
- 
+---
 
+## For End Users
+
+### What You Need to Know
+
+**Good news:** If your IT department set this up, you don't need to do anything. Machine Tunnel runs automatically in the background, invisible to you.
+
+**What changes for you:**
+
+| Situation | Before | With Machine Tunnel |
+|-----------|--------|---------------------|
+| First login on new laptop (remote) | ❌ "Cannot contact domain controller" | ✅ Works normally |
+| Password expired while working remotely | ❌ Stuck until you visit the office | ✅ Can change password |
+| Cached credentials expired | ❌ Cannot log in | ✅ Fresh authentication from AD |
+
+### Checking If It's Working
+
+Want to verify? Open PowerShell and run:
+
+```powershell
+Get-Service NetBirdMachine
+```
+
+You should see:
+
+```
+Status   Name             DisplayName
+------   ----             -----------
+Running  NetBirdMachine   NetBird Machine Tunnel
+```
+
+### Common Questions
+
+**Q: Do I need to start the VPN manually?**
+No. Machine Tunnel starts automatically when your computer boots — even before you see the login screen.
+
+**Q: Will this slow down my computer?**
+No. The tunnel uses minimal resources and WireGuard is known for its performance.
+
+**Q: What if I see "Cannot contact domain controller"?**
+Contact your IT department. They can check the tunnel status and help you.
+
+---
+
+## For Administrators
+
+### Prerequisites
+
+| Requirement | Details |
+|-------------|---------|
+| **Windows** | Windows 10 or 11 (64-bit) |
+| **Active Directory** | AD CS (Certificate Services) with machine certificate template |
+| **Certificate** | Machine cert with SAN containing `hostname.domain` |
+| **NetBird Server** | This fork with mTLS enabled |
+| **Network** | Outbound access to ports 443 and 33074 |
+
+### Architecture at a Glance
+
+Machine Tunnel uses a **Router-Peer** design — your Domain Controllers remain completely untouched:
+
+```
+Windows Clients ──► WireGuard Mesh ──► Router-Peer VM ──► Domain Controllers
+                                       (Linux, routing)
+```
+
+**Key benefits:**
+- No software changes on Domain Controllers
+- Easy to add redundancy (multiple Router-Peers)
+- Clean audit trail (no NAT masking)
+
+> **Full details:** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for network diagrams, port requirements, and design decisions.
+
+### Installation
+
+#### Step 1: Prepare Your Server
+
+Enable mTLS on the management server:
+
+```bash
+NETBIRD_MTLS_ENABLED=true
+NETBIRD_MTLS_CA_FILE=/path/to/your-enterprise-ca.crt
+NETBIRD_MTLS_PORT=33074
+```
+
+#### Step 2: Deploy to Windows Machines
+
+```powershell
+# Install the service
+.\netbird-machine.exe install
+
+# Verify it's running
+Get-Service NetBirdMachine
+```
+
+Or use the installation script for automated deployment:
+
+```powershell
+.\scripts\install-netbird-machine.ps1 -ManagementURL "https://netbird.example.com" -SetupKey "your-key"
+```
+
+#### Step 3: Bootstrap New Machines
+
+New machines use a two-phase process:
+
+1. **Phase 1 (Setup Key):** Temporary key for initial connection and domain join
+2. **Phase 2 (mTLS):** Machine certificate for permanent authentication
+
+After the machine joins the domain and enrolls its certificate, the Setup Key is no longer needed.
+
+> **Full details:** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#two-phase-authentication) for the complete bootstrap sequence.
+
+### Configuration
+
+Config file: `C:\ProgramData\NetBird\machine-config.yaml`
+
+```yaml
+management_url: "https://netbird.example.com:443"
+
+# After certificate enrollment:
+machine_cert_enabled: true
+
+# Sensitive values are DPAPI-encrypted automatically:
+# encrypted_private_key: <encrypted>
+# encrypted_ssh_key: <encrypted>
+```
+
+**Security features built-in:**
+- All secrets encrypted with Windows DPAPI (machine-bound)
+- Config directory restricted to SYSTEM and Administrators
+- Setup Key automatically removed after mTLS transition
+
+### Security Checklist
+
+Before going to production, verify these items:
+
+| Check | Command |
+|-------|---------|
+| Service runs as SYSTEM | `Get-WmiObject Win32_Service -Filter "Name='NetBirdMachine'" \| Select StartName` |
+| Config is encrypted | `Get-Content "C:\ProgramData\NetBird\machine-config.yaml"` — look for `encrypted_` prefix |
+| Permissions restricted | `Get-Acl "C:\ProgramData\NetBird"` — only SYSTEM and Administrators |
+| Certificate has correct SAN | Check certificate contains `hostname.domain` in SAN |
+| mTLS port listening (server) | `ss -tlnp \| grep 33074` |
+
+> **Full checklist:** See [docs/SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md) for complete production hardening guide with verification scripts.
+
+### Verification
+
+After deployment, test connectivity:
+
+```powershell
+# 1. Service running?
+Get-Service NetBirdMachine
+
+# 2. Tunnel interface up?
+Get-NetAdapter | Where-Object { $_.Name -like "wg*" }
+
+# 3. Can reach Domain Controller?
+Test-NetConnection -ComputerName dc01.yourdomain.local -Port 389
+```
+
+### Troubleshooting Preview
+
+**Service won't start?**
+```powershell
+Get-Content "C:\ProgramData\NetBird\machine-tunnel.log" -Tail 50
+```
+
+**Tunnel up but can't reach DC?**
+- Check Router-Peer is running
+- Verify route exists: `route print | Select-String "192.168"`
+
+**DNS not resolving AD names?**
+```powershell
+# Check NRPT rules
+Get-DnsClientNrptRule
+
+# Clear DNS cache
+Clear-DnsClientCache
+```
+
+> **Full guide:** See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for step-by-step diagnostics and solutions.
+
+---
+
+## What This Fork Adds to NetBird
+
+This fork includes **all standard NetBird features** plus the following additions for Windows AD environments:
+
+| Feature | What It Does |
+|---------|--------------|
+| **Machine Tunnel Service** | Windows SYSTEM service that runs before user login |
+| **mTLS Authentication** | Machine certificates from AD CS (in addition to Setup Keys, SSO, OIDC) |
+| **NRPT DNS Routing** | Domain-specific DNS routing for AD traffic |
+| **Windows Firewall Integration** | Port-level access control for Domain Controller traffic |
+| **DPAPI Key Storage** | Hardware-bound encryption for sensitive configuration |
+| **Dedicated mTLS Port (33074)** | Separate port for machine certificate authentication |
+
+**Everything else works exactly like standard NetBird** — your existing NetBird clients, configurations, and workflows remain compatible.
+
+---
+
+## Migration from Upstream NetBird
+
+### Can I Use Just the Machine Tunnel Feature?
+
+**No.** The Machine Tunnel requires server-side changes that don't exist in upstream NetBird:
+- mTLS authentication endpoint (port 33074)
+- `RegisterMachinePeer` and `SyncMachinePeer` RPCs
+- Per-account domain mapping for multi-tenant isolation
+
+You need to deploy this fork's management server to use Machine Tunnel.
+
+### Migrating an Existing NetBird Installation
+
+If you're already running NetBird and want to add Machine Tunnel capability:
+
+**Step 1: Replace the Management Server**
+- Deploy this fork's management server
+- Your existing configuration and peers will continue to work
+- Standard NetBird clients are 100% compatible
+
+**Step 2: Add Machine Tunnel to Windows Clients**
+- Install `netbird-machine.exe` on machines that need pre-login VPN
+- The standard `netbird` client can remain installed for post-login use
+- Both services can coexist on the same machine
+
+**Step 3: Configure mTLS**
+- Set up AD CS certificate template
+- Enable mTLS on the management server
+- Enroll machine certificates on Windows clients
+
+### Running Both Clients
+
+You can run both the standard NetBird client and Machine Tunnel on the same Windows machine:
+
+| Service | Runs As | When | Purpose |
+|---------|---------|------|---------|
+| `netbird` | Current User | After login | General VPN access |
+| `netbird-machine` | SYSTEM | Before login | AD authentication |
+
+They use separate configurations and don't interfere with each other.
+
+---
+
+## Testing & Compatibility
+
+### What We Tested
+
+The Machine Tunnel feature was tested in our lab environment:
+
+| Component | Test Environment | What Was Verified |
+|-----------|------------------|-------------------|
+| **Windows Client** | Windows 11 (22H2) | Service lifecycle, DPAPI encryption, tunnel establishment |
+| **Management Server** | Ubuntu 22.04 (Docker) | mTLS authentication, peer registration, multi-tenant isolation |
+| **Domain Controller** | Windows Server 2022 | Certificate enrollment, Kerberos authentication |
+| **Network** | Proxmox virtualization | Router-Peer routing, NRPT DNS, firewall rules |
+
+**Tested scenarios:**
+- Fresh machine bootstrap with Setup Key
+- Domain join through tunnel
+- Certificate enrollment from AD CS
+- mTLS transition (Setup Key → Certificate)
+- Service restart with key persistence
+- Pre-login domain authentication
+
+### What Comes from Upstream NetBird
+
+The following components are inherited from NetBird and verified through their CI/CD:
+
+| Component | Verified By |
+|-----------|-------------|
+| WireGuard tunnel implementation | NetBird CI |
+| Peer-to-peer connectivity | NetBird CI |
+| NAT traversal (STUN/TURN) | NetBird CI |
+| Signal and Relay servers | NetBird CI |
+| Management API (non-mTLS) | NetBird CI |
+| Cross-platform clients (macOS, Linux, iOS, Android) | NetBird CI |
+| Web dashboard | NetBird CI |
+
+**Note:** We run NetBird's existing test suite as part of our CI, but we have not independently verified every upstream feature in our lab environment.
+
+### Known Limitations
+
+| Limitation | Details |
+|------------|---------|
+| Windows only | Machine Tunnel client supports Windows 10/11 only |
+| AD CS required | Machine certificates must come from Active Directory Certificate Services |
+| No CRL checking | Certificate revocation checking is not yet implemented |
+
+---
+
+## Documentation
+
+| Document | What's Inside |
+|----------|---------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Network topology, component design, bootstrap sequence |
+| [SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md) | DPAPI, file permissions, mTLS setup, production checklist |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Health checks, diagnostics, common problems with solutions |
+| [CHANGELOG.md](CHANGELOG.md) | All changes from upstream with file listings |
+| [NOTICE.md](NOTICE.md) | License attribution and modification summary |
+
+---
+
+## Building from Source
+
+**Requirements:**
+- Go 1.21+
+- For Windows builds from Linux: MinGW-w64
+
+**Build:**
+
+```bash
+# Windows binary
+GOOS=windows GOARCH=amd64 go build -o netbird-machine.exe ./client/cmd/netbird-machine
+
+# With CGO (for DPAPI)
+CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -o netbird-machine.exe ./client/cmd/netbird-machine
+```
+
+**Test:**
+
+```bash
+go test ./client/internal/tunnel/...
+```
+
+---
+
+## License
+
+Licensed under **GNU Affero General Public License v3.0 (AGPL-3.0)** — same as NetBird.
+
+- You can use, modify, and distribute this software
+- If you modify and deploy it, you must share your source code
+- Full text: [LICENSE](LICENSE)
+
+### Attribution
+
+Based on [NetBird](https://github.com/netbirdio/netbird) by the NetBird Authors.
+
+See [CHANGELOG.md](CHANGELOG.md) for technical details of our modifications.
+See [NOTICE.md](NOTICE.md) for modification summary and attribution.
+
+---
+
+## Contributing
+
+For general NetBird improvements, please contribute to the [upstream project](https://github.com/netbirdio/netbird).
+
+For Machine Tunnel-specific issues, open an issue here.
+
+---
+
+*Thank you to the NetBird team for creating such excellent open-source software.*

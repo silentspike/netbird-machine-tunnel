@@ -30,7 +30,7 @@ import (
 	nbpeer "github.com/netbirdio/netbird/management/server/peer"
 	"github.com/netbirdio/netbird/shared/management/status"
 
-	// Machine Tunnel Fork: mTLS DNS label generation
+	// === MACHINE-TUNNEL-FORK: mTLS DNS label generation ===
 	"github.com/netbirdio/netbird/management/internals/shared/mtls"
 )
 
@@ -418,9 +418,11 @@ func (am *DefaultAccountManager) GetPeerNetwork(ctx context.Context, peerID stri
 // Each new Peer will be assigned a new next net.IP from the Account.Network and Account.Network.LastIP will be updated (IP's are not reused).
 // The peer property is just a placeholder for the Peer properties to pass further
 func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKey, userID string, peer *nbpeer.Peer, temporary bool) (*nbpeer.Peer, *types.NetworkMap, []*posture.Checks, error) {
-	// Machine Tunnel Fork: mTLS as third auth method (alongside setup key and user/SSO)
+	// === MACHINE-TUNNEL-FORK START ===
+	// mTLS as third auth method (alongside setup key and user/SSO)
 	mTLSIdentity := mtls.GetIdentity(ctx)
 	addedByMTLS := mTLSIdentity != nil && setupKey == "" && userID == ""
+	// === MACHINE-TUNNEL-FORK END ===
 
 	if setupKey == "" && userID == "" && !addedByMTLS {
 		// no auth method provided => reject access
@@ -454,8 +456,9 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 	var groupsToAdd []string
 	var allowExtraDNSLabels bool
 	switch {
+	// === MACHINE-TUNNEL-FORK START ===
 	case addedByMTLS:
-		// Machine Tunnel Fork: mTLS-authenticated machine peer
+		// mTLS-authenticated machine peer
 		accountID = mTLSIdentity.AccountID
 		opEvent.InitiatorID = mTLSIdentity.DNSName
 		opEvent.Activity = activity.PeerAddedWithMTLS
@@ -463,6 +466,7 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 		ephemeral = false
 		log.WithContext(ctx).Infof("Adding machine peer via mTLS: DNS=%s, Account=%s",
 			mTLSIdentity.DNSName, mTLSIdentity.AccountID)
+	// === MACHINE-TUNNEL-FORK END ===
 	case addedByUser:
 		user, err := am.Store.GetUserByUserID(ctx, store.LockingStrengthNone, userID)
 		if err != nil {
@@ -581,8 +585,9 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 		}
 
 		var freeLabel string
-		// Machine Tunnel Fork: Use hash-based DNS label for mTLS peers
-		// This prevents collisions across different domains with same hostname
+		// === MACHINE-TUNNEL-FORK START ===
+		// Use hash-based DNS label for mTLS peers to prevent collisions
+		// across different domains with same hostname
 		switch {
 		case peer.Meta.CertDNSName != "" && peer.Meta.CertDomain != "":
 			// mTLS peer: use FQDN-hash based label for uniqueness
@@ -594,6 +599,7 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 					return nil, nil, nil, fmt.Errorf("failed to get free DNS label: %w", err)
 				}
 			}
+		// === MACHINE-TUNNEL-FORK END ===
 		case ephemeral || attempt > 1:
 			freeLabel, err = getPeerIPDNSLabel(freeIP, peer.Meta.Hostname)
 			if err != nil {
@@ -634,10 +640,11 @@ func (am *DefaultAccountManager) AddPeer(ctx context.Context, accountID, setupKe
 				if err != nil {
 					log.WithContext(ctx).Debugf("failed to update user last login: %v", err)
 				}
+			// === MACHINE-TUNNEL-FORK START ===
 			case addedByMTLS:
-				// Machine Tunnel Fork: mTLS peers don't use setup keys
-				// No setup key usage to increment, no user login to save
+				// mTLS peers don't use setup keys - no usage to increment
 				log.WithContext(ctx).Debugf("mTLS peer added without setup key: %s", newPeer.DNSLabel)
+			// === MACHINE-TUNNEL-FORK END ===
 			default:
 				sk, err := transaction.GetSetupKeyBySecret(ctx, store.LockingStrengthUpdate, encodedHashedKey)
 				if err != nil {
