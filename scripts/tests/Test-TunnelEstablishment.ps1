@@ -232,28 +232,34 @@ Write-Host "  Testing DC reachability (DNS port 53)..." -ForegroundColor Gray
 $dnsTest = Test-NetConnection -ComputerName $DCAddress -Port 53 -WarningAction SilentlyContinue
 Write-TestResult "TC1.6: DC DNS (53/TCP)" $dnsTest.TcpTestSucceeded "Connected: $($dnsTest.TcpTestSucceeded)"
 
-# TC1.7: Kerberos TGT
+# TC1.7: Kerberos TGT (Machine Account - SYSTEM Session)
+# For Pre-Login VPN, we check the SYSTEM session (0x3e7) because Machine Tunnel runs as SYSTEM
 if ($SkipKerberos) {
     Write-TestResult "TC1.7: Kerberos TGT" $false -Skip "Skipped via -SkipKerberos flag"
 } else {
-    Write-Host "  Checking Kerberos TGT..." -ForegroundColor Gray
-    $klistOutput = klist 2>&1 | Out-String
-    $hasTGT = $klistOutput -match "krbtgt/" -or $klistOutput -match "Ticket\(s\)"
+    Write-Host "  Checking Kerberos TGT (SYSTEM session 0x3e7)..." -ForegroundColor Gray
+    # Machine Tunnel runs as SYSTEM - check SYSTEM session for machine account tickets
+    $klistOutput = klist -li 0x3e7 2>&1 | Out-String
+    $hasTGT = $klistOutput -match "krbtgt/" -and $klistOutput -match "Cached Tickets:"
 
-    if ($hasTGT -and $klistOutput -notmatch "Error" -and $klistOutput -notmatch "No tickets") {
-        Write-TestResult "TC1.7: Kerberos TGT" $true "TGT found in cache"
+    if ($hasTGT -and $klistOutput -notmatch "Error" -and $klistOutput -notmatch "0x0") {
+        # Count tickets for detail
+        $ticketCount = ([regex]::Matches($klistOutput, "#\d+>")).Count
+        Write-TestResult "TC1.7: Kerberos TGT" $true "Machine TGT found ($ticketCount tickets in SYSTEM cache)"
         if ($VerbosePreference -eq "Continue") {
             # Extract ticket info
-            $tickets = $klistOutput -split "`n" | Where-Object { $_ -match "Server:" -or $_ -match "KerbTicket" }
-            foreach ($t in $tickets) {
+            $tickets = $klistOutput -split "`n" | Where-Object { $_ -match "Server:" -or $_ -match "Client:" }
+            foreach ($t in $tickets | Select-Object -First 4) {
                 Write-Host "         $($t.Trim())" -ForegroundColor Gray
             }
         }
     } else {
-        Write-TestResult "TC1.7: Kerberos TGT" $false "No TGT in cache"
+        Write-TestResult "TC1.7: Kerberos TGT" $false "No Machine TGT in SYSTEM cache"
         if ($VerbosePreference -eq "Continue") {
-            Write-Host "         klist output:" -ForegroundColor Gray
-            Write-Host "         $klistOutput" -ForegroundColor Gray
+            Write-Host "         klist -li 0x3e7 output:" -ForegroundColor Gray
+            $klistOutput -split "`n" | Select-Object -First 10 | ForEach-Object {
+                Write-Host "         $_" -ForegroundColor Gray
+            }
         }
     }
 }
