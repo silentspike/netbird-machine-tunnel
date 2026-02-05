@@ -64,8 +64,10 @@ type BaseServer struct {
 	certManager *autocert.Manager
 	update      *version.Update
 
-	// Machine Tunnel Fork: Separate mTLS server for machine peers
+	// === MACHINE-TUNNEL-FORK START ===
+	// Separate mTLS server for machine certificate authentication
 	mtlsServer *MTLSServer
+	// === MACHINE-TUNNEL-FORK END ===
 
 	errCh  chan error
 	wg     sync.WaitGroup
@@ -183,11 +185,13 @@ func (s *BaseServer) Start(ctx context.Context) error {
 		}
 	}
 
-	// Machine Tunnel Fork: Start separate mTLS server if enabled
+	// === MACHINE-TUNNEL-FORK START ===
+	// Start separate mTLS server for machine certificate authentication
 	if err := s.startMTLSServer(srvCtx); err != nil {
 		log.WithContext(srvCtx).Warnf("mTLS server not started: %v", err)
 		// Continue - mTLS is optional, main server should still work
 	}
+	// === MACHINE-TUNNEL-FORK END ===
 
 	for _, fn := range s.afterInit {
 		if fn != nil {
@@ -226,10 +230,12 @@ func (s *BaseServer) Stop() error {
 		_ = s.certManager.Listener().Close()
 	}
 	s.GRPCServer().Stop()
-	// Machine Tunnel Fork: Stop mTLS server if running
+	// === MACHINE-TUNNEL-FORK START ===
+	// Stop mTLS server if running
 	if s.mtlsServer != nil {
 		s.mtlsServer.Stop()
 	}
+	// === MACHINE-TUNNEL-FORK END ===
 	_ = s.Store().Close(ctx)
 	_ = s.EventStore().Close(ctx)
 	if s.update != nil {
