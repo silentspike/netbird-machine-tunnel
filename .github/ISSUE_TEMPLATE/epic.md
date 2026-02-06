@@ -1,19 +1,20 @@
 ---
 name: Epic
-about: Großes Feature das mehrere Stories umfasst
+about: Large feature spanning multiple stories and tasks
 title: '[Epic] E-X: '
-labels: type:epic, priority:critical, phase:mvp
+labels: type:epic
 assignees: ''
 ---
 
-## Epic Beschreibung
-Was ist das übergeordnete Ziel dieses Epics?
+## Description
+
+What is the high-level goal of this epic?
 
 ## Business Value
-Welchen Wert bringt dieses Epic für den User/das Projekt?
+
+What value does this epic provide for users or the project?
 
 ## Scope
-Was ist Teil dieses Epics? Was ist NICHT Teil?
 
 **In Scope:**
 -
@@ -22,18 +23,29 @@ Was ist Teil dieses Epics? Was ist NICHT Teil?
 -
 
 ## Stories
-<!-- Liste der zugehörigen Stories -->
+
+<!-- List related stories. Create them as separate issues and link here. -->
 - [ ] S-1: ...
 - [ ] S-2: ...
 
 ## Acceptance Criteria
-<!-- Wann gilt das Epic als abgeschlossen? -->
+
+<!-- When is this epic considered complete? -->
 - [ ] ...
 
 ## Dependencies
-<!-- Abhängigkeiten zu anderen Epics/externen Systemen -->
+
+<!-- Dependencies on other epics, external systems, or upstream NetBird changes -->
 -
 
 ## Risks
-<!-- Bekannte Risiken -->
+
+<!-- Known risks and mitigations -->
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| | | |
+
+## Security Considerations
+
+<!-- Does this epic affect authentication, encryption, or access control? -->
 -

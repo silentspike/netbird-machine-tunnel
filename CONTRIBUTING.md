@@ -1,307 +1,179 @@
-# Contributing to NetBird
+# Contributing to NetBird Machine Tunnel Edition
 
-Thanks for your interest in contributing to NetBird. 
+Thank you for your interest in contributing to this project.
 
-There are many ways that you can contribute:
-- Reporting issues
-- Updating documentation
-- Sharing use cases in slack or Reddit
-- Bug fix or feature enhancement
+This is a fork of [NetBird](https://github.com/netbirdio/netbird) that adds a Machine Tunnel feature for Windows pre-login VPN. Contributions to both the Machine Tunnel feature and general improvements are welcome.
 
-If you haven't already, join our slack workspace [here](https://join.slack.com/t/netbirdio/shared_invite/zt-vrahf41g-ik1v7fV8du6t0RwxSrJ96A), we would love to discuss topics that need community contribution and enhancements to existing features.
+## Where to Report Issues
 
-## Contents
+| Type | Where |
+|------|-------|
+| Machine Tunnel bugs/features | [This repository](https://github.com/obtFusi/netbird-fork/issues) |
+| Standard NetBird bugs/features | [Upstream NetBird](https://github.com/netbirdio/netbird/issues) |
+| Security vulnerabilities | See [SECURITY.md](SECURITY.md) |
+| General questions | [Upstream NetBird Discussions](https://github.com/netbirdio/netbird/discussions) |
 
-- [Contributing to NetBird](#contributing-to-netbird)
-    - [Contents](#contents)
-    - [Code of conduct](#code-of-conduct)
-    - [Directory structure](#directory-structure)
-    - [Development setup](#development-setup)
-        - [Requirements](#requirements)
-        - [Local NetBird setup](#local-netbird-setup)
-        - [Dev Container Support](#dev-container-support)
-        - [Build and start](#build-and-start)
-        - [Test suite](#test-suite)
-    - [Checklist before submitting a PR](#checklist-before-submitting-a-pr)
-    - [Other project repositories](#other-project-repositories)
-    - [Contributor License Agreement](#contributor-license-agreement)
+If you are unsure whether an issue belongs here or upstream, open it here and we will redirect if needed.
 
-## Code of conduct
+## Code of Conduct
 
-This project and everyone participating in it are governed by the Code of
-Conduct which can be found in the file [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-By participating, you are expected to uphold this code. Please report
-unacceptable behavior to community@netbird.io.
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
-## Directory structure
+## How to Contribute
 
-The NetBird project monorepo is organized to maintain most of its individual dependencies code within their directories, except for a few auxiliary or shared packages.
-
-The most important directories are:
-
-- [/.github](/.github) - Github actions workflow files and issue templates
-- [/client](/client) - NetBird agent code
-- [/client/cmd](/client/cmd) - NetBird agent cli code
-- [/client/internal](/client/internal) - NetBird agent business logic code
-- [/client/proto](/client/proto) - NetBird agent daemon GRPC proto files
-- [/client/server](/client/server) - NetBird agent daemon code for background execution
-- [/client/ui](/client/ui) - NetBird agent UI code
-- [/encryption](/encryption) - Contain main encryption code for agent communication
-- [/iface](/iface) - Wireguard® interface code
-- [/infrastructure_files](/infrastructure_files) - Getting started files containing docker and template scripts
-- [/management](/management) - Management service code
-- [/management/client](/management/client) - Management service client code which is imported by the agent code
-- [/management/proto](/management/proto) - Management service GRPC proto files
-- [/management/server](/management/server) - Management service server code
-- [/management/server/http](/management/server/http) - Management service REST API code
-- [/management/server/idp](/management/server/idp) - Management service IDP management code
-- [/release_files](/release_files) - Files that goes into release packages
-- [/signal](/signal) - Signal service code
-- [/signal/client](/signal/client) - Signal service client code which is imported by the agent code
-- [/signal/peer](/signal/peer) - Signal service peer message logic
-- [/signal/proto](/signal/proto) - Signal service GRPC proto files
-- [/signal/server](/signal/server) - Signal service server code
-
-
-## Development setup
-
-If you want to contribute to bug fixes or improve existing features, you have to ensure that all needed
-dependencies are installed. Here is a short guide on how that can be done.
-
-### Requirements
-
-#### Go 1.21
-
-Follow the installation guide from https://go.dev/
-
-#### UI client - Fyne toolkit 
-
-We use the fyne toolkit in our UI client. You can follow its requirement guide to have all its dependencies installed: https://developer.fyne.io/started/#prerequisites
-
-#### gRPC
-You can follow the instructions from the quickstarter guide https://grpc.io/docs/languages/go/quickstart/#prerequisites and then run the `generate.sh` files located in each `proto` directory to generate changes.
-> **IMPORTANT**: We are very open to contributions that can improve the client daemon protocol. For Signal and Management protocols, please reach out on slack or via github issues with your proposals.
-
-#### Docker
-
-Follow the installation guide from https://docs.docker.com/get-docker/
-
-#### Goreleaser and golangci-lint
-
-We utilize two tools in our Github actions workflows:
-- Goreleaser: Used for release packaging. You can follow the installation steps [here](https://goreleaser.com/install/); keep in mind to match the version defined in [release.yml](/.github/workflows/release.yml)
-- golangci-lint: Used for linting checks. You can follow the installation steps [here](https://golangci-lint.run/usage/install/); keep in mind to match the version defined in [golangci-lint.yml](/.github/workflows/golangci-lint.yml)
-
-They can be executed from the repository root before every push or PR:
-
-**Goreleaser**
-```shell
-goreleaser build --snapshot --clean
-```
-**golangci-lint**
-```shell
-golangci-lint run
-```
-
-### Local NetBird setup
-
-> **IMPORTANT**: All the steps below have to get executed at least once to get the development setup up and running!
-
-Now that everything NetBird requires to run is installed, the actual NetBird code can be
-checked out and set up:
-
-1. [Fork](https://guides.github.com/activities/forking/#fork) the NetBird repository
-
-2. Clone your forked repository
-
-   ```
-   git clone https://github.com/<your_github_username>/netbird.git
-   ```
-
-3. Go into the repository folder
-
-   ```
-   cd netbird
-   ```
-
-4. Add the original NetBird repository as `upstream` to your forked repository
-
-   ```
-   git remote add upstream https://github.com/netbirdio/netbird.git
-   ```
-
-5. Install all Go dependencies:
-
-   ```
-   go mod tidy
-   ```
-
-6. Configure Git hooks for automatic linting:
-
-   ```bash
-   make setup-hooks
-   ```
-
-   This will configure Git to run linting automatically before each push, helping catch issues early.
-
-### Dev Container Support
-
-If you prefer using a dev container for development, NetBird now includes support for dev containers. 
-Dev containers provide a consistent and isolated development environment, making it easier for contributors to get started quickly. Follow the steps below to set up NetBird in a dev container.
-
-#### 1. Prerequisites:
-
-* Install Docker on your machine: [Docker Installation Guide](https://docs.docker.com/get-docker/)
-* Install Visual Studio Code: [VS Code Installation Guide](https://code.visualstudio.com/download)
-* If you prefer JetBrains Goland please follow this [manual](https://www.jetbrains.com/help/go/connect-to-devcontainer.html)
-
-#### 2. Clone the Repository:
-
-Clone the repository following previous [Local NetBird setup](#local-netbird-setup).
-
-#### 3. Open in project in IDE of your choice:
-
-**VScode**:
-
-Open the project folder in Visual Studio Code:
+### 1. Fork and Clone
 
 ```bash
-code .
+git clone https://github.com/<your_username>/netbird-fork.git
+cd netbird-fork
+git remote add upstream https://github.com/obtFusi/netbird-fork.git
 ```
 
-When you open the project in VS Code, it will detect the presence of a dev container configuration.
-Click on the green "Reopen in Container" button in the bottom-right corner of VS Code.
+### 2. Create a Branch
 
-**Goland**:
-
-Open GoLand and select `"File" > "Open"` to open the NetBird project folder.
-GoLand will detect the dev container configuration and prompt you to open the project in the container. Accept the prompt.
-
-#### 4. Wait for the Container to Build:
-
-VsCode or GoLand will use the specified Docker image to build the dev container. This might take some time, depending on your internet connection.
-
-#### 6. Development:
-
-Once the container is built, you can start developing within the dev container. All the necessary dependencies and configurations are set up within the container.
-
-
-### Build and start
-#### Client
-
-To start NetBird, execute:
-```
-cd client
-CGO_ENABLED=0 go build .
+```bash
+git checkout -b feature/your-feature-name
 ```
 
-> Windows clients have a Wireguard driver requirement. You can download the wintun driver from https://www.wintun.net/builds/wintun-0.14.1.zip, after decompressing, you can copy the file `windtun\bin\ARCH\wintun.dll` to the same path as your binary file or to `C:\Windows\System32\wintun.dll`.
+### 3. Make Changes
 
-> To test the client GUI application on Windows machines with RDP or vituralized environments (e.g. virtualbox or cloud), you need to download and extract the opengl32.dll from https://fdossena.com/?p=mesa/index.frag next to the built application.
+- Follow existing code patterns and style
+- Add tests for new functionality
+- Update documentation for user-visible changes
 
-To start NetBird the client in the foreground:
+### 4. Test
 
-```
-sudo ./client up --log-level debug --log-file console
-```
-> On Windows use a powershell with administrator privileges
-#### Signal service
+```bash
+# Run all tests
+go test ./...
 
-To start NetBird's signal, execute:
+# Run Machine Tunnel specific tests
+go test ./client/internal/tunnel/...
+go test ./management/internals/shared/grpc/... -run MachineTunnel
 
-```
-cd signal
-go build .
-```
+# Run linter
+golangci-lint run
 
-To start NetBird the signal service:
-
-```
-./signal run --log-level debug --log-file console
+# Build Windows binary
+GOOS=windows GOARCH=amd64 go build -o bin/netbird-machine.exe ./client/cmd/netbird-machine
 ```
 
-#### Management service
-> You may need to generate a configuration file for management. Follow steps 2 to 5 from our [self-hosting guide](https://netbird.io/docs/getting-started/self-hosting).
+### 5. Submit a Pull Request
 
-To start NetBird's management, execute:
+Open a PR against the `main` branch with a clear description of what changed and why.
 
-```
-cd management
-go build .
-```
+## Directory Structure
 
-To start NetBird the management service:
+This fork follows the standard NetBird directory structure with additions:
 
-```
-./management management --log-level debug --log-file console --config ./management.json
-```
+### Fork-Specific Directories
 
-#### Windows Netbird Installer
-Create dist directory
-```shell
-mkdir -p dist/netbird_windows_amd64
-```
+| Path | Purpose |
+|------|---------|
+| `client/cmd/netbird-machine/` | Machine Tunnel Windows service |
+| `client/internal/tunnel/` | Machine Tunnel core logic |
+| `management/internals/server/mtls_*` | Server-side mTLS authentication |
+| `management/internals/shared/mtls/` | mTLS identity extraction |
+| `scripts/` | Deployment and testing scripts |
+| `docs/` | Architecture and security documentation |
 
-UI client
-```shell
-CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o netbird-ui.exe -ldflags "-s -w -H windowsgui" ./client/ui
-mv netbird-ui.exe ./dist/netbird_windows_amd64/
-```
+### Standard NetBird Directories
 
-Client
-```shell
-CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o netbird.exe ./client/
-mv netbird.exe ./dist/netbird_windows_amd64/
-```
-> Windows clients have a Wireguard driver requirement. You can download the wintun driver from https://www.wintun.net/builds/wintun-0.14.1.zip, after decompressing, you can copy the file `windtun\bin\ARCH\wintun.dll` to `./dist/netbird_windows_amd64/`.
+| Path | Purpose |
+|------|---------|
+| `client/` | NetBird client agent |
+| `management/` | Management server |
+| `signal/` | Signal server |
+| `relay/` | Relay server |
+| `shared/` | Shared protobuf definitions and utilities |
 
-NSIS compiler
-- [Windows-nsis]( https://nsis.sourceforge.io/Download)
-- [MacOS-makensis](https://formulae.brew.sh/formula/makensis#default)
-- [Linux-makensis](https://manpages.ubuntu.com/manpages/trusty/man1/makensis.1.html)
+For the complete upstream directory structure, see the [NetBird CONTRIBUTING.md](https://github.com/netbirdio/netbird/blob/main/CONTRIBUTING.md).
 
-NSIS Plugins. Download and move them to the NSIS plugins folder.
-- [EnVar](https://nsis.sourceforge.io/mediawiki/images/7/7f/EnVar_plugin.zip)
-- [ShellExecAsUser](https://nsis.sourceforge.io/mediawiki/images/6/68/ShellExecAsUser_amd64-Unicode.7z)
+## Understanding Fork-Specific Code
 
-Windows Installer
-```shell
-export APPVER=0.0.0.1
-makensis -V4 client/installer.nsis
+Code added or modified by this fork is marked with comments:
+
+```go
+// === MACHINE-TUNNEL-FORK START ===
+// Description of what this block does
+yourCode()
+// === MACHINE-TUNNEL-FORK END ===
 ```
 
-The installer `netbird-installer.exe` will be created in root directory.
+These markers serve two purposes:
+1. Help contributors identify fork-specific code vs upstream code
+2. Assist with merge conflict resolution during upstream syncs
 
-### Test suite
+**When modifying upstream files**, always use these markers around your changes.
 
-The tests can be started via:
+## Development Requirements
 
-```
-cd netbird
-go test -exec sudo ./...
-```
-> On Windows use a powershell with administrator privileges
+- **Go 1.21+** (see `go.mod` for exact version)
+- **golangci-lint** (matching version in `.github/workflows/golangci-lint.yml`)
+- **protoc** with `protoc-gen-go` and `protoc-gen-go-grpc` (for proto changes)
 
-> Non-GTK environments will need the `libayatana-appindicator3-dev` (debian/ubuntu) package installed
+### Windows-Specific Development
 
-## Checklist before submitting a PR
-As a critical network service and open-source project, we must enforce a few things before submitting the pull-requests:
-- Keep functions as simple as possible, with a single purpose
-- Use private functions and constants where possible
-- Comment on any new public functions
-- Add unit tests for any new public function
+Machine Tunnel features require testing on Windows:
 
-> When pushing fixes to the PR comments, please push as separate commits; we will squash the PR before merging, so there is no need to squash it before pushing it, and we are more than okay with 10-100 commits in a single PR. This helps review the fixes to the requested changes.
+- Windows 10/11 or Windows Server 2019+
+- Active Directory environment (for certificate tests)
+- Administrator privileges (for service installation)
 
-## Other project repositories
+## Pull Request Checklist
 
-NetBird project is composed of 3 main repositories:
-- NetBird: This repository, which contains the code for the agents and control plane services.
-- Dashboard: https://github.com/netbirdio/dashboard, contains the Administration UI for the management service
-- Documentations: https://github.com/netbirdio/docs, contains the documentation from https://netbird.io/docs
+Before submitting a PR, verify:
+
+- [ ] Code compiles without errors (`go build ./...`)
+- [ ] All tests pass (`go test ./...`)
+- [ ] Linter passes (`golangci-lint run`)
+- [ ] Windows cross-compilation succeeds (`GOOS=windows GOARCH=amd64 go build ./client/cmd/netbird-machine`)
+- [ ] New public functions have tests
+- [ ] User-visible changes are documented in the PR description
+- [ ] CHANGELOG.md is updated for features and bug fixes
+- [ ] Fork-specific code uses `MACHINE-TUNNEL-FORK` markers in upstream files
+- [ ] No secrets, credentials, or internal IPs in the code
+
+## Upstream Synchronization
+
+This fork is regularly synchronized with upstream NetBird via an automated workflow. The sync runs weekly and creates a PR for manual review.
+
+When contributing, keep in mind:
+- Avoid modifying upstream files when possible
+- When modifications are necessary, use `MACHINE-TUNNEL-FORK` markers
+- Activity IDs 150+ are reserved for this fork (upstream uses 0-149)
+- Keep fork-specific code isolated in dedicated files/packages
+
+## Coding Guidelines
+
+### Go Style
+
+- Follow standard Go conventions (`gofmt`, `go vet`)
+- Wrap errors with context: `fmt.Errorf("operation description: %w", err)`
+- Use `context.Context` for cancellation
+- Keep interfaces small and focused
+
+### Windows-Specific Code
+
+- Use `_windows.go` suffix for Windows-only files
+- Use `golang.org/x/sys/windows` for Windows API calls
+- Store sensitive data with DPAPI, not plaintext
+- Use registry paths under `HKLM:\SOFTWARE\NetBird\Machine`
+
+### Security
+
+- Validate certificates via SAN DNSName, not CN
+- Use `VerifiedChains` for issuer fingerprinting
+- Never log private keys, certificates, or credentials
+- Scope firewall rules to the `wg-nb-machine` interface
 
 ## Contributor License Agreement
 
-That we do not have any potential problems later it is sadly necessary to sign a [Contributor License Agreement](CONTRIBUTOR_LICENSE_AGREEMENT.md). That can be done literally with the push of a button.
+By submitting a pull request, you agree to the terms of the [Contributor License Agreement](CONTRIBUTOR_LICENSE_AGREEMENT.md).
 
-A bot will automatically comment on the pull request once it got opened asking for the agreement to be signed. Before it did not get signed it is sadly not possible to merge it in.
+## Need Help?
+
+- Read the [Architecture Documentation](docs/ARCHITECTURE.md) to understand the system
+- Check the [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for common issues
+- Review existing [issues](https://github.com/obtFusi/netbird-fork/issues) for context
+- Open a discussion if you need guidance on an approach
