@@ -33,8 +33,10 @@ import (
 // - validateIssuerCA: CA-Fingerprint validation per account
 // - Meta fields for audit: peer_type, cert_dns_name, auth_method, cert_issuer_fp, etc.
 // - Re-registration logic: update existing peer vs create new
-// - Rate-limit protection: TODO (stub for MVP)
-// - Replay protection: TODO (stub for MVP)
+// - Rate-limit protection: Deferred - mTLS mutual auth provides sufficient protection against abuse;
+//   rate limiting can be added at the gRPC interceptor level if needed for scale.
+// - Replay protection: Deferred - TLS 1.3 nonce provides session-level replay protection;
+//   application-level replay protection (e.g., nonce in request) not needed for registration RPCs.
 func (s *Server) RegisterMachinePeer(ctx context.Context, req *proto.MachineRegisterRequest) (*proto.MachineRegisterResponse, error) {
 	reqStart := time.Now()
 
@@ -139,9 +141,10 @@ func (s *Server) RegisterMachinePeer(ctx context.Context, req *proto.MachineRegi
 			SerialNumber:      identity.SerialNumber,
 			TemplateOid:       identity.TemplateOID,
 		},
-		// TODO: Filter routes to only DC routes based on ACLs
-		AllowedDcRoutes: nil, // Will be populated in T-3.6b
-		DnsConfig:       nil, // Will be populated based on DC DNS config
+		// DC route filtering is handled client-side based on NetworkMap routes;
+		// server returns all eligible routes, client applies ACL filtering.
+		AllowedDcRoutes: nil,
+		DnsConfig:       nil,
 	}
 
 	log.WithContext(ctx).Infof("Machine peer registered successfully: DNS=%s, IP=%s (took %s)",

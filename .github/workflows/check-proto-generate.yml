@@ -6,6 +6,9 @@ on:
       - 'shared/management/proto/*.proto'
       - 'Makefile'
 
+permissions:
+  contents: read
+
 jobs:
   check-generate:
     runs-on: ubuntu-latest
