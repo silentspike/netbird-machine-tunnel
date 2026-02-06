@@ -195,8 +195,19 @@ const (
 	DNSRecordUpdated Activity = 100
 	DNSRecordDeleted Activity = 101
 
-	// Machine Tunnel Fork: mTLS peer registration activity
-	PeerAddedWithMTLS Activity = 102
+	JobCreatedByUser Activity = 102
+
+	UserPasswordChanged Activity = 103
+
+	UserInviteLinkCreated     Activity = 104
+	UserInviteLinkAccepted    Activity = 105
+	UserInviteLinkRegenerated Activity = 106
+	UserInviteLinkDeleted     Activity = 107
+
+	// === MACHINE-TUNNEL-FORK START ===
+	// mTLS peer registration activity (ID 150+ reserved for fork extensions)
+	PeerAddedWithMTLS Activity = 150
+	// === MACHINE-TUNNEL-FORK END ===
 
 	AccountDeleted Activity = 99999
 )
@@ -323,8 +334,18 @@ var activityMap = map[Activity]Code{
 	DNSRecordUpdated: {"DNS zone record updated", "dns.zone.record.update"},
 	DNSRecordDeleted: {"DNS zone record deleted", "dns.zone.record.delete"},
 
-	// Machine Tunnel Fork
+	JobCreatedByUser: {"Create Job for peer", "peer.job.create"},
+
+	UserPasswordChanged: {"User password changed", "user.password.change"},
+
+	UserInviteLinkCreated:     {"User invite link created", "user.invite.link.create"},
+	UserInviteLinkAccepted:    {"User invite link accepted", "user.invite.link.accept"},
+	UserInviteLinkRegenerated: {"User invite link regenerated", "user.invite.link.regenerate"},
+	UserInviteLinkDeleted:     {"User invite link deleted", "user.invite.link.delete"},
+
+	// === MACHINE-TUNNEL-FORK START ===
 	PeerAddedWithMTLS: {"Machine peer added via mTLS", "peer.mtls.add"},
+	// === MACHINE-TUNNEL-FORK END ===
 }
 
 // StringCode returns a string code of the activity
