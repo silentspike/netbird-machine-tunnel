@@ -23,6 +23,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type JobStatus int32
+
+const (
+	JobStatus_unknown_status JobStatus = 0 //placeholder
+	JobStatus_succeeded      JobStatus = 1
+	JobStatus_failed         JobStatus = 2
+)
+
+// Enum value maps for JobStatus.
+var (
+	JobStatus_name = map[int32]string{
+		0: "unknown_status",
+		1: "succeeded",
+		2: "failed",
+	}
+	JobStatus_value = map[string]int32{
+		"unknown_status": 0,
+		"succeeded":      1,
+		"failed":         2,
+	}
+)
+
+func (x JobStatus) Enum() *JobStatus {
+	p := new(JobStatus)
+	*p = x
+	return p
+}
+
+func (x JobStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (JobStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_shared_management_proto_management_proto_enumTypes[0].Descriptor()
+}
+
+func (JobStatus) Type() protoreflect.EnumType {
+	return &file_shared_management_proto_management_proto_enumTypes[0]
+}
+
+func (x JobStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use JobStatus.Descriptor instead.
+func (JobStatus) EnumDescriptor() ([]byte, []int) {
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{0}
+}
+
 type RuleProtocol int32
 
 const (
@@ -65,11 +114,11 @@ func (x RuleProtocol) String() string {
 }
 
 func (RuleProtocol) Descriptor() protoreflect.EnumDescriptor {
-	return file_shared_management_proto_management_proto_enumTypes[0].Descriptor()
+	return file_shared_management_proto_management_proto_enumTypes[1].Descriptor()
 }
 
 func (RuleProtocol) Type() protoreflect.EnumType {
-	return &file_shared_management_proto_management_proto_enumTypes[0]
+	return &file_shared_management_proto_management_proto_enumTypes[1]
 }
 
 func (x RuleProtocol) Number() protoreflect.EnumNumber {
@@ -78,7 +127,7 @@ func (x RuleProtocol) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RuleProtocol.Descriptor instead.
 func (RuleProtocol) EnumDescriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{0}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{1}
 }
 
 type RuleDirection int32
@@ -111,11 +160,11 @@ func (x RuleDirection) String() string {
 }
 
 func (RuleDirection) Descriptor() protoreflect.EnumDescriptor {
-	return file_shared_management_proto_management_proto_enumTypes[1].Descriptor()
+	return file_shared_management_proto_management_proto_enumTypes[2].Descriptor()
 }
 
 func (RuleDirection) Type() protoreflect.EnumType {
-	return &file_shared_management_proto_management_proto_enumTypes[1]
+	return &file_shared_management_proto_management_proto_enumTypes[2]
 }
 
 func (x RuleDirection) Number() protoreflect.EnumNumber {
@@ -124,7 +173,7 @@ func (x RuleDirection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RuleDirection.Descriptor instead.
 func (RuleDirection) EnumDescriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{1}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{2}
 }
 
 type RuleAction int32
@@ -157,11 +206,11 @@ func (x RuleAction) String() string {
 }
 
 func (RuleAction) Descriptor() protoreflect.EnumDescriptor {
-	return file_shared_management_proto_management_proto_enumTypes[2].Descriptor()
+	return file_shared_management_proto_management_proto_enumTypes[3].Descriptor()
 }
 
 func (RuleAction) Type() protoreflect.EnumType {
-	return &file_shared_management_proto_management_proto_enumTypes[2]
+	return &file_shared_management_proto_management_proto_enumTypes[3]
 }
 
 func (x RuleAction) Number() protoreflect.EnumNumber {
@@ -170,7 +219,7 @@ func (x RuleAction) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RuleAction.Descriptor instead.
 func (RuleAction) EnumDescriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{2}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{3}
 }
 
 // MachineUpdateType indicates what triggered the sync update.
@@ -213,11 +262,11 @@ func (x MachineUpdateType) String() string {
 }
 
 func (MachineUpdateType) Descriptor() protoreflect.EnumDescriptor {
-	return file_shared_management_proto_management_proto_enumTypes[3].Descriptor()
+	return file_shared_management_proto_management_proto_enumTypes[4].Descriptor()
 }
 
 func (MachineUpdateType) Type() protoreflect.EnumType {
-	return &file_shared_management_proto_management_proto_enumTypes[3]
+	return &file_shared_management_proto_management_proto_enumTypes[4]
 }
 
 func (x MachineUpdateType) Number() protoreflect.EnumNumber {
@@ -226,7 +275,7 @@ func (x MachineUpdateType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use MachineUpdateType.Descriptor instead.
 func (MachineUpdateType) EnumDescriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{3}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{4}
 }
 
 type HostConfig_Protocol int32
@@ -268,11 +317,11 @@ func (x HostConfig_Protocol) String() string {
 }
 
 func (HostConfig_Protocol) Descriptor() protoreflect.EnumDescriptor {
-	return file_shared_management_proto_management_proto_enumTypes[4].Descriptor()
+	return file_shared_management_proto_management_proto_enumTypes[5].Descriptor()
 }
 
 func (HostConfig_Protocol) Type() protoreflect.EnumType {
-	return &file_shared_management_proto_management_proto_enumTypes[4]
+	return &file_shared_management_proto_management_proto_enumTypes[5]
 }
 
 func (x HostConfig_Protocol) Number() protoreflect.EnumNumber {
@@ -281,7 +330,7 @@ func (x HostConfig_Protocol) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use HostConfig_Protocol.Descriptor instead.
 func (HostConfig_Protocol) EnumDescriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{14, 0}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{18, 0}
 }
 
 type DeviceAuthorizationFlowProvider int32
@@ -311,11 +360,11 @@ func (x DeviceAuthorizationFlowProvider) String() string {
 }
 
 func (DeviceAuthorizationFlowProvider) Descriptor() protoreflect.EnumDescriptor {
-	return file_shared_management_proto_management_proto_enumTypes[5].Descriptor()
+	return file_shared_management_proto_management_proto_enumTypes[6].Descriptor()
 }
 
 func (DeviceAuthorizationFlowProvider) Type() protoreflect.EnumType {
-	return &file_shared_management_proto_management_proto_enumTypes[5]
+	return &file_shared_management_proto_management_proto_enumTypes[6]
 }
 
 func (x DeviceAuthorizationFlowProvider) Number() protoreflect.EnumNumber {
@@ -324,7 +373,7 @@ func (x DeviceAuthorizationFlowProvider) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DeviceAuthorizationFlowProvider.Descriptor instead.
 func (DeviceAuthorizationFlowProvider) EnumDescriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{27, 0}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{31, 0}
 }
 
 type EncryptedMessage struct {
@@ -390,6 +439,282 @@ func (x *EncryptedMessage) GetVersion() int32 {
 	return 0
 }
 
+type JobRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	ID    []byte                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	// Types that are valid to be assigned to WorkloadParameters:
+	//
+	//	*JobRequest_Bundle
+	WorkloadParameters isJobRequest_WorkloadParameters `protobuf_oneof:"workload_parameters"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *JobRequest) Reset() {
+	*x = JobRequest{}
+	mi := &file_shared_management_proto_management_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JobRequest) ProtoMessage() {}
+
+func (x *JobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_shared_management_proto_management_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JobRequest.ProtoReflect.Descriptor instead.
+func (*JobRequest) Descriptor() ([]byte, []int) {
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *JobRequest) GetID() []byte {
+	if x != nil {
+		return x.ID
+	}
+	return nil
+}
+
+func (x *JobRequest) GetWorkloadParameters() isJobRequest_WorkloadParameters {
+	if x != nil {
+		return x.WorkloadParameters
+	}
+	return nil
+}
+
+func (x *JobRequest) GetBundle() *BundleParameters {
+	if x != nil {
+		if x, ok := x.WorkloadParameters.(*JobRequest_Bundle); ok {
+			return x.Bundle
+		}
+	}
+	return nil
+}
+
+type isJobRequest_WorkloadParameters interface {
+	isJobRequest_WorkloadParameters()
+}
+
+type JobRequest_Bundle struct {
+	Bundle *BundleParameters `protobuf:"bytes,10,opt,name=bundle,proto3,oneof"` //OtherParameters other = 11;
+}
+
+func (*JobRequest_Bundle) isJobRequest_WorkloadParameters() {}
+
+type JobResponse struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	ID     []byte                 `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Status JobStatus              `protobuf:"varint,2,opt,name=status,proto3,enum=management.JobStatus" json:"status,omitempty"`
+	Reason []byte                 `protobuf:"bytes,3,opt,name=Reason,proto3" json:"Reason,omitempty"`
+	// Types that are valid to be assigned to WorkloadResults:
+	//
+	//	*JobResponse_Bundle
+	WorkloadResults isJobResponse_WorkloadResults `protobuf_oneof:"workload_results"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *JobResponse) Reset() {
+	*x = JobResponse{}
+	mi := &file_shared_management_proto_management_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JobResponse) ProtoMessage() {}
+
+func (x *JobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_shared_management_proto_management_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JobResponse.ProtoReflect.Descriptor instead.
+func (*JobResponse) Descriptor() ([]byte, []int) {
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *JobResponse) GetID() []byte {
+	if x != nil {
+		return x.ID
+	}
+	return nil
+}
+
+func (x *JobResponse) GetStatus() JobStatus {
+	if x != nil {
+		return x.Status
+	}
+	return JobStatus_unknown_status
+}
+
+func (x *JobResponse) GetReason() []byte {
+	if x != nil {
+		return x.Reason
+	}
+	return nil
+}
+
+func (x *JobResponse) GetWorkloadResults() isJobResponse_WorkloadResults {
+	if x != nil {
+		return x.WorkloadResults
+	}
+	return nil
+}
+
+func (x *JobResponse) GetBundle() *BundleResult {
+	if x != nil {
+		if x, ok := x.WorkloadResults.(*JobResponse_Bundle); ok {
+			return x.Bundle
+		}
+	}
+	return nil
+}
+
+type isJobResponse_WorkloadResults interface {
+	isJobResponse_WorkloadResults()
+}
+
+type JobResponse_Bundle struct {
+	Bundle *BundleResult `protobuf:"bytes,10,opt,name=bundle,proto3,oneof"` //OtherResult other = 11;
+}
+
+func (*JobResponse_Bundle) isJobResponse_WorkloadResults() {}
+
+type BundleParameters struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	BundleFor     bool                   `protobuf:"varint,1,opt,name=bundle_for,json=bundleFor,proto3" json:"bundle_for,omitempty"`
+	BundleForTime int64                  `protobuf:"varint,2,opt,name=bundle_for_time,json=bundleForTime,proto3" json:"bundle_for_time,omitempty"`
+	LogFileCount  int32                  `protobuf:"varint,3,opt,name=log_file_count,json=logFileCount,proto3" json:"log_file_count,omitempty"`
+	Anonymize     bool                   `protobuf:"varint,4,opt,name=anonymize,proto3" json:"anonymize,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BundleParameters) Reset() {
+	*x = BundleParameters{}
+	mi := &file_shared_management_proto_management_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BundleParameters) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BundleParameters) ProtoMessage() {}
+
+func (x *BundleParameters) ProtoReflect() protoreflect.Message {
+	mi := &file_shared_management_proto_management_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BundleParameters.ProtoReflect.Descriptor instead.
+func (*BundleParameters) Descriptor() ([]byte, []int) {
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *BundleParameters) GetBundleFor() bool {
+	if x != nil {
+		return x.BundleFor
+	}
+	return false
+}
+
+func (x *BundleParameters) GetBundleForTime() int64 {
+	if x != nil {
+		return x.BundleForTime
+	}
+	return 0
+}
+
+func (x *BundleParameters) GetLogFileCount() int32 {
+	if x != nil {
+		return x.LogFileCount
+	}
+	return 0
+}
+
+func (x *BundleParameters) GetAnonymize() bool {
+	if x != nil {
+		return x.Anonymize
+	}
+	return false
+}
+
+type BundleResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UploadKey     string                 `protobuf:"bytes,1,opt,name=upload_key,json=uploadKey,proto3" json:"upload_key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BundleResult) Reset() {
+	*x = BundleResult{}
+	mi := &file_shared_management_proto_management_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BundleResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BundleResult) ProtoMessage() {}
+
+func (x *BundleResult) ProtoReflect() protoreflect.Message {
+	mi := &file_shared_management_proto_management_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BundleResult.ProtoReflect.Descriptor instead.
+func (*BundleResult) Descriptor() ([]byte, []int) {
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *BundleResult) GetUploadKey() string {
+	if x != nil {
+		return x.UploadKey
+	}
+	return ""
+}
+
 type SyncRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Meta data of the peer
@@ -400,7 +725,7 @@ type SyncRequest struct {
 
 func (x *SyncRequest) Reset() {
 	*x = SyncRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[1]
+	mi := &file_shared_management_proto_management_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -412,7 +737,7 @@ func (x *SyncRequest) String() string {
 func (*SyncRequest) ProtoMessage() {}
 
 func (x *SyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[1]
+	mi := &file_shared_management_proto_management_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -425,7 +750,7 @@ func (x *SyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRequest.ProtoReflect.Descriptor instead.
 func (*SyncRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{1}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SyncRequest) GetMeta() *PeerSystemMeta {
@@ -456,7 +781,7 @@ type SyncResponse struct {
 
 func (x *SyncResponse) Reset() {
 	*x = SyncResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[2]
+	mi := &file_shared_management_proto_management_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -468,7 +793,7 @@ func (x *SyncResponse) String() string {
 func (*SyncResponse) ProtoMessage() {}
 
 func (x *SyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[2]
+	mi := &file_shared_management_proto_management_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -481,7 +806,7 @@ func (x *SyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncResponse.ProtoReflect.Descriptor instead.
 func (*SyncResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{2}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SyncResponse) GetNetbirdConfig() *NetbirdConfig {
@@ -536,7 +861,7 @@ type SyncMetaRequest struct {
 
 func (x *SyncMetaRequest) Reset() {
 	*x = SyncMetaRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[3]
+	mi := &file_shared_management_proto_management_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -548,7 +873,7 @@ func (x *SyncMetaRequest) String() string {
 func (*SyncMetaRequest) ProtoMessage() {}
 
 func (x *SyncMetaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[3]
+	mi := &file_shared_management_proto_management_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -561,7 +886,7 @@ func (x *SyncMetaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncMetaRequest.ProtoReflect.Descriptor instead.
 func (*SyncMetaRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{3}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SyncMetaRequest) GetMeta() *PeerSystemMeta {
@@ -588,7 +913,7 @@ type LoginRequest struct {
 
 func (x *LoginRequest) Reset() {
 	*x = LoginRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[4]
+	mi := &file_shared_management_proto_management_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -600,7 +925,7 @@ func (x *LoginRequest) String() string {
 func (*LoginRequest) ProtoMessage() {}
 
 func (x *LoginRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[4]
+	mi := &file_shared_management_proto_management_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -613,7 +938,7 @@ func (x *LoginRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginRequest.ProtoReflect.Descriptor instead.
 func (*LoginRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{4}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *LoginRequest) GetSetupKey() string {
@@ -665,7 +990,7 @@ type PeerKeys struct {
 
 func (x *PeerKeys) Reset() {
 	*x = PeerKeys{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[5]
+	mi := &file_shared_management_proto_management_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -677,7 +1002,7 @@ func (x *PeerKeys) String() string {
 func (*PeerKeys) ProtoMessage() {}
 
 func (x *PeerKeys) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[5]
+	mi := &file_shared_management_proto_management_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -690,7 +1015,7 @@ func (x *PeerKeys) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerKeys.ProtoReflect.Descriptor instead.
 func (*PeerKeys) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{5}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *PeerKeys) GetSshPubKey() []byte {
@@ -720,7 +1045,7 @@ type Environment struct {
 
 func (x *Environment) Reset() {
 	*x = Environment{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[6]
+	mi := &file_shared_management_proto_management_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -732,7 +1057,7 @@ func (x *Environment) String() string {
 func (*Environment) ProtoMessage() {}
 
 func (x *Environment) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[6]
+	mi := &file_shared_management_proto_management_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -745,7 +1070,7 @@ func (x *Environment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Environment.ProtoReflect.Descriptor instead.
 func (*Environment) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{6}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Environment) GetCloud() string {
@@ -777,7 +1102,7 @@ type File struct {
 
 func (x *File) Reset() {
 	*x = File{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[7]
+	mi := &file_shared_management_proto_management_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -789,7 +1114,7 @@ func (x *File) String() string {
 func (*File) ProtoMessage() {}
 
 func (x *File) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[7]
+	mi := &file_shared_management_proto_management_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -802,7 +1127,7 @@ func (x *File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use File.ProtoReflect.Descriptor instead.
 func (*File) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{7}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *File) GetPath() string {
@@ -849,7 +1174,7 @@ type Flags struct {
 
 func (x *Flags) Reset() {
 	*x = Flags{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[8]
+	mi := &file_shared_management_proto_management_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -861,7 +1186,7 @@ func (x *Flags) String() string {
 func (*Flags) ProtoMessage() {}
 
 func (x *Flags) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[8]
+	mi := &file_shared_management_proto_management_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -874,7 +1199,7 @@ func (x *Flags) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Flags.ProtoReflect.Descriptor instead.
 func (*Flags) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{8}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Flags) GetRosenpassEnabled() bool {
@@ -1008,7 +1333,7 @@ type PeerSystemMeta struct {
 
 func (x *PeerSystemMeta) Reset() {
 	*x = PeerSystemMeta{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[9]
+	mi := &file_shared_management_proto_management_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1020,7 +1345,7 @@ func (x *PeerSystemMeta) String() string {
 func (*PeerSystemMeta) ProtoMessage() {}
 
 func (x *PeerSystemMeta) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[9]
+	mi := &file_shared_management_proto_management_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1033,7 +1358,7 @@ func (x *PeerSystemMeta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerSystemMeta.ProtoReflect.Descriptor instead.
 func (*PeerSystemMeta) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{9}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *PeerSystemMeta) GetHostname() string {
@@ -1169,7 +1494,7 @@ type LoginResponse struct {
 
 func (x *LoginResponse) Reset() {
 	*x = LoginResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[10]
+	mi := &file_shared_management_proto_management_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1181,7 +1506,7 @@ func (x *LoginResponse) String() string {
 func (*LoginResponse) ProtoMessage() {}
 
 func (x *LoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[10]
+	mi := &file_shared_management_proto_management_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1194,7 +1519,7 @@ func (x *LoginResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
 func (*LoginResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{10}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *LoginResponse) GetNetbirdConfig() *NetbirdConfig {
@@ -1232,7 +1557,7 @@ type ServerKeyResponse struct {
 
 func (x *ServerKeyResponse) Reset() {
 	*x = ServerKeyResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[11]
+	mi := &file_shared_management_proto_management_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1244,7 +1569,7 @@ func (x *ServerKeyResponse) String() string {
 func (*ServerKeyResponse) ProtoMessage() {}
 
 func (x *ServerKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[11]
+	mi := &file_shared_management_proto_management_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1257,7 +1582,7 @@ func (x *ServerKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerKeyResponse.ProtoReflect.Descriptor instead.
 func (*ServerKeyResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{11}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ServerKeyResponse) GetKey() string {
@@ -1289,7 +1614,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[12]
+	mi := &file_shared_management_proto_management_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1301,7 +1626,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[12]
+	mi := &file_shared_management_proto_management_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1314,7 +1639,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{12}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{16}
 }
 
 // NetbirdConfig is a common configuration of any Netbird peer. It contains STUN, TURN, Signal and Management servers configurations
@@ -1334,7 +1659,7 @@ type NetbirdConfig struct {
 
 func (x *NetbirdConfig) Reset() {
 	*x = NetbirdConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[13]
+	mi := &file_shared_management_proto_management_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1346,7 +1671,7 @@ func (x *NetbirdConfig) String() string {
 func (*NetbirdConfig) ProtoMessage() {}
 
 func (x *NetbirdConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[13]
+	mi := &file_shared_management_proto_management_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1359,7 +1684,7 @@ func (x *NetbirdConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetbirdConfig.ProtoReflect.Descriptor instead.
 func (*NetbirdConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{13}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *NetbirdConfig) GetStuns() []*HostConfig {
@@ -1409,7 +1734,7 @@ type HostConfig struct {
 
 func (x *HostConfig) Reset() {
 	*x = HostConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[14]
+	mi := &file_shared_management_proto_management_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1421,7 +1746,7 @@ func (x *HostConfig) String() string {
 func (*HostConfig) ProtoMessage() {}
 
 func (x *HostConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[14]
+	mi := &file_shared_management_proto_management_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1434,7 +1759,7 @@ func (x *HostConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HostConfig.ProtoReflect.Descriptor instead.
 func (*HostConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{14}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *HostConfig) GetUri() string {
@@ -1462,7 +1787,7 @@ type RelayConfig struct {
 
 func (x *RelayConfig) Reset() {
 	*x = RelayConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[15]
+	mi := &file_shared_management_proto_management_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1474,7 +1799,7 @@ func (x *RelayConfig) String() string {
 func (*RelayConfig) ProtoMessage() {}
 
 func (x *RelayConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[15]
+	mi := &file_shared_management_proto_management_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1487,7 +1812,7 @@ func (x *RelayConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RelayConfig.ProtoReflect.Descriptor instead.
 func (*RelayConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{15}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *RelayConfig) GetUrls() []string {
@@ -1530,7 +1855,7 @@ type FlowConfig struct {
 
 func (x *FlowConfig) Reset() {
 	*x = FlowConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[16]
+	mi := &file_shared_management_proto_management_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1542,7 +1867,7 @@ func (x *FlowConfig) String() string {
 func (*FlowConfig) ProtoMessage() {}
 
 func (x *FlowConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[16]
+	mi := &file_shared_management_proto_management_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1555,7 +1880,7 @@ func (x *FlowConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FlowConfig.ProtoReflect.Descriptor instead.
 func (*FlowConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{16}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *FlowConfig) GetUrl() string {
@@ -1631,7 +1956,7 @@ type JWTConfig struct {
 
 func (x *JWTConfig) Reset() {
 	*x = JWTConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[17]
+	mi := &file_shared_management_proto_management_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1643,7 +1968,7 @@ func (x *JWTConfig) String() string {
 func (*JWTConfig) ProtoMessage() {}
 
 func (x *JWTConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[17]
+	mi := &file_shared_management_proto_management_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1656,7 +1981,7 @@ func (x *JWTConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JWTConfig.ProtoReflect.Descriptor instead.
 func (*JWTConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{17}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *JWTConfig) GetIssuer() string {
@@ -1707,7 +2032,7 @@ type ProtectedHostConfig struct {
 
 func (x *ProtectedHostConfig) Reset() {
 	*x = ProtectedHostConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[18]
+	mi := &file_shared_management_proto_management_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1719,7 +2044,7 @@ func (x *ProtectedHostConfig) String() string {
 func (*ProtectedHostConfig) ProtoMessage() {}
 
 func (x *ProtectedHostConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[18]
+	mi := &file_shared_management_proto_management_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1732,7 +2057,7 @@ func (x *ProtectedHostConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProtectedHostConfig.ProtoReflect.Descriptor instead.
 func (*ProtectedHostConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{18}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ProtectedHostConfig) GetHostConfig() *HostConfig {
@@ -1779,7 +2104,7 @@ type PeerConfig struct {
 
 func (x *PeerConfig) Reset() {
 	*x = PeerConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[19]
+	mi := &file_shared_management_proto_management_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1791,7 +2116,7 @@ func (x *PeerConfig) String() string {
 func (*PeerConfig) ProtoMessage() {}
 
 func (x *PeerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[19]
+	mi := &file_shared_management_proto_management_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1804,7 +2129,7 @@ func (x *PeerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerConfig.ProtoReflect.Descriptor instead.
 func (*PeerConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{19}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *PeerConfig) GetAddress() string {
@@ -1875,7 +2200,7 @@ type AutoUpdateSettings struct {
 
 func (x *AutoUpdateSettings) Reset() {
 	*x = AutoUpdateSettings{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[20]
+	mi := &file_shared_management_proto_management_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1887,7 +2212,7 @@ func (x *AutoUpdateSettings) String() string {
 func (*AutoUpdateSettings) ProtoMessage() {}
 
 func (x *AutoUpdateSettings) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[20]
+	mi := &file_shared_management_proto_management_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1900,7 +2225,7 @@ func (x *AutoUpdateSettings) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AutoUpdateSettings.ProtoReflect.Descriptor instead.
 func (*AutoUpdateSettings) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{20}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AutoUpdateSettings) GetVersion() string {
@@ -1953,7 +2278,7 @@ type NetworkMap struct {
 
 func (x *NetworkMap) Reset() {
 	*x = NetworkMap{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[21]
+	mi := &file_shared_management_proto_management_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1965,7 +2290,7 @@ func (x *NetworkMap) String() string {
 func (*NetworkMap) ProtoMessage() {}
 
 func (x *NetworkMap) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[21]
+	mi := &file_shared_management_proto_management_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1978,7 +2303,7 @@ func (x *NetworkMap) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkMap.ProtoReflect.Descriptor instead.
 func (*NetworkMap) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{21}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *NetworkMap) GetSerial() uint64 {
@@ -2086,7 +2411,7 @@ type SSHAuth struct {
 
 func (x *SSHAuth) Reset() {
 	*x = SSHAuth{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[22]
+	mi := &file_shared_management_proto_management_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2098,7 +2423,7 @@ func (x *SSHAuth) String() string {
 func (*SSHAuth) ProtoMessage() {}
 
 func (x *SSHAuth) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[22]
+	mi := &file_shared_management_proto_management_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2111,7 +2436,7 @@ func (x *SSHAuth) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SSHAuth.ProtoReflect.Descriptor instead.
 func (*SSHAuth) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{22}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *SSHAuth) GetUserIDClaim() string {
@@ -2144,7 +2469,7 @@ type MachineUserIndexes struct {
 
 func (x *MachineUserIndexes) Reset() {
 	*x = MachineUserIndexes{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[23]
+	mi := &file_shared_management_proto_management_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2156,7 +2481,7 @@ func (x *MachineUserIndexes) String() string {
 func (*MachineUserIndexes) ProtoMessage() {}
 
 func (x *MachineUserIndexes) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[23]
+	mi := &file_shared_management_proto_management_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2169,7 +2494,7 @@ func (x *MachineUserIndexes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineUserIndexes.ProtoReflect.Descriptor instead.
 func (*MachineUserIndexes) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{23}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *MachineUserIndexes) GetIndexes() []uint32 {
@@ -2198,7 +2523,7 @@ type RemotePeerConfig struct {
 
 func (x *RemotePeerConfig) Reset() {
 	*x = RemotePeerConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[24]
+	mi := &file_shared_management_proto_management_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2210,7 +2535,7 @@ func (x *RemotePeerConfig) String() string {
 func (*RemotePeerConfig) ProtoMessage() {}
 
 func (x *RemotePeerConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[24]
+	mi := &file_shared_management_proto_management_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2223,7 +2548,7 @@ func (x *RemotePeerConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemotePeerConfig.ProtoReflect.Descriptor instead.
 func (*RemotePeerConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{24}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *RemotePeerConfig) GetWgPubKey() string {
@@ -2276,7 +2601,7 @@ type SSHConfig struct {
 
 func (x *SSHConfig) Reset() {
 	*x = SSHConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[25]
+	mi := &file_shared_management_proto_management_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2288,7 +2613,7 @@ func (x *SSHConfig) String() string {
 func (*SSHConfig) ProtoMessage() {}
 
 func (x *SSHConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[25]
+	mi := &file_shared_management_proto_management_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2301,7 +2626,7 @@ func (x *SSHConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SSHConfig.ProtoReflect.Descriptor instead.
 func (*SSHConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{25}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SSHConfig) GetSshEnabled() bool {
@@ -2334,7 +2659,7 @@ type DeviceAuthorizationFlowRequest struct {
 
 func (x *DeviceAuthorizationFlowRequest) Reset() {
 	*x = DeviceAuthorizationFlowRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[26]
+	mi := &file_shared_management_proto_management_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2346,7 +2671,7 @@ func (x *DeviceAuthorizationFlowRequest) String() string {
 func (*DeviceAuthorizationFlowRequest) ProtoMessage() {}
 
 func (x *DeviceAuthorizationFlowRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[26]
+	mi := &file_shared_management_proto_management_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2359,7 +2684,7 @@ func (x *DeviceAuthorizationFlowRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviceAuthorizationFlowRequest.ProtoReflect.Descriptor instead.
 func (*DeviceAuthorizationFlowRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{26}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{30}
 }
 
 // DeviceAuthorizationFlow represents Device Authorization Flow information
@@ -2376,7 +2701,7 @@ type DeviceAuthorizationFlow struct {
 
 func (x *DeviceAuthorizationFlow) Reset() {
 	*x = DeviceAuthorizationFlow{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[27]
+	mi := &file_shared_management_proto_management_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2388,7 +2713,7 @@ func (x *DeviceAuthorizationFlow) String() string {
 func (*DeviceAuthorizationFlow) ProtoMessage() {}
 
 func (x *DeviceAuthorizationFlow) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[27]
+	mi := &file_shared_management_proto_management_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2401,7 +2726,7 @@ func (x *DeviceAuthorizationFlow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviceAuthorizationFlow.ProtoReflect.Descriptor instead.
 func (*DeviceAuthorizationFlow) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{27}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *DeviceAuthorizationFlow) GetProvider() DeviceAuthorizationFlowProvider {
@@ -2427,7 +2752,7 @@ type PKCEAuthorizationFlowRequest struct {
 
 func (x *PKCEAuthorizationFlowRequest) Reset() {
 	*x = PKCEAuthorizationFlowRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[28]
+	mi := &file_shared_management_proto_management_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2439,7 +2764,7 @@ func (x *PKCEAuthorizationFlowRequest) String() string {
 func (*PKCEAuthorizationFlowRequest) ProtoMessage() {}
 
 func (x *PKCEAuthorizationFlowRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[28]
+	mi := &file_shared_management_proto_management_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2452,7 +2777,7 @@ func (x *PKCEAuthorizationFlowRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PKCEAuthorizationFlowRequest.ProtoReflect.Descriptor instead.
 func (*PKCEAuthorizationFlowRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{28}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{32}
 }
 
 // PKCEAuthorizationFlow represents Authorization Code Flow information
@@ -2467,7 +2792,7 @@ type PKCEAuthorizationFlow struct {
 
 func (x *PKCEAuthorizationFlow) Reset() {
 	*x = PKCEAuthorizationFlow{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[29]
+	mi := &file_shared_management_proto_management_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2479,7 +2804,7 @@ func (x *PKCEAuthorizationFlow) String() string {
 func (*PKCEAuthorizationFlow) ProtoMessage() {}
 
 func (x *PKCEAuthorizationFlow) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[29]
+	mi := &file_shared_management_proto_management_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2492,7 +2817,7 @@ func (x *PKCEAuthorizationFlow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PKCEAuthorizationFlow.ProtoReflect.Descriptor instead.
 func (*PKCEAuthorizationFlow) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{29}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *PKCEAuthorizationFlow) GetProviderConfig() *ProviderConfig {
@@ -2536,7 +2861,7 @@ type ProviderConfig struct {
 
 func (x *ProviderConfig) Reset() {
 	*x = ProviderConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[30]
+	mi := &file_shared_management_proto_management_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2548,7 +2873,7 @@ func (x *ProviderConfig) String() string {
 func (*ProviderConfig) ProtoMessage() {}
 
 func (x *ProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[30]
+	mi := &file_shared_management_proto_management_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2561,7 +2886,7 @@ func (x *ProviderConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProviderConfig.ProtoReflect.Descriptor instead.
 func (*ProviderConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{30}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *ProviderConfig) GetClientID() string {
@@ -2667,7 +2992,7 @@ type Route struct {
 
 func (x *Route) Reset() {
 	*x = Route{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[31]
+	mi := &file_shared_management_proto_management_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2679,7 +3004,7 @@ func (x *Route) String() string {
 func (*Route) ProtoMessage() {}
 
 func (x *Route) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[31]
+	mi := &file_shared_management_proto_management_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2692,7 +3017,7 @@ func (x *Route) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Route.ProtoReflect.Descriptor instead.
 func (*Route) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{31}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *Route) GetID() string {
@@ -2779,7 +3104,7 @@ type DNSConfig struct {
 
 func (x *DNSConfig) Reset() {
 	*x = DNSConfig{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[32]
+	mi := &file_shared_management_proto_management_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2791,7 +3116,7 @@ func (x *DNSConfig) String() string {
 func (*DNSConfig) ProtoMessage() {}
 
 func (x *DNSConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[32]
+	mi := &file_shared_management_proto_management_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2804,7 +3129,7 @@ func (x *DNSConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DNSConfig.ProtoReflect.Descriptor instead.
 func (*DNSConfig) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{32}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *DNSConfig) GetServiceEnable() bool {
@@ -2851,7 +3176,7 @@ type CustomZone struct {
 
 func (x *CustomZone) Reset() {
 	*x = CustomZone{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[33]
+	mi := &file_shared_management_proto_management_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2863,7 +3188,7 @@ func (x *CustomZone) String() string {
 func (*CustomZone) ProtoMessage() {}
 
 func (x *CustomZone) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[33]
+	mi := &file_shared_management_proto_management_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2876,7 +3201,7 @@ func (x *CustomZone) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CustomZone.ProtoReflect.Descriptor instead.
 func (*CustomZone) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{33}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *CustomZone) GetDomain() string {
@@ -2921,7 +3246,7 @@ type SimpleRecord struct {
 
 func (x *SimpleRecord) Reset() {
 	*x = SimpleRecord{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[34]
+	mi := &file_shared_management_proto_management_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2933,7 +3258,7 @@ func (x *SimpleRecord) String() string {
 func (*SimpleRecord) ProtoMessage() {}
 
 func (x *SimpleRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[34]
+	mi := &file_shared_management_proto_management_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2946,7 +3271,7 @@ func (x *SimpleRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SimpleRecord.ProtoReflect.Descriptor instead.
 func (*SimpleRecord) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{34}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *SimpleRecord) GetName() string {
@@ -2997,7 +3322,7 @@ type NameServerGroup struct {
 
 func (x *NameServerGroup) Reset() {
 	*x = NameServerGroup{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[35]
+	mi := &file_shared_management_proto_management_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3009,7 +3334,7 @@ func (x *NameServerGroup) String() string {
 func (*NameServerGroup) ProtoMessage() {}
 
 func (x *NameServerGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[35]
+	mi := &file_shared_management_proto_management_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3022,7 +3347,7 @@ func (x *NameServerGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NameServerGroup.ProtoReflect.Descriptor instead.
 func (*NameServerGroup) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{35}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *NameServerGroup) GetNameServers() []*NameServer {
@@ -3065,7 +3390,7 @@ type NameServer struct {
 
 func (x *NameServer) Reset() {
 	*x = NameServer{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[36]
+	mi := &file_shared_management_proto_management_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3077,7 +3402,7 @@ func (x *NameServer) String() string {
 func (*NameServer) ProtoMessage() {}
 
 func (x *NameServer) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[36]
+	mi := &file_shared_management_proto_management_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3090,7 +3415,7 @@ func (x *NameServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NameServer.ProtoReflect.Descriptor instead.
 func (*NameServer) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{36}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *NameServer) GetIP() string {
@@ -3131,7 +3456,7 @@ type FirewallRule struct {
 
 func (x *FirewallRule) Reset() {
 	*x = FirewallRule{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[37]
+	mi := &file_shared_management_proto_management_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3143,7 +3468,7 @@ func (x *FirewallRule) String() string {
 func (*FirewallRule) ProtoMessage() {}
 
 func (x *FirewallRule) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[37]
+	mi := &file_shared_management_proto_management_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3156,7 +3481,7 @@ func (x *FirewallRule) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FirewallRule.ProtoReflect.Descriptor instead.
 func (*FirewallRule) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{37}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *FirewallRule) GetPeerIP() string {
@@ -3218,7 +3543,7 @@ type NetworkAddress struct {
 
 func (x *NetworkAddress) Reset() {
 	*x = NetworkAddress{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[38]
+	mi := &file_shared_management_proto_management_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3230,7 +3555,7 @@ func (x *NetworkAddress) String() string {
 func (*NetworkAddress) ProtoMessage() {}
 
 func (x *NetworkAddress) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[38]
+	mi := &file_shared_management_proto_management_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3243,7 +3568,7 @@ func (x *NetworkAddress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkAddress.ProtoReflect.Descriptor instead.
 func (*NetworkAddress) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{38}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *NetworkAddress) GetNetIP() string {
@@ -3269,7 +3594,7 @@ type Checks struct {
 
 func (x *Checks) Reset() {
 	*x = Checks{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[39]
+	mi := &file_shared_management_proto_management_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3281,7 +3606,7 @@ func (x *Checks) String() string {
 func (*Checks) ProtoMessage() {}
 
 func (x *Checks) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[39]
+	mi := &file_shared_management_proto_management_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3294,7 +3619,7 @@ func (x *Checks) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Checks.ProtoReflect.Descriptor instead.
 func (*Checks) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{39}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *Checks) GetFiles() []string {
@@ -3317,7 +3642,7 @@ type PortInfo struct {
 
 func (x *PortInfo) Reset() {
 	*x = PortInfo{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[40]
+	mi := &file_shared_management_proto_management_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3329,7 +3654,7 @@ func (x *PortInfo) String() string {
 func (*PortInfo) ProtoMessage() {}
 
 func (x *PortInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[40]
+	mi := &file_shared_management_proto_management_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3342,7 +3667,7 @@ func (x *PortInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortInfo.ProtoReflect.Descriptor instead.
 func (*PortInfo) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{40}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *PortInfo) GetPortSelection() isPortInfo_PortSelection {
@@ -3415,7 +3740,7 @@ type RouteFirewallRule struct {
 
 func (x *RouteFirewallRule) Reset() {
 	*x = RouteFirewallRule{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[41]
+	mi := &file_shared_management_proto_management_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3427,7 +3752,7 @@ func (x *RouteFirewallRule) String() string {
 func (*RouteFirewallRule) ProtoMessage() {}
 
 func (x *RouteFirewallRule) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[41]
+	mi := &file_shared_management_proto_management_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3440,7 +3765,7 @@ func (x *RouteFirewallRule) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouteFirewallRule.ProtoReflect.Descriptor instead.
 func (*RouteFirewallRule) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{41}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *RouteFirewallRule) GetSourceRanges() []string {
@@ -3529,7 +3854,7 @@ type ForwardingRule struct {
 
 func (x *ForwardingRule) Reset() {
 	*x = ForwardingRule{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[42]
+	mi := &file_shared_management_proto_management_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3541,7 +3866,7 @@ func (x *ForwardingRule) String() string {
 func (*ForwardingRule) ProtoMessage() {}
 
 func (x *ForwardingRule) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[42]
+	mi := &file_shared_management_proto_management_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3554,7 +3879,7 @@ func (x *ForwardingRule) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardingRule.ProtoReflect.Descriptor instead.
 func (*ForwardingRule) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{42}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ForwardingRule) GetProtocol() RuleProtocol {
@@ -3607,7 +3932,7 @@ type MachineIdentity struct {
 
 func (x *MachineIdentity) Reset() {
 	*x = MachineIdentity{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[43]
+	mi := &file_shared_management_proto_management_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3619,7 +3944,7 @@ func (x *MachineIdentity) String() string {
 func (*MachineIdentity) ProtoMessage() {}
 
 func (x *MachineIdentity) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[43]
+	mi := &file_shared_management_proto_management_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3632,7 +3957,7 @@ func (x *MachineIdentity) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineIdentity.ProtoReflect.Descriptor instead.
 func (*MachineIdentity) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{43}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *MachineIdentity) GetDnsName() string {
@@ -3692,7 +4017,7 @@ type MachineRegisterRequest struct {
 
 func (x *MachineRegisterRequest) Reset() {
 	*x = MachineRegisterRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[44]
+	mi := &file_shared_management_proto_management_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3704,7 +4029,7 @@ func (x *MachineRegisterRequest) String() string {
 func (*MachineRegisterRequest) ProtoMessage() {}
 
 func (x *MachineRegisterRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[44]
+	mi := &file_shared_management_proto_management_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3717,7 +4042,7 @@ func (x *MachineRegisterRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineRegisterRequest.ProtoReflect.Descriptor instead.
 func (*MachineRegisterRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{44}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *MachineRegisterRequest) GetMeta() *PeerSystemMeta {
@@ -3760,7 +4085,7 @@ type MachineRegisterResponse struct {
 
 func (x *MachineRegisterResponse) Reset() {
 	*x = MachineRegisterResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[45]
+	mi := &file_shared_management_proto_management_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3772,7 +4097,7 @@ func (x *MachineRegisterResponse) String() string {
 func (*MachineRegisterResponse) ProtoMessage() {}
 
 func (x *MachineRegisterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[45]
+	mi := &file_shared_management_proto_management_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3785,7 +4110,7 @@ func (x *MachineRegisterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineRegisterResponse.ProtoReflect.Descriptor instead.
 func (*MachineRegisterResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{45}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *MachineRegisterResponse) GetPeerConfig() *PeerConfig {
@@ -3834,7 +4159,7 @@ type MachineSyncRequest struct {
 
 func (x *MachineSyncRequest) Reset() {
 	*x = MachineSyncRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[46]
+	mi := &file_shared_management_proto_management_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3846,7 +4171,7 @@ func (x *MachineSyncRequest) String() string {
 func (*MachineSyncRequest) ProtoMessage() {}
 
 func (x *MachineSyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[46]
+	mi := &file_shared_management_proto_management_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3859,7 +4184,7 @@ func (x *MachineSyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineSyncRequest.ProtoReflect.Descriptor instead.
 func (*MachineSyncRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{46}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *MachineSyncRequest) GetMeta() *PeerSystemMeta {
@@ -3884,7 +4209,7 @@ type MachineSyncResponse struct {
 
 func (x *MachineSyncResponse) Reset() {
 	*x = MachineSyncResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[47]
+	mi := &file_shared_management_proto_management_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3896,7 +4221,7 @@ func (x *MachineSyncResponse) String() string {
 func (*MachineSyncResponse) ProtoMessage() {}
 
 func (x *MachineSyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[47]
+	mi := &file_shared_management_proto_management_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3909,7 +4234,7 @@ func (x *MachineSyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineSyncResponse.ProtoReflect.Descriptor instead.
 func (*MachineSyncResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{47}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *MachineSyncResponse) GetNetworkMap() *NetworkMap {
@@ -3944,7 +4269,7 @@ type MachineRoutesRequest struct {
 
 func (x *MachineRoutesRequest) Reset() {
 	*x = MachineRoutesRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[48]
+	mi := &file_shared_management_proto_management_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3956,7 +4281,7 @@ func (x *MachineRoutesRequest) String() string {
 func (*MachineRoutesRequest) ProtoMessage() {}
 
 func (x *MachineRoutesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[48]
+	mi := &file_shared_management_proto_management_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3969,7 +4294,7 @@ func (x *MachineRoutesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineRoutesRequest.ProtoReflect.Descriptor instead.
 func (*MachineRoutesRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{48}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *MachineRoutesRequest) GetIncludeOffline() bool {
@@ -3994,7 +4319,7 @@ type MachineRoutesResponse struct {
 
 func (x *MachineRoutesResponse) Reset() {
 	*x = MachineRoutesResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[49]
+	mi := &file_shared_management_proto_management_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4006,7 +4331,7 @@ func (x *MachineRoutesResponse) String() string {
 func (*MachineRoutesResponse) ProtoMessage() {}
 
 func (x *MachineRoutesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[49]
+	mi := &file_shared_management_proto_management_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4019,7 +4344,7 @@ func (x *MachineRoutesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineRoutesResponse.ProtoReflect.Descriptor instead.
 func (*MachineRoutesResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{49}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *MachineRoutesResponse) GetRoutes() []*Route {
@@ -4064,7 +4389,7 @@ type MachineStatusRequest struct {
 
 func (x *MachineStatusRequest) Reset() {
 	*x = MachineStatusRequest{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[50]
+	mi := &file_shared_management_proto_management_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4076,7 +4401,7 @@ func (x *MachineStatusRequest) String() string {
 func (*MachineStatusRequest) ProtoMessage() {}
 
 func (x *MachineStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[50]
+	mi := &file_shared_management_proto_management_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4089,7 +4414,7 @@ func (x *MachineStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineStatusRequest.ProtoReflect.Descriptor instead.
 func (*MachineStatusRequest) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{50}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *MachineStatusRequest) GetTunnelUp() bool {
@@ -4149,7 +4474,7 @@ type MachineStatusResponse struct {
 
 func (x *MachineStatusResponse) Reset() {
 	*x = MachineStatusResponse{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[51]
+	mi := &file_shared_management_proto_management_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4161,7 +4486,7 @@ func (x *MachineStatusResponse) String() string {
 func (*MachineStatusResponse) ProtoMessage() {}
 
 func (x *MachineStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[51]
+	mi := &file_shared_management_proto_management_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4174,7 +4499,7 @@ func (x *MachineStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MachineStatusResponse.ProtoReflect.Descriptor instead.
 func (*MachineStatusResponse) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{51}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *MachineStatusResponse) GetAck() bool {
@@ -4208,7 +4533,7 @@ type PortInfo_Range struct {
 
 func (x *PortInfo_Range) Reset() {
 	*x = PortInfo_Range{}
-	mi := &file_shared_management_proto_management_proto_msgTypes[53]
+	mi := &file_shared_management_proto_management_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4220,7 +4545,7 @@ func (x *PortInfo_Range) String() string {
 func (*PortInfo_Range) ProtoMessage() {}
 
 func (x *PortInfo_Range) ProtoReflect() protoreflect.Message {
-	mi := &file_shared_management_proto_management_proto_msgTypes[53]
+	mi := &file_shared_management_proto_management_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4233,7 +4558,7 @@ func (x *PortInfo_Range) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortInfo_Range.ProtoReflect.Descriptor instead.
 func (*PortInfo_Range) Descriptor() ([]byte, []int) {
-	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{40, 0}
+	return file_shared_management_proto_management_proto_rawDescGZIP(), []int{44, 0}
 }
 
 func (x *PortInfo_Range) GetStart() uint32 {
@@ -4259,7 +4584,29 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x10EncryptedMessage\x12\x1a\n" +
 	"\bwgPubKey\x18\x01 \x01(\tR\bwgPubKey\x12\x12\n" +
 	"\x04body\x18\x02 \x01(\fR\x04body\x12\x18\n" +
-	"\aversion\x18\x03 \x01(\x05R\aversion\"=\n" +
+	"\aversion\x18\x03 \x01(\x05R\aversion\"k\n" +
+	"\n" +
+	"JobRequest\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\fR\x02ID\x126\n" +
+	"\x06bundle\x18\n" +
+	" \x01(\v2\x1c.management.BundleParametersH\x00R\x06bundleB\x15\n" +
+	"\x13workload_parameters\"\xac\x01\n" +
+	"\vJobResponse\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\fR\x02ID\x12-\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x15.management.JobStatusR\x06status\x12\x16\n" +
+	"\x06Reason\x18\x03 \x01(\fR\x06Reason\x122\n" +
+	"\x06bundle\x18\n" +
+	" \x01(\v2\x18.management.BundleResultH\x00R\x06bundleB\x12\n" +
+	"\x10workload_results\"\x9d\x01\n" +
+	"\x10BundleParameters\x12\x1d\n" +
+	"\n" +
+	"bundle_for\x18\x01 \x01(\bR\tbundleFor\x12&\n" +
+	"\x0fbundle_for_time\x18\x02 \x01(\x03R\rbundleForTime\x12$\n" +
+	"\x0elog_file_count\x18\x03 \x01(\x05R\flogFileCount\x12\x1c\n" +
+	"\tanonymize\x18\x04 \x01(\bR\tanonymize\"-\n" +
+	"\fBundleResult\x12\x1d\n" +
+	"\n" +
+	"upload_key\x18\x01 \x01(\tR\tuploadKey\"=\n" +
 	"\vSyncRequest\x12.\n" +
 	"\x04meta\x18\x01 \x01(\v2\x1a.management.PeerSystemMetaR\x04meta\"\xdb\x02\n" +
 	"\fSyncResponse\x12?\n" +
@@ -4588,7 +4935,12 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x03ack\x18\x01 \x01(\bR\x03ack\x12;\n" +
 	"\vserver_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"serverTime\x12#\n" +
-	"\rconfig_serial\x18\x03 \x01(\x04R\fconfigSerial*L\n" +
+	"\rconfig_serial\x18\x03 \x01(\x04R\fconfigSerial*:\n" +
+	"\tJobStatus\x12\x12\n" +
+	"\x0eunknown_status\x10\x00\x12\r\n" +
+	"\tsucceeded\x10\x01\x12\n" +
+	"\n" +
+	"\x06failed\x10\x02*L\n" +
 	"\fRuleProtocol\x12\v\n" +
 	"\aUNKNOWN\x10\x00\x12\a\n" +
 	"\x03ALL\x10\x01\x12\a\n" +
@@ -4610,7 +4962,7 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x15MACHINE_UPDATE_ROUTES\x10\x01\x12\x16\n" +
 	"\x12MACHINE_UPDATE_DNS\x10\x02\x12\x18\n" +
 	"\x14MACHINE_UPDATE_PEERS\x10\x03\x12\x1b\n" +
-	"\x17MACHINE_UPDATE_FIREWALL\x10\x042\xc0\a\n" +
+	"\x17MACHINE_UPDATE_FIREWALL\x10\x042\x89\b\n" +
 	"\x11ManagementService\x12E\n" +
 	"\x05Login\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x00\x12F\n" +
 	"\x04Sync\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x000\x01\x12B\n" +
@@ -4619,7 +4971,8 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x1aGetDeviceAuthorizationFlow\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x00\x12X\n" +
 	"\x18GetPKCEAuthorizationFlow\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x00\x12=\n" +
 	"\bSyncMeta\x12\x1c.management.EncryptedMessage\x1a\x11.management.Empty\"\x00\x12;\n" +
-	"\x06Logout\x12\x1c.management.EncryptedMessage\x1a\x11.management.Empty\"\x00\x12`\n" +
+	"\x06Logout\x12\x1c.management.EncryptedMessage\x1a\x11.management.Empty\"\x00\x12G\n" +
+	"\x03Job\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x00(\x010\x01\x12`\n" +
 	"\x13RegisterMachinePeer\x12\".management.MachineRegisterRequest\x1a#.management.MachineRegisterResponse\"\x00\x12V\n" +
 	"\x0fSyncMachinePeer\x12\x1e.management.MachineSyncRequest\x1a\x1f.management.MachineSyncResponse\"\x000\x01\x12Y\n" +
 	"\x10GetMachineRoutes\x12 .management.MachineRoutesRequest\x1a!.management.MachineRoutesResponse\"\x00\x12\\\n" +
@@ -4637,173 +4990,183 @@ func file_shared_management_proto_management_proto_rawDescGZIP() []byte {
 	return file_shared_management_proto_management_proto_rawDescData
 }
 
-var file_shared_management_proto_management_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_shared_management_proto_management_proto_msgTypes = make([]protoimpl.MessageInfo, 54)
+var file_shared_management_proto_management_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
+var file_shared_management_proto_management_proto_msgTypes = make([]protoimpl.MessageInfo, 58)
 var file_shared_management_proto_management_proto_goTypes = []any{
-	(RuleProtocol)(0),                      // 0: management.RuleProtocol
-	(RuleDirection)(0),                     // 1: management.RuleDirection
-	(RuleAction)(0),                        // 2: management.RuleAction
-	(MachineUpdateType)(0),                 // 3: management.MachineUpdateType
-	(HostConfig_Protocol)(0),               // 4: management.HostConfig.Protocol
-	(DeviceAuthorizationFlowProvider)(0),   // 5: management.DeviceAuthorizationFlow.provider
-	(*EncryptedMessage)(nil),               // 6: management.EncryptedMessage
-	(*SyncRequest)(nil),                    // 7: management.SyncRequest
-	(*SyncResponse)(nil),                   // 8: management.SyncResponse
-	(*SyncMetaRequest)(nil),                // 9: management.SyncMetaRequest
-	(*LoginRequest)(nil),                   // 10: management.LoginRequest
-	(*PeerKeys)(nil),                       // 11: management.PeerKeys
-	(*Environment)(nil),                    // 12: management.Environment
-	(*File)(nil),                           // 13: management.File
-	(*Flags)(nil),                          // 14: management.Flags
-	(*PeerSystemMeta)(nil),                 // 15: management.PeerSystemMeta
-	(*LoginResponse)(nil),                  // 16: management.LoginResponse
-	(*ServerKeyResponse)(nil),              // 17: management.ServerKeyResponse
-	(*Empty)(nil),                          // 18: management.Empty
-	(*NetbirdConfig)(nil),                  // 19: management.NetbirdConfig
-	(*HostConfig)(nil),                     // 20: management.HostConfig
-	(*RelayConfig)(nil),                    // 21: management.RelayConfig
-	(*FlowConfig)(nil),                     // 22: management.FlowConfig
-	(*JWTConfig)(nil),                      // 23: management.JWTConfig
-	(*ProtectedHostConfig)(nil),            // 24: management.ProtectedHostConfig
-	(*PeerConfig)(nil),                     // 25: management.PeerConfig
-	(*AutoUpdateSettings)(nil),             // 26: management.AutoUpdateSettings
-	(*NetworkMap)(nil),                     // 27: management.NetworkMap
-	(*SSHAuth)(nil),                        // 28: management.SSHAuth
-	(*MachineUserIndexes)(nil),             // 29: management.MachineUserIndexes
-	(*RemotePeerConfig)(nil),               // 30: management.RemotePeerConfig
-	(*SSHConfig)(nil),                      // 31: management.SSHConfig
-	(*DeviceAuthorizationFlowRequest)(nil), // 32: management.DeviceAuthorizationFlowRequest
-	(*DeviceAuthorizationFlow)(nil),        // 33: management.DeviceAuthorizationFlow
-	(*PKCEAuthorizationFlowRequest)(nil),   // 34: management.PKCEAuthorizationFlowRequest
-	(*PKCEAuthorizationFlow)(nil),          // 35: management.PKCEAuthorizationFlow
-	(*ProviderConfig)(nil),                 // 36: management.ProviderConfig
-	(*Route)(nil),                          // 37: management.Route
-	(*DNSConfig)(nil),                      // 38: management.DNSConfig
-	(*CustomZone)(nil),                     // 39: management.CustomZone
-	(*SimpleRecord)(nil),                   // 40: management.SimpleRecord
-	(*NameServerGroup)(nil),                // 41: management.NameServerGroup
-	(*NameServer)(nil),                     // 42: management.NameServer
-	(*FirewallRule)(nil),                   // 43: management.FirewallRule
-	(*NetworkAddress)(nil),                 // 44: management.NetworkAddress
-	(*Checks)(nil),                         // 45: management.Checks
-	(*PortInfo)(nil),                       // 46: management.PortInfo
-	(*RouteFirewallRule)(nil),              // 47: management.RouteFirewallRule
-	(*ForwardingRule)(nil),                 // 48: management.ForwardingRule
-	(*MachineIdentity)(nil),                // 49: management.MachineIdentity
-	(*MachineRegisterRequest)(nil),         // 50: management.MachineRegisterRequest
-	(*MachineRegisterResponse)(nil),        // 51: management.MachineRegisterResponse
-	(*MachineSyncRequest)(nil),             // 52: management.MachineSyncRequest
-	(*MachineSyncResponse)(nil),            // 53: management.MachineSyncResponse
-	(*MachineRoutesRequest)(nil),           // 54: management.MachineRoutesRequest
-	(*MachineRoutesResponse)(nil),          // 55: management.MachineRoutesResponse
-	(*MachineStatusRequest)(nil),           // 56: management.MachineStatusRequest
-	(*MachineStatusResponse)(nil),          // 57: management.MachineStatusResponse
-	nil,                                    // 58: management.SSHAuth.MachineUsersEntry
-	(*PortInfo_Range)(nil),                 // 59: management.PortInfo.Range
-	(*timestamppb.Timestamp)(nil),          // 60: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),            // 61: google.protobuf.Duration
+	(JobStatus)(0),                         // 0: management.JobStatus
+	(RuleProtocol)(0),                      // 1: management.RuleProtocol
+	(RuleDirection)(0),                     // 2: management.RuleDirection
+	(RuleAction)(0),                        // 3: management.RuleAction
+	(MachineUpdateType)(0),                 // 4: management.MachineUpdateType
+	(HostConfig_Protocol)(0),               // 5: management.HostConfig.Protocol
+	(DeviceAuthorizationFlowProvider)(0),   // 6: management.DeviceAuthorizationFlow.provider
+	(*EncryptedMessage)(nil),               // 7: management.EncryptedMessage
+	(*JobRequest)(nil),                     // 8: management.JobRequest
+	(*JobResponse)(nil),                    // 9: management.JobResponse
+	(*BundleParameters)(nil),               // 10: management.BundleParameters
+	(*BundleResult)(nil),                   // 11: management.BundleResult
+	(*SyncRequest)(nil),                    // 12: management.SyncRequest
+	(*SyncResponse)(nil),                   // 13: management.SyncResponse
+	(*SyncMetaRequest)(nil),                // 14: management.SyncMetaRequest
+	(*LoginRequest)(nil),                   // 15: management.LoginRequest
+	(*PeerKeys)(nil),                       // 16: management.PeerKeys
+	(*Environment)(nil),                    // 17: management.Environment
+	(*File)(nil),                           // 18: management.File
+	(*Flags)(nil),                          // 19: management.Flags
+	(*PeerSystemMeta)(nil),                 // 20: management.PeerSystemMeta
+	(*LoginResponse)(nil),                  // 21: management.LoginResponse
+	(*ServerKeyResponse)(nil),              // 22: management.ServerKeyResponse
+	(*Empty)(nil),                          // 23: management.Empty
+	(*NetbirdConfig)(nil),                  // 24: management.NetbirdConfig
+	(*HostConfig)(nil),                     // 25: management.HostConfig
+	(*RelayConfig)(nil),                    // 26: management.RelayConfig
+	(*FlowConfig)(nil),                     // 27: management.FlowConfig
+	(*JWTConfig)(nil),                      // 28: management.JWTConfig
+	(*ProtectedHostConfig)(nil),            // 29: management.ProtectedHostConfig
+	(*PeerConfig)(nil),                     // 30: management.PeerConfig
+	(*AutoUpdateSettings)(nil),             // 31: management.AutoUpdateSettings
+	(*NetworkMap)(nil),                     // 32: management.NetworkMap
+	(*SSHAuth)(nil),                        // 33: management.SSHAuth
+	(*MachineUserIndexes)(nil),             // 34: management.MachineUserIndexes
+	(*RemotePeerConfig)(nil),               // 35: management.RemotePeerConfig
+	(*SSHConfig)(nil),                      // 36: management.SSHConfig
+	(*DeviceAuthorizationFlowRequest)(nil), // 37: management.DeviceAuthorizationFlowRequest
+	(*DeviceAuthorizationFlow)(nil),        // 38: management.DeviceAuthorizationFlow
+	(*PKCEAuthorizationFlowRequest)(nil),   // 39: management.PKCEAuthorizationFlowRequest
+	(*PKCEAuthorizationFlow)(nil),          // 40: management.PKCEAuthorizationFlow
+	(*ProviderConfig)(nil),                 // 41: management.ProviderConfig
+	(*Route)(nil),                          // 42: management.Route
+	(*DNSConfig)(nil),                      // 43: management.DNSConfig
+	(*CustomZone)(nil),                     // 44: management.CustomZone
+	(*SimpleRecord)(nil),                   // 45: management.SimpleRecord
+	(*NameServerGroup)(nil),                // 46: management.NameServerGroup
+	(*NameServer)(nil),                     // 47: management.NameServer
+	(*FirewallRule)(nil),                   // 48: management.FirewallRule
+	(*NetworkAddress)(nil),                 // 49: management.NetworkAddress
+	(*Checks)(nil),                         // 50: management.Checks
+	(*PortInfo)(nil),                       // 51: management.PortInfo
+	(*RouteFirewallRule)(nil),              // 52: management.RouteFirewallRule
+	(*ForwardingRule)(nil),                 // 53: management.ForwardingRule
+	(*MachineIdentity)(nil),                // 54: management.MachineIdentity
+	(*MachineRegisterRequest)(nil),         // 55: management.MachineRegisterRequest
+	(*MachineRegisterResponse)(nil),        // 56: management.MachineRegisterResponse
+	(*MachineSyncRequest)(nil),             // 57: management.MachineSyncRequest
+	(*MachineSyncResponse)(nil),            // 58: management.MachineSyncResponse
+	(*MachineRoutesRequest)(nil),           // 59: management.MachineRoutesRequest
+	(*MachineRoutesResponse)(nil),          // 60: management.MachineRoutesResponse
+	(*MachineStatusRequest)(nil),           // 61: management.MachineStatusRequest
+	(*MachineStatusResponse)(nil),          // 62: management.MachineStatusResponse
+	nil,                                    // 63: management.SSHAuth.MachineUsersEntry
+	(*PortInfo_Range)(nil),                 // 64: management.PortInfo.Range
+	(*timestamppb.Timestamp)(nil),          // 65: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),            // 66: google.protobuf.Duration
 }
 var file_shared_management_proto_management_proto_depIdxs = []int32{
-	15, // 0: management.SyncRequest.meta:type_name -> management.PeerSystemMeta
-	19, // 1: management.SyncResponse.netbirdConfig:type_name -> management.NetbirdConfig
-	25, // 2: management.SyncResponse.peerConfig:type_name -> management.PeerConfig
-	30, // 3: management.SyncResponse.remotePeers:type_name -> management.RemotePeerConfig
-	27, // 4: management.SyncResponse.NetworkMap:type_name -> management.NetworkMap
-	45, // 5: management.SyncResponse.Checks:type_name -> management.Checks
-	15, // 6: management.SyncMetaRequest.meta:type_name -> management.PeerSystemMeta
-	15, // 7: management.LoginRequest.meta:type_name -> management.PeerSystemMeta
-	11, // 8: management.LoginRequest.peerKeys:type_name -> management.PeerKeys
-	44, // 9: management.PeerSystemMeta.networkAddresses:type_name -> management.NetworkAddress
-	12, // 10: management.PeerSystemMeta.environment:type_name -> management.Environment
-	13, // 11: management.PeerSystemMeta.files:type_name -> management.File
-	14, // 12: management.PeerSystemMeta.flags:type_name -> management.Flags
-	19, // 13: management.LoginResponse.netbirdConfig:type_name -> management.NetbirdConfig
-	25, // 14: management.LoginResponse.peerConfig:type_name -> management.PeerConfig
-	45, // 15: management.LoginResponse.Checks:type_name -> management.Checks
-	60, // 16: management.ServerKeyResponse.expiresAt:type_name -> google.protobuf.Timestamp
-	20, // 17: management.NetbirdConfig.stuns:type_name -> management.HostConfig
-	24, // 18: management.NetbirdConfig.turns:type_name -> management.ProtectedHostConfig
-	20, // 19: management.NetbirdConfig.signal:type_name -> management.HostConfig
-	21, // 20: management.NetbirdConfig.relay:type_name -> management.RelayConfig
-	22, // 21: management.NetbirdConfig.flow:type_name -> management.FlowConfig
-	4,  // 22: management.HostConfig.protocol:type_name -> management.HostConfig.Protocol
-	61, // 23: management.FlowConfig.interval:type_name -> google.protobuf.Duration
-	20, // 24: management.ProtectedHostConfig.hostConfig:type_name -> management.HostConfig
-	31, // 25: management.PeerConfig.sshConfig:type_name -> management.SSHConfig
-	26, // 26: management.PeerConfig.autoUpdate:type_name -> management.AutoUpdateSettings
-	25, // 27: management.NetworkMap.peerConfig:type_name -> management.PeerConfig
-	30, // 28: management.NetworkMap.remotePeers:type_name -> management.RemotePeerConfig
-	37, // 29: management.NetworkMap.Routes:type_name -> management.Route
-	38, // 30: management.NetworkMap.DNSConfig:type_name -> management.DNSConfig
-	30, // 31: management.NetworkMap.offlinePeers:type_name -> management.RemotePeerConfig
-	43, // 32: management.NetworkMap.FirewallRules:type_name -> management.FirewallRule
-	47, // 33: management.NetworkMap.routesFirewallRules:type_name -> management.RouteFirewallRule
-	48, // 34: management.NetworkMap.forwardingRules:type_name -> management.ForwardingRule
-	28, // 35: management.NetworkMap.sshAuth:type_name -> management.SSHAuth
-	58, // 36: management.SSHAuth.machine_users:type_name -> management.SSHAuth.MachineUsersEntry
-	31, // 37: management.RemotePeerConfig.sshConfig:type_name -> management.SSHConfig
-	23, // 38: management.SSHConfig.jwtConfig:type_name -> management.JWTConfig
-	5,  // 39: management.DeviceAuthorizationFlow.Provider:type_name -> management.DeviceAuthorizationFlow.provider
-	36, // 40: management.DeviceAuthorizationFlow.ProviderConfig:type_name -> management.ProviderConfig
-	36, // 41: management.PKCEAuthorizationFlow.ProviderConfig:type_name -> management.ProviderConfig
-	41, // 42: management.DNSConfig.NameServerGroups:type_name -> management.NameServerGroup
-	39, // 43: management.DNSConfig.CustomZones:type_name -> management.CustomZone
-	40, // 44: management.CustomZone.Records:type_name -> management.SimpleRecord
-	42, // 45: management.NameServerGroup.NameServers:type_name -> management.NameServer
-	1,  // 46: management.FirewallRule.Direction:type_name -> management.RuleDirection
-	2,  // 47: management.FirewallRule.Action:type_name -> management.RuleAction
-	0,  // 48: management.FirewallRule.Protocol:type_name -> management.RuleProtocol
-	46, // 49: management.FirewallRule.PortInfo:type_name -> management.PortInfo
-	59, // 50: management.PortInfo.range:type_name -> management.PortInfo.Range
-	2,  // 51: management.RouteFirewallRule.action:type_name -> management.RuleAction
-	0,  // 52: management.RouteFirewallRule.protocol:type_name -> management.RuleProtocol
-	46, // 53: management.RouteFirewallRule.portInfo:type_name -> management.PortInfo
-	0,  // 54: management.ForwardingRule.protocol:type_name -> management.RuleProtocol
-	46, // 55: management.ForwardingRule.destinationPort:type_name -> management.PortInfo
-	46, // 56: management.ForwardingRule.translatedPort:type_name -> management.PortInfo
-	15, // 57: management.MachineRegisterRequest.meta:type_name -> management.PeerSystemMeta
-	25, // 58: management.MachineRegisterResponse.peer_config:type_name -> management.PeerConfig
-	19, // 59: management.MachineRegisterResponse.netbird_config:type_name -> management.NetbirdConfig
-	49, // 60: management.MachineRegisterResponse.machine_identity:type_name -> management.MachineIdentity
-	37, // 61: management.MachineRegisterResponse.allowed_dc_routes:type_name -> management.Route
-	38, // 62: management.MachineRegisterResponse.dns_config:type_name -> management.DNSConfig
-	15, // 63: management.MachineSyncRequest.meta:type_name -> management.PeerSystemMeta
-	27, // 64: management.MachineSyncResponse.network_map:type_name -> management.NetworkMap
-	3,  // 65: management.MachineSyncResponse.update_type:type_name -> management.MachineUpdateType
-	37, // 66: management.MachineRoutesResponse.routes:type_name -> management.Route
-	30, // 67: management.MachineRoutesResponse.router_peers:type_name -> management.RemotePeerConfig
-	60, // 68: management.MachineStatusRequest.last_handshake:type_name -> google.protobuf.Timestamp
-	60, // 69: management.MachineStatusResponse.server_time:type_name -> google.protobuf.Timestamp
-	29, // 70: management.SSHAuth.MachineUsersEntry.value:type_name -> management.MachineUserIndexes
-	6,  // 71: management.ManagementService.Login:input_type -> management.EncryptedMessage
-	6,  // 72: management.ManagementService.Sync:input_type -> management.EncryptedMessage
-	18, // 73: management.ManagementService.GetServerKey:input_type -> management.Empty
-	18, // 74: management.ManagementService.isHealthy:input_type -> management.Empty
-	6,  // 75: management.ManagementService.GetDeviceAuthorizationFlow:input_type -> management.EncryptedMessage
-	6,  // 76: management.ManagementService.GetPKCEAuthorizationFlow:input_type -> management.EncryptedMessage
-	6,  // 77: management.ManagementService.SyncMeta:input_type -> management.EncryptedMessage
-	6,  // 78: management.ManagementService.Logout:input_type -> management.EncryptedMessage
-	50, // 79: management.ManagementService.RegisterMachinePeer:input_type -> management.MachineRegisterRequest
-	52, // 80: management.ManagementService.SyncMachinePeer:input_type -> management.MachineSyncRequest
-	54, // 81: management.ManagementService.GetMachineRoutes:input_type -> management.MachineRoutesRequest
-	56, // 82: management.ManagementService.ReportMachineStatus:input_type -> management.MachineStatusRequest
-	6,  // 83: management.ManagementService.Login:output_type -> management.EncryptedMessage
-	6,  // 84: management.ManagementService.Sync:output_type -> management.EncryptedMessage
-	17, // 85: management.ManagementService.GetServerKey:output_type -> management.ServerKeyResponse
-	18, // 86: management.ManagementService.isHealthy:output_type -> management.Empty
-	6,  // 87: management.ManagementService.GetDeviceAuthorizationFlow:output_type -> management.EncryptedMessage
-	6,  // 88: management.ManagementService.GetPKCEAuthorizationFlow:output_type -> management.EncryptedMessage
-	18, // 89: management.ManagementService.SyncMeta:output_type -> management.Empty
-	18, // 90: management.ManagementService.Logout:output_type -> management.Empty
-	51, // 91: management.ManagementService.RegisterMachinePeer:output_type -> management.MachineRegisterResponse
-	53, // 92: management.ManagementService.SyncMachinePeer:output_type -> management.MachineSyncResponse
-	55, // 93: management.ManagementService.GetMachineRoutes:output_type -> management.MachineRoutesResponse
-	57, // 94: management.ManagementService.ReportMachineStatus:output_type -> management.MachineStatusResponse
-	83, // [83:95] is the sub-list for method output_type
-	71, // [71:83] is the sub-list for method input_type
-	71, // [71:71] is the sub-list for extension type_name
-	71, // [71:71] is the sub-list for extension extendee
-	0,  // [0:71] is the sub-list for field type_name
+	10, // 0: management.JobRequest.bundle:type_name -> management.BundleParameters
+	0,  // 1: management.JobResponse.status:type_name -> management.JobStatus
+	11, // 2: management.JobResponse.bundle:type_name -> management.BundleResult
+	20, // 3: management.SyncRequest.meta:type_name -> management.PeerSystemMeta
+	24, // 4: management.SyncResponse.netbirdConfig:type_name -> management.NetbirdConfig
+	30, // 5: management.SyncResponse.peerConfig:type_name -> management.PeerConfig
+	35, // 6: management.SyncResponse.remotePeers:type_name -> management.RemotePeerConfig
+	32, // 7: management.SyncResponse.NetworkMap:type_name -> management.NetworkMap
+	50, // 8: management.SyncResponse.Checks:type_name -> management.Checks
+	20, // 9: management.SyncMetaRequest.meta:type_name -> management.PeerSystemMeta
+	20, // 10: management.LoginRequest.meta:type_name -> management.PeerSystemMeta
+	16, // 11: management.LoginRequest.peerKeys:type_name -> management.PeerKeys
+	49, // 12: management.PeerSystemMeta.networkAddresses:type_name -> management.NetworkAddress
+	17, // 13: management.PeerSystemMeta.environment:type_name -> management.Environment
+	18, // 14: management.PeerSystemMeta.files:type_name -> management.File
+	19, // 15: management.PeerSystemMeta.flags:type_name -> management.Flags
+	24, // 16: management.LoginResponse.netbirdConfig:type_name -> management.NetbirdConfig
+	30, // 17: management.LoginResponse.peerConfig:type_name -> management.PeerConfig
+	50, // 18: management.LoginResponse.Checks:type_name -> management.Checks
+	65, // 19: management.ServerKeyResponse.expiresAt:type_name -> google.protobuf.Timestamp
+	25, // 20: management.NetbirdConfig.stuns:type_name -> management.HostConfig
+	29, // 21: management.NetbirdConfig.turns:type_name -> management.ProtectedHostConfig
+	25, // 22: management.NetbirdConfig.signal:type_name -> management.HostConfig
+	26, // 23: management.NetbirdConfig.relay:type_name -> management.RelayConfig
+	27, // 24: management.NetbirdConfig.flow:type_name -> management.FlowConfig
+	5,  // 25: management.HostConfig.protocol:type_name -> management.HostConfig.Protocol
+	66, // 26: management.FlowConfig.interval:type_name -> google.protobuf.Duration
+	25, // 27: management.ProtectedHostConfig.hostConfig:type_name -> management.HostConfig
+	36, // 28: management.PeerConfig.sshConfig:type_name -> management.SSHConfig
+	31, // 29: management.PeerConfig.autoUpdate:type_name -> management.AutoUpdateSettings
+	30, // 30: management.NetworkMap.peerConfig:type_name -> management.PeerConfig
+	35, // 31: management.NetworkMap.remotePeers:type_name -> management.RemotePeerConfig
+	42, // 32: management.NetworkMap.Routes:type_name -> management.Route
+	43, // 33: management.NetworkMap.DNSConfig:type_name -> management.DNSConfig
+	35, // 34: management.NetworkMap.offlinePeers:type_name -> management.RemotePeerConfig
+	48, // 35: management.NetworkMap.FirewallRules:type_name -> management.FirewallRule
+	52, // 36: management.NetworkMap.routesFirewallRules:type_name -> management.RouteFirewallRule
+	53, // 37: management.NetworkMap.forwardingRules:type_name -> management.ForwardingRule
+	33, // 38: management.NetworkMap.sshAuth:type_name -> management.SSHAuth
+	63, // 39: management.SSHAuth.machine_users:type_name -> management.SSHAuth.MachineUsersEntry
+	36, // 40: management.RemotePeerConfig.sshConfig:type_name -> management.SSHConfig
+	28, // 41: management.SSHConfig.jwtConfig:type_name -> management.JWTConfig
+	6,  // 42: management.DeviceAuthorizationFlow.Provider:type_name -> management.DeviceAuthorizationFlow.provider
+	41, // 43: management.DeviceAuthorizationFlow.ProviderConfig:type_name -> management.ProviderConfig
+	41, // 44: management.PKCEAuthorizationFlow.ProviderConfig:type_name -> management.ProviderConfig
+	46, // 45: management.DNSConfig.NameServerGroups:type_name -> management.NameServerGroup
+	44, // 46: management.DNSConfig.CustomZones:type_name -> management.CustomZone
+	45, // 47: management.CustomZone.Records:type_name -> management.SimpleRecord
+	47, // 48: management.NameServerGroup.NameServers:type_name -> management.NameServer
+	2,  // 49: management.FirewallRule.Direction:type_name -> management.RuleDirection
+	3,  // 50: management.FirewallRule.Action:type_name -> management.RuleAction
+	1,  // 51: management.FirewallRule.Protocol:type_name -> management.RuleProtocol
+	51, // 52: management.FirewallRule.PortInfo:type_name -> management.PortInfo
+	64, // 53: management.PortInfo.range:type_name -> management.PortInfo.Range
+	3,  // 54: management.RouteFirewallRule.action:type_name -> management.RuleAction
+	1,  // 55: management.RouteFirewallRule.protocol:type_name -> management.RuleProtocol
+	51, // 56: management.RouteFirewallRule.portInfo:type_name -> management.PortInfo
+	1,  // 57: management.ForwardingRule.protocol:type_name -> management.RuleProtocol
+	51, // 58: management.ForwardingRule.destinationPort:type_name -> management.PortInfo
+	51, // 59: management.ForwardingRule.translatedPort:type_name -> management.PortInfo
+	20, // 60: management.MachineRegisterRequest.meta:type_name -> management.PeerSystemMeta
+	30, // 61: management.MachineRegisterResponse.peer_config:type_name -> management.PeerConfig
+	24, // 62: management.MachineRegisterResponse.netbird_config:type_name -> management.NetbirdConfig
+	54, // 63: management.MachineRegisterResponse.machine_identity:type_name -> management.MachineIdentity
+	42, // 64: management.MachineRegisterResponse.allowed_dc_routes:type_name -> management.Route
+	43, // 65: management.MachineRegisterResponse.dns_config:type_name -> management.DNSConfig
+	20, // 66: management.MachineSyncRequest.meta:type_name -> management.PeerSystemMeta
+	32, // 67: management.MachineSyncResponse.network_map:type_name -> management.NetworkMap
+	4,  // 68: management.MachineSyncResponse.update_type:type_name -> management.MachineUpdateType
+	42, // 69: management.MachineRoutesResponse.routes:type_name -> management.Route
+	35, // 70: management.MachineRoutesResponse.router_peers:type_name -> management.RemotePeerConfig
+	65, // 71: management.MachineStatusRequest.last_handshake:type_name -> google.protobuf.Timestamp
+	65, // 72: management.MachineStatusResponse.server_time:type_name -> google.protobuf.Timestamp
+	34, // 73: management.SSHAuth.MachineUsersEntry.value:type_name -> management.MachineUserIndexes
+	7,  // 74: management.ManagementService.Login:input_type -> management.EncryptedMessage
+	7,  // 75: management.ManagementService.Sync:input_type -> management.EncryptedMessage
+	23, // 76: management.ManagementService.GetServerKey:input_type -> management.Empty
+	23, // 77: management.ManagementService.isHealthy:input_type -> management.Empty
+	7,  // 78: management.ManagementService.GetDeviceAuthorizationFlow:input_type -> management.EncryptedMessage
+	7,  // 79: management.ManagementService.GetPKCEAuthorizationFlow:input_type -> management.EncryptedMessage
+	7,  // 80: management.ManagementService.SyncMeta:input_type -> management.EncryptedMessage
+	7,  // 81: management.ManagementService.Logout:input_type -> management.EncryptedMessage
+	7,  // 82: management.ManagementService.Job:input_type -> management.EncryptedMessage
+	55, // 83: management.ManagementService.RegisterMachinePeer:input_type -> management.MachineRegisterRequest
+	57, // 84: management.ManagementService.SyncMachinePeer:input_type -> management.MachineSyncRequest
+	59, // 85: management.ManagementService.GetMachineRoutes:input_type -> management.MachineRoutesRequest
+	61, // 86: management.ManagementService.ReportMachineStatus:input_type -> management.MachineStatusRequest
+	7,  // 87: management.ManagementService.Login:output_type -> management.EncryptedMessage
+	7,  // 88: management.ManagementService.Sync:output_type -> management.EncryptedMessage
+	22, // 89: management.ManagementService.GetServerKey:output_type -> management.ServerKeyResponse
+	23, // 90: management.ManagementService.isHealthy:output_type -> management.Empty
+	7,  // 91: management.ManagementService.GetDeviceAuthorizationFlow:output_type -> management.EncryptedMessage
+	7,  // 92: management.ManagementService.GetPKCEAuthorizationFlow:output_type -> management.EncryptedMessage
+	23, // 93: management.ManagementService.SyncMeta:output_type -> management.Empty
+	23, // 94: management.ManagementService.Logout:output_type -> management.Empty
+	7,  // 95: management.ManagementService.Job:output_type -> management.EncryptedMessage
+	56, // 96: management.ManagementService.RegisterMachinePeer:output_type -> management.MachineRegisterResponse
+	58, // 97: management.ManagementService.SyncMachinePeer:output_type -> management.MachineSyncResponse
+	60, // 98: management.ManagementService.GetMachineRoutes:output_type -> management.MachineRoutesResponse
+	62, // 99: management.ManagementService.ReportMachineStatus:output_type -> management.MachineStatusResponse
+	87, // [87:100] is the sub-list for method output_type
+	74, // [74:87] is the sub-list for method input_type
+	74, // [74:74] is the sub-list for extension type_name
+	74, // [74:74] is the sub-list for extension extendee
+	0,  // [0:74] is the sub-list for field type_name
 }
 
 func init() { file_shared_management_proto_management_proto_init() }
@@ -4811,7 +5174,13 @@ func file_shared_management_proto_management_proto_init() {
 	if File_shared_management_proto_management_proto != nil {
 		return
 	}
-	file_shared_management_proto_management_proto_msgTypes[40].OneofWrappers = []any{
+	file_shared_management_proto_management_proto_msgTypes[1].OneofWrappers = []any{
+		(*JobRequest_Bundle)(nil),
+	}
+	file_shared_management_proto_management_proto_msgTypes[2].OneofWrappers = []any{
+		(*JobResponse_Bundle)(nil),
+	}
+	file_shared_management_proto_management_proto_msgTypes[44].OneofWrappers = []any{
 		(*PortInfo_Port)(nil),
 		(*PortInfo_Range_)(nil),
 	}
@@ -4820,8 +5189,8 @@ func file_shared_management_proto_management_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_shared_management_proto_management_proto_rawDesc), len(file_shared_management_proto_management_proto_rawDesc)),
-			NumEnums:      6,
-			NumMessages:   54,
+			NumEnums:      7,
+			NumMessages:   58,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -31,7 +31,7 @@ jobs:
             tar -C /usr/local -vxzf "$GO_TARBALL"            
 
           # -x - to print all executed commands
-          # -e - to faile on first error
+          # -e - to fail on first error
           run: |
             set -e -x
             export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin

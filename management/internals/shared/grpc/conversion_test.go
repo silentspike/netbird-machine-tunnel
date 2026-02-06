@@ -195,7 +195,7 @@ func TestBuildJWTConfig_Audiences(t *testing.T) {
 
 			assert.NotNil(t, result)
 			assert.Equal(t, tc.expectedAudiences, result.Audiences, "audiences should match expected")
-			// nolint:staticcheck // SA1019: testing deprecated Audience field for backwards compatibility
+			//nolint:staticcheck // SA1019: Testing backwards compatibility - Audience field must still be populated
 			assert.Equal(t, tc.expectedAudience, result.Audience, "audience should match expected")
 		})
 	}
