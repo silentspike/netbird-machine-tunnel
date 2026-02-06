@@ -32,7 +32,7 @@
     Path to save test results (default: ./test-results).
 
 .EXAMPLE
-    .\Invoke-E2ETestCycle.ps1 -VMID 105 -SetupKey "a1b2c3d4-..." -DomainName "corp.local" -DCAddress "192.168.100.20"
+    .\Invoke-E2ETestCycle.ps1 -VMID 105 -SetupKey "a1b2c3d4-..." -DomainName "corp.example.com" -DCAddress "dc.example.com"
 
 .NOTES
     Prerequisites:
@@ -44,7 +44,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$ProxmoxHost = "10.0.0.106",
+    [string]$ProxmoxHost = "proxmox.example.com",
 
     [Parameter(Mandatory = $true)]
     [int]$VMID,

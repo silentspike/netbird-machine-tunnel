@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	serverAddr = flag.String("server", "10.0.0.103:33074", "mTLS server address (host:port)")
+	serverAddr = flag.String("server", "localhost:33074", "mTLS server address (host:port)")
 	caCertFile = flag.String("ca", "", "CA certificate file for server verification")
 	testOnly   = flag.String("test", "", "Run only specific test (tc19,tc21,tc22,tc23,tc27)")
 )
@@ -498,8 +498,8 @@ func init() {
 		fmt.Fprintf(os.Stderr, "  tc23 - Multi-SAN Rejection (no match rejected)\n")
 		fmt.Fprintf(os.Stderr, "  tc27 - Issuer-Fingerprint Validation\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
-		fmt.Fprintf(os.Stderr, "  mtlstest -server 10.0.0.103:33074\n")
-		fmt.Fprintf(os.Stderr, "  mtlstest -server 10.0.0.103:33074 -test tc21\n")
-		fmt.Fprintf(os.Stderr, "  mtlstest -server 10.0.0.103:33074 -ca ca.crt\n")
+		fmt.Fprintf(os.Stderr, "  mtlstest -server mgmt.example.com:33074\n")
+		fmt.Fprintf(os.Stderr, "  mtlstest -server mgmt.example.com:33074 -test tc21\n")
+		fmt.Fprintf(os.Stderr, "  mtlstest -server mgmt.example.com:33074 -ca ca.crt\n")
 	}
 }

@@ -180,7 +180,7 @@ ss -tlnp | grep 33074
 **Check server logs for mTLS activity:**
 
 ```bash
-docker logs ubuntu-management-1 --tail 100 | grep -i mtls
+docker logs netbird-management --tail 100 | grep -i mtls
 ```
 
 You should see:
@@ -203,7 +203,7 @@ The server must be configured to trust your organization's Certificate Authority
 **Verify CA is loaded:**
 
 ```bash
-docker logs ubuntu-management-1 | grep "CA certificate"
+docker logs netbird-management | grep "CA certificate"
 ```
 
 You should see:
@@ -329,7 +329,7 @@ Certificate SAN: workstation1.company-a.local
 **View authentication in server logs:**
 
 ```bash
-docker logs ubuntu-management-1 --tail 100 | grep -E "peer registration|domain|account"
+docker logs netbird-management --tail 100 | grep -E "peer registration|domain|account"
 ```
 
 Successful authentication looks like:
@@ -410,11 +410,11 @@ ss -tlnp | grep -q 33074 && echo "LISTENING" || echo "NOT LISTENING"
 
 # 2. CA loaded
 echo -n "CA Certificate: "
-docker logs ubuntu-management-1 2>&1 | grep -q "CA pool loaded" && echo "LOADED" || echo "NOT LOADED"
+docker logs netbird-management 2>&1 | grep -q "CA pool loaded" && echo "LOADED" || echo "NOT LOADED"
 
 # 3. mTLS config
 echo -n "mTLS Config: "
-docker logs ubuntu-management-1 2>&1 | grep -q "mTLS config loaded" && echo "CONFIGURED" || echo "NOT CONFIGURED"
+docker logs netbird-management 2>&1 | grep -q "mTLS config loaded" && echo "CONFIGURED" || echo "NOT CONFIGURED"
 ```
 
 ---

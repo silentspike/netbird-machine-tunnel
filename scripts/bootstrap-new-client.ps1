@@ -22,7 +22,7 @@
     The FQDN of the Active Directory domain (e.g., "corp.local").
 
 .PARAMETER DCAddress
-    The IP address of the Domain Controller (e.g., "192.168.100.20").
+    The IP address of the Domain Controller (e.g., "dc.example.com").
 
 .PARAMETER OUPath
     Optional. The OU path for the computer object.
@@ -39,7 +39,7 @@
     Show what would be done without making changes.
 
 .EXAMPLE
-    .\bootstrap-new-client.ps1 -SetupKey "a1b2c3d4-e5f6-7890-abcd-ef1234567890" -DomainName "corp.local" -DCAddress "192.168.100.20"
+    .\bootstrap-new-client.ps1 -SetupKey "a1b2c3d4-e5f6-7890-abcd-ef1234567890" -DomainName "corp.local" -DCAddress "dc.example.com"
 
 .NOTES
     Requires: Administrator privileges, PowerShell 5.1+
