@@ -35,8 +35,8 @@
 
 [CmdletBinding()]
 param(
-    [string]$DCAddress = "192.168.100.20",
-    [string]$DomainName = "test.local",
+    [string]$DCAddress = "dc.example.com",
+    [string]$DomainName = "corp.example.com",
     [string]$DCNetworkPrefix = "192.168.100",
     [switch]$SkipKerberos
 )

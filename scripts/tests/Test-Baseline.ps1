@@ -19,6 +19,10 @@
     Version: 1.0.0
 #>
 
+param(
+    [string]$DCAddress = "dc.example.com"
+)
+
 Write-Host "=== T-6.7: Baseline-Checks ===" -ForegroundColor Cyan
 Write-Host "Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n"
 
@@ -88,7 +92,7 @@ if ($wg -and $wg.Status -eq "Up") {
 
 # 7. DC Connectivity
 Write-Host "`n7. DC Connectivity..." -ForegroundColor Yellow
-$dc = Test-NetConnection -ComputerName 192.168.100.20 -Port 389 -WarningAction SilentlyContinue
+$dc = Test-NetConnection -ComputerName $DCAddress -Port 389 -WarningAction SilentlyContinue
 if ($dc.TcpTestSucceeded) {
     Write-Host "   [PASS] DC LDAP (389) erreichbar" -ForegroundColor Green
 } else {
