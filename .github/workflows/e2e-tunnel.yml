@@ -8,6 +8,9 @@ name: "E2E Tunnel Tests"
 #
 # Use workflow_dispatch to record test results from lab testing.
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
     inputs:
