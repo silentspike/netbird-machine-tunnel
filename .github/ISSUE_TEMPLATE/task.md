@@ -1,31 +1,39 @@
 ---
 name: Technical Task
-about: Technische Aufgabe für die Implementierung
+about: A specific technical task for implementation
 title: '[Task] T-X.Y: '
-labels: type:task, phase:mvp
+labels: type:task
 assignees: ''
 ---
 
 ## Parent Story
-<!-- Link zur Story -->
+
+<!-- Link to the parent story -->
 Refs #
 
-## Beschreibung
-Was muss technisch umgesetzt werden?
+## Description
 
-## Dateien/Komponenten
-<!-- Welche Files werden geändert/erstellt? -->
+What needs to be implemented?
+
+## Files / Components
+
+<!-- Which files will be created or modified? -->
 -
 
 ## Implementation Notes
-<!-- Technische Details -->
+
+<!-- Technical details, API signatures, design decisions -->
 -
 
 ## Definition of Done
-- [ ] Code implementiert
-- [ ] Tests geschrieben
+
+- [ ] Code implemented
+- [ ] Tests written and passing
 - [ ] Code reviewed
-- [ ] Dokumentation aktualisiert (falls nötig)
+- [ ] Documentation updated (if applicable)
+- [ ] Windows cross-compilation succeeds
 
 ## Estimated Complexity
+
 <!-- Simple | Medium | Complex -->
+
