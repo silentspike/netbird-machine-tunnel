@@ -18,7 +18,7 @@ on:
       dc_address:
         description: 'Domain Controller IP address'
         required: true
-        default: '192.168.100.20'
+        default: ''
       domain_name:
         description: 'Domain name for SRV lookups'
         required: true

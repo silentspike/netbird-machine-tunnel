@@ -61,7 +61,7 @@ Get-Service NetBirdMachine
 Get-NetAdapter | Where-Object { $_.Name -like "wg*" }
 
 # 3. Can you reach the Domain Controller?
-Test-NetConnection -ComputerName 192.168.100.20 -Port 389 -WarningAction SilentlyContinue
+Test-NetConnection -ComputerName <DC_IP> -Port 389 -WarningAction SilentlyContinue
 ```
 
 **What healthy output looks like:**
@@ -87,7 +87,7 @@ Connect to your management server and run:
 docker ps | grep management
 
 # Check recent logs for errors
-docker logs ubuntu-management-1 --tail 50 | grep -E "ERROR|WARN|mTLS"
+docker logs netbird-management --tail 50 | grep -E "ERROR|WARN|mTLS"
 ```
 
 **What healthy output looks like:**
@@ -186,19 +186,19 @@ Test if you can reach the Domain Controller through the tunnel.
 
 ```powershell
 # Test DNS (port 53)
-Test-NetConnection -ComputerName 192.168.100.20 -Port 53 -WarningAction SilentlyContinue
+Test-NetConnection -ComputerName <DC_IP> -Port 53 -WarningAction SilentlyContinue
 
 # Test Kerberos (port 88)
-Test-NetConnection -ComputerName 192.168.100.20 -Port 88 -WarningAction SilentlyContinue
+Test-NetConnection -ComputerName <DC_IP> -Port 88 -WarningAction SilentlyContinue
 
 # Test LDAP (port 389)
-Test-NetConnection -ComputerName 192.168.100.20 -Port 389 -WarningAction SilentlyContinue
+Test-NetConnection -ComputerName <DC_IP> -Port 389 -WarningAction SilentlyContinue
 
 # Test SMB for Group Policy (port 445)
-Test-NetConnection -ComputerName 192.168.100.20 -Port 445 -WarningAction SilentlyContinue
+Test-NetConnection -ComputerName <DC_IP> -Port 445 -WarningAction SilentlyContinue
 ```
 
-Replace `192.168.100.20` with your Domain Controller's IP address.
+Replace `<DC_IP>` with your Domain Controller's IP address.
 
 **If connectivity fails:**
 - Check if the tunnel interface is up
@@ -259,7 +259,7 @@ The management server runs in Docker and handles client authentication.
 docker ps | grep management
 
 # You should see something like:
-# ubuntu-management-1   Up 2 days
+# netbird-management   Up 2 days
 ```
 
 **If the container is not running:**
@@ -269,7 +269,7 @@ docker ps | grep management
 docker ps -a | grep management
 
 # View container logs to see why it stopped
-docker logs ubuntu-management-1
+docker logs netbird-management
 ```
 
 ### Step 2: Check Server Logs
@@ -278,13 +278,13 @@ The server logs show authentication attempts and errors.
 
 ```bash
 # View recent logs
-docker logs ubuntu-management-1 --tail 100
+docker logs netbird-management --tail 100
 
 # Filter for mTLS-related messages
-docker logs ubuntu-management-1 --tail 100 | grep -i "mtls"
+docker logs netbird-management --tail 100 | grep -i "mtls"
 
 # Filter for errors and warnings
-docker logs ubuntu-management-1 --tail 100 | grep -E "ERROR|WARN"
+docker logs netbird-management --tail 100 | grep -E "ERROR|WARN"
 ```
 
 **What to look for in the logs:**
@@ -317,7 +317,7 @@ You can check if a specific client is connecting by searching the logs:
 
 ```bash
 # Search for a specific computer name
-docker logs ubuntu-management-1 --tail 500 | grep "your-computer-name"
+docker logs netbird-management --tail 500 | grep "your-computer-name"
 ```
 
 ---
@@ -381,7 +381,7 @@ docker logs ubuntu-management-1 --tail 500 | grep "your-computer-name"
    - Clear cache: `Clear-DnsClientCache`
 
 3. **DC DNS server not responding**
-   - Test: `Test-NetConnection -ComputerName 192.168.100.20 -Port 53`
+   - Test: `Test-NetConnection -ComputerName <DC_IP> -Port 53`
 
 ### Problem: Authentication fails on server
 
@@ -412,7 +412,7 @@ If you can't solve the problem:
 1. **Collect diagnostic information:**
    - Service status: `Get-Service NetBirdMachine`
    - Last 100 lines of log: `Get-Content "C:\ProgramData\NetBird\machine-tunnel.log" -Tail 100`
-   - Server logs: `docker logs ubuntu-management-1 --tail 100`
+   - Server logs: `docker logs netbird-management --tail 100`
 
 2. **Check the documentation:**
    - [Architecture Overview](ARCHITECTURE.md)
