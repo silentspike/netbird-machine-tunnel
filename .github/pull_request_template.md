@@ -1,27 +1,48 @@
-## Describe your changes
+## Description
 
-## Issue ticket number and link
+<!-- What does this PR do? Why is it needed? -->
 
-## Stack
+## Related Issue
 
-<!-- branch-stack -->
+<!-- Link the issue this PR addresses -->
+Closes #
 
-### Checklist
-- [ ] Is it a bug fix
-- [ ] Is a typo/documentation fix
-- [ ] Is a feature enhancement
-- [ ] It is a refactor
-- [ ] Created tests that fail without the change (if possible)
+## Type of Change
 
-> By submitting this pull request, you confirm that you have read and agree to the terms of the [Contributor License Agreement](https://github.com/netbirdio/netbird/blob/main/CONTRIBUTOR_LICENSE_AGREEMENT.md).
+- [ ] Bug fix (non-breaking change that fixes an issue)
+- [ ] New feature (non-breaking change that adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Refactoring (no functional changes)
+- [ ] Documentation update
+- [ ] CI/CD or build changes
+- [ ] Dependency update
 
-## Documentation
-Select exactly one:
+## How Has This Been Tested?
 
-- [ ] I added/updated documentation for this change
-- [ ] Documentation is **not needed** for this change (explain why)
+<!-- Describe the tests you ran and how to reproduce them -->
 
-### Docs PR URL (required if "docs added" is checked)
-Paste the PR link from https://github.com/netbirdio/docs here:
+- [ ] Unit tests (`go test ./...`)
+- [ ] Linter (`golangci-lint run`)
+- [ ] Windows cross-compilation (`GOOS=windows GOARCH=amd64 go build ./client/cmd/netbird-machine`)
+- [ ] Windows VM manual test (describe below)
 
-https://github.com/netbirdio/docs/pull/__
+**Test environment:**
+- OS:
+- NetBird Machine Tunnel version:
+
+**Test evidence:**
+<!-- Paste command outputs, screenshots, or log excerpts that prove the change works -->
+
+## Checklist
+
+- [ ] Code compiles without errors
+- [ ] All tests pass
+- [ ] Linter passes
+- [ ] I have added tests for new functionality
+- [ ] I have updated documentation for user-visible changes
+- [ ] CHANGELOG.md is updated (for features and bug fixes)
+- [ ] Fork-specific code in upstream files uses `MACHINE-TUNNEL-FORK` markers
+- [ ] No secrets, credentials, or internal IPs in the code
+- [ ] llms.txt is updated if files were added, renamed, or removed
+
+> By submitting this pull request, you confirm that you have read and agree to the terms of the [Contributor License Agreement](CONTRIBUTOR_LICENSE_AGREEMENT.md).

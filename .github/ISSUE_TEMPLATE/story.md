@@ -1,32 +1,42 @@
 ---
 name: User Story
-about: Feature aus Nutzersicht beschreiben
+about: Describe a feature from the user's perspective
 title: '[Story] S-X: '
-labels: type:story, priority:high, phase:mvp
+labels: type:story
 assignees: ''
 ---
 
 ## Parent Epic
-<!-- Link zum Epic -->
+
+<!-- Link to the parent epic -->
 Refs #
 
 ## User Story
-Als [Rolle]
-möchte ich [Funktion]
-damit [Nutzen]
+
+As a [role],
+I want [capability],
+so that [benefit].
 
 ## Acceptance Criteria
-<!-- Wann gilt die Story als abgeschlossen? -->
+
+<!-- Testable conditions that must be met -->
 - [ ] ...
 
 ## Tasks
-<!-- Liste der zugehörigen Tasks -->
+
+<!-- Break down into technical tasks. Create them as separate issues. -->
 - [ ] T-X.1: ...
 - [ ] T-X.2: ...
 
 ## Technical Notes
-<!-- Technische Hinweise für die Implementierung -->
+
+<!-- Implementation hints, architecture considerations, relevant code paths -->
 -
 
-## Branch
-`feature/...`
+## Testing Strategy
+
+<!-- How will this story be verified? -->
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Windows VM manual test
+- [ ] Other: ___

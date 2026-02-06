@@ -1,8 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: NetBird Documentation
+  - name: Machine Tunnel Documentation
+    url: https://github.com/obtFusi/netbird-fork/tree/main/docs
+    about: Architecture, security hardening, and troubleshooting guides
+  - name: Standard NetBird Documentation
     url: https://docs.netbird.io
-    about: Official NetBird documentation
-  - name: NetBird Discussions
+    about: Official NetBird documentation (for non-Machine-Tunnel questions)
+  - name: Security Vulnerabilities
+    url: https://github.com/obtFusi/netbird-fork/security/advisories/new
+    about: Report security vulnerabilities privately (do not open a public issue)
+  - name: NetBird Community Discussions
     url: https://github.com/netbirdio/netbird/discussions
-    about: Ask questions and discuss NetBird
+    about: General NetBird questions and community support

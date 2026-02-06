@@ -1,0 +1,50 @@
+# NetBird Machine Tunnel Fork - Code Ownership
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# All PRs require at least one review from a code owner.
+# More specific rules below override less specific ones.
+
+# Default: all changes require maintainer review
+* @obtFusi
+
+# ============================================================
+# Security-Critical Paths (require careful review)
+# ============================================================
+
+# mTLS authentication & certificate handling
+/management/internals/server/mtls_* @obtFusi
+/management/internals/shared/mtls/ @obtFusi
+/client/internal/auth/ @obtFusi
+
+# Machine Tunnel core (fork-specific code)
+/client/internal/tunnel/ @obtFusi
+/client/cmd/netbird-machine/ @obtFusi
+
+# DPAPI encryption & key management
+/client/internal/tunnel/security_windows.go @obtFusi
+
+# ============================================================
+# Server-Side Changes (upstream-sensitive)
+# ============================================================
+
+/management/server/ @obtFusi
+/management/internals/ @obtFusi
+/shared/management/proto/ @obtFusi
+
+# ============================================================
+# Infrastructure & CI/CD
+# ============================================================
+
+/.github/workflows/ @obtFusi
+/.github/CODEOWNERS @obtFusi
+/Makefile @obtFusi
+
+# ============================================================
+# Documentation & Public-Facing
+# ============================================================
+
+/README.md @obtFusi
+/SECURITY.md @obtFusi
+/CHANGELOG.md @obtFusi
+/NOTICE.md @obtFusi
+/LICENSE @obtFusi
