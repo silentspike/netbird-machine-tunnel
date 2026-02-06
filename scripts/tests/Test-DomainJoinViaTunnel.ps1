@@ -36,8 +36,8 @@
         Path = ".\Test-DomainJoinViaTunnel.ps1"
         Parameters = @{
             SetupKey = "a1b2c3d4-..."
-            DomainName = "corp.local"
-            DCAddress = "192.168.100.20"
+            DomainName = "corp.example.com"
+            DCAddress = "dc.example.com"
         }
     }
 

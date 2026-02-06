@@ -20,7 +20,9 @@
 
 param(
     [switch]$WithTunnel,
-    [switch]$StopOnFirstFailure
+    [switch]$StopOnFirstFailure,
+    [string]$ManagementServer = "mgmt.example.com",
+    [string]$DCAddress = "dc.example.com"
 )
 
 Write-Host "=== T-6.8: GO/NO-GO MATRIX ===" -ForegroundColor Cyan
@@ -68,7 +70,7 @@ if ($domain -eq "test.local") {
 # 14.0.4: Router-Peer Isolation (nur ohne Tunnel)
 Write-Host "`n[14.0.4] Router-Peer Isolation..." -ForegroundColor Yellow
 if (-not $WithTunnel) {
-    $dcDirect = Test-NetConnection -ComputerName 192.168.100.20 -Port 389 -WarningAction SilentlyContinue
+    $dcDirect = Test-NetConnection -ComputerName $DCAddress -Port 389 -WarningAction SilentlyContinue
     if (-not $dcDirect.TcpTestSucceeded) {
         Add-Result "14.0.4" "PASS" "DC nicht direkt erreichbar (Isolation OK)"
     } else {
@@ -80,9 +82,9 @@ if (-not $WithTunnel) {
 
 # 14.0.5: Management-Server
 Write-Host "`n[14.0.5] Management-Server..." -ForegroundColor Yellow
-$mgmtServer = Test-NetConnection -ComputerName 10.0.0.103 -Port 443 -WarningAction SilentlyContinue
+$mgmtServer = Test-NetConnection -ComputerName $ManagementServer -Port 443 -WarningAction SilentlyContinue
 if ($mgmtServer.TcpTestSucceeded) {
-    Add-Result "14.0.5" "PASS" "Management-Server erreichbar (10.0.0.103:443)"
+    Add-Result "14.0.5" "PASS" "Management-Server erreichbar ($ManagementServer`:443)"
 } else {
     Add-Result "14.0.5" "FAIL" "Management-Server nicht erreichbar"
 }
@@ -96,7 +98,7 @@ if ($WithTunnel) {
         Add-Result "14.0.6" "PASS" "Tunnel UP: $($wg.Name) ($wgIP)"
 
         # DC via Tunnel erreichbar?
-        $dcVia = Test-NetConnection -ComputerName 192.168.100.20 -Port 389 -WarningAction SilentlyContinue
+        $dcVia = Test-NetConnection -ComputerName $DCAddress -Port 389 -WarningAction SilentlyContinue
         if ($dcVia.TcpTestSucceeded) {
             Add-Result "14.0.6b" "PASS" "DC via Tunnel erreichbar"
         } else {

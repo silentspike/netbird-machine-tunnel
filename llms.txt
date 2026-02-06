@@ -31,7 +31,7 @@ This fork adds a **Machine Tunnel** feature: a Windows SYSTEM service (`NetBirdM
 ## Server-Side mTLS (fork-specific)
 
 - [management/internals/server/mtls_server.go](management/internals/server/mtls_server.go): Separate mTLS gRPC server on port 33074
-- [management/internals/server/mtls_config.go](management/internals/server/mtls_config.go): mTLS TLS configuration, CA trust
+- [management/internals/server/mtls_auth.go](management/internals/server/mtls_auth.go): mTLS authentication, identity extraction, CA trust
 - [management/internals/shared/grpc/machine_tunnel.go](management/internals/shared/grpc/machine_tunnel.go): RegisterMachinePeer, SyncMachinePeer RPCs
 - [management/internals/shared/grpc/machine_tunnel_test.go](management/internals/shared/grpc/machine_tunnel_test.go): Server-side tests
 - [management/internals/shared/mtls/](management/internals/shared/mtls/): Identity extraction, issuer validation
@@ -44,8 +44,8 @@ This fork adds a **Machine Tunnel** feature: a Windows SYSTEM service (`NetBirdM
 
 ## Scripts & Deployment
 
-- [scripts/install-machine-tunnel.ps1](scripts/install-machine-tunnel.ps1): Windows installer
-- [scripts/enroll-cert.ps1](scripts/enroll-cert.ps1): AD CS certificate enrollment
+- [scripts/install-netbird-machine.ps1](scripts/install-netbird-machine.ps1): Windows installer
+- [scripts/bootstrap-new-client.ps1](scripts/bootstrap-new-client.ps1): Full bootstrap (install, domain join, cert enrollment)
 - [scripts/reset-netbird-machine.ps1](scripts/reset-netbird-machine.ps1): Clean reset for testing
 - [scripts/tests/](scripts/tests/): E2E test scripts for lab environment
 

@@ -51,6 +51,9 @@ secrets/
 credentials/
 credentials.json
 
+# Lab-specific configuration (contains real IPs/credentials)
+scripts/lab/lab-config.ps1
+
 # Test artifacts
 coverage.out
 coverage.html

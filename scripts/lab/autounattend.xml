@@ -137,7 +137,8 @@
 
             <UserAccounts>
                 <AdministratorPassword>
-                    <Value>NetBird-Lab-2025!</Value>
+                    <!-- CHANGE THIS: Set a strong password for the lab admin account -->
+                    <Value>CHANGE-ME-Lab-Password!</Value>
                     <PlainText>true</PlainText>
                 </AdministratorPassword>
             </UserAccounts>
@@ -146,7 +147,8 @@
                 <Enabled>true</Enabled>
                 <Username>Administrator</Username>
                 <Password>
-                    <Value>NetBird-Lab-2025!</Value>
+                    <!-- CHANGE THIS: Must match AdministratorPassword above -->
+                    <Value>CHANGE-ME-Lab-Password!</Value>
                     <PlainText>true</PlainText>
                 </Password>
                 <LogonCount>3</LogonCount>
