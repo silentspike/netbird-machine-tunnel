@@ -352,7 +352,7 @@ jobs:
         run: git --no-pager diff --exit-code
 
       - name: Login to Docker hub
-        if: matrix.store == 'mysql' && (github.repository == github.head.repo.full_name || !github.head_ref)
+        if: matrix.store == 'mysql' && secrets.DOCKER_USER != '' && (github.repository == github.head.repo.full_name || !github.head_ref)
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
@@ -363,7 +363,7 @@ jobs:
         run: docker pull mlsmaycon/warmed-mysql:8
 
       - name: Test
-        run: |          
+        run: |
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
           NETBIRD_STORE_ENGINE=${{ matrix.store }} \
             CI=true \
@@ -440,7 +440,7 @@ jobs:
         run: git --no-pager diff --exit-code
 
       - name: Login to Docker hub
-        if: matrix.store == 'mysql' && (github.repository == github.head.repo.full_name || !github.head_ref)
+        if: matrix.store == 'mysql' && secrets.DOCKER_USER != '' && (github.repository == github.head.repo.full_name || !github.head_ref)
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
@@ -529,7 +529,7 @@ jobs:
         run: git --no-pager diff --exit-code
 
       - name: Login to Docker hub
-        if: matrix.store == 'mysql' && (github.repository == github.head.repo.full_name || !github.head_ref)
+        if: matrix.store == 'mysql' && secrets.DOCKER_USER != '' && (github.repository == github.head.repo.full_name || !github.head_ref)
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
