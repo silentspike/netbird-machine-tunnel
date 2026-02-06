@@ -86,4 +86,4 @@ go test ./management/internals/shared/grpc/... -run MachineTunnel
 
 ## License
 
-AGPL-3.0 (inherited from NetBird). See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).
+Dual-licensed: BSD-3-Clause (client, shared) + AGPL-3.0 (management, signal, relay). See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).

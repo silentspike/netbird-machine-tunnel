@@ -8,6 +8,9 @@ on:
 
 env:
   downloadPath: '${{ github.workspace }}\temp'
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || github.actor_id }}
   cancel-in-progress: true

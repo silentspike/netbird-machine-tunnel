@@ -1,12 +1,24 @@
 # Notice
 
-This project is a fork of [NetBird](https://github.com/netbirdio/netbird), licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+This project is a fork of [NetBird](https://github.com/netbirdio/netbird).
+
+## Licensing
+
+NetBird uses a **dual-license** structure:
+
+| Component | License | Directories |
+|-----------|---------|-------------|
+| Client, Shared Libraries | **BSD-3-Clause** | `client/`, `shared/`, root |
+| Management Server | **AGPL-3.0** | `management/` |
+| Signal Server | **AGPL-3.0** | `signal/` |
+| Relay Server | **AGPL-3.0** | `relay/` |
+
+This fork inherits and follows the same dual-license structure. See [LICENSE](LICENSE) for the BSD-3-Clause text, and the respective `LICENSE` files in `management/`, `signal/`, and `relay/` for AGPL-3.0.
 
 ## Original Project
 
 - **Project:** NetBird
 - **Repository:** https://github.com/netbirdio/netbird
-- **License:** AGPL-3.0
 - **Copyright:** NetBird Authors
 
 ## Fork Information
@@ -30,7 +42,7 @@ This fork includes the following modifications from upstream NetBird:
 ### Windows Service (client/cmd/netbird-machine/)
 - **SYSTEM Service:** Runs as NT AUTHORITY\SYSTEM for pre-login operation
 - **SCM Integration:** Windows Service Control Manager with recovery actions
-- **Bootstrap Flow:** Two-phase authentication (Setup Key → mTLS)
+- **Bootstrap Flow:** Two-phase authentication (Setup Key, then mTLS)
 
 ### Server Extensions (management/server/)
 - **Machine Peer Registration:** RegisterMachinePeer RPC for machine authentication
@@ -39,7 +51,7 @@ This fork includes the following modifications from upstream NetBird:
 
 ## Source Code Availability
 
-As required by AGPL-3.0, the complete source code for this fork is available at:
+As required by AGPL-3.0 (for the server components), the complete source code for this fork is available at:
 
 https://github.com/obtFusi/netbird-fork
 
@@ -47,7 +59,3 @@ https://github.com/obtFusi/netbird-fork
 
 NetBird was created by the NetBird team and contributors:
 https://github.com/netbirdio/netbird/graphs/contributors
-
-## License
-
-This fork is distributed under the same AGPL-3.0 license as the original NetBird project. See [LICENSE](LICENSE) for the full license text.
