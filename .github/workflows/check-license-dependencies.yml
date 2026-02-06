@@ -13,6 +13,9 @@ on:
       - 'go.sum'
       - '.github/workflows/check-license-dependencies.yml'
 
+permissions:
+  contents: read
+
 jobs:
   check-internal-dependencies:
     name: Check Internal AGPL Dependencies
