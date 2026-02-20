@@ -627,10 +627,11 @@ func TestReportMachineStatus_UpdatesLastSeen(t *testing.T) {
 
 	mockAM := &mock_server.MockAccountManager{
 		GetStoreFunc: func() store.Store { return mockStore },
-		MarkPeerConnectedFunc: func(_ context.Context, peerKey string, connected bool, _ net.IP, _ time.Time) error {
+		MarkPeerConnectedFunc: func(_ context.Context, peerKey string, connected bool, _ net.IP, accountID string, _ time.Time) error {
 			markConnectedCalled = true
 			capturedPeerKey = peerKey
 			capturedConnected = connected
+			capturedAccountID = accountID
 			return nil
 		},
 	}
@@ -650,9 +651,7 @@ func TestReportMachineStatus_UpdatesLastSeen(t *testing.T) {
 	assert.True(t, markConnectedCalled, "MarkPeerConnected should have been called")
 	assert.Equal(t, testPeerKey, capturedPeerKey)
 	assert.True(t, capturedConnected)
-	// Note: capturedAccountID comes from the 5th param of the real MarkPeerConnected,
-	// but the MockAccountManager.MarkPeerConnectedFunc only receives 4 params due to mock signature
-	_ = capturedAccountID
+	assert.Equal(t, testAccountID, capturedAccountID, "accountID should be passed through")
 }
 
 func TestReportMachineStatus_MarkPeerConnectedError(t *testing.T) {
@@ -669,7 +668,7 @@ func TestReportMachineStatus_MarkPeerConnectedError(t *testing.T) {
 
 	mockAM := &mock_server.MockAccountManager{
 		GetStoreFunc: func() store.Store { return mockStore },
-		MarkPeerConnectedFunc: func(_ context.Context, _ string, _ bool, _ net.IP, _ time.Time) error {
+		MarkPeerConnectedFunc: func(_ context.Context, _ string, _ bool, _ net.IP, _ string, _ time.Time) error {
 			return errors.New("database error")
 		},
 	}
