@@ -111,6 +111,11 @@ func TestServiceLifecycle(t *testing.T) {
 	})
 
 	t.Run("Restart", func(t *testing.T) {
+		// Allow the service to fully stabilize before restart.
+		// On FreeBSD QEMU VMs the init system may not be ready for
+		// a restart immediately after reporting StatusRunning.
+		time.Sleep(2 * time.Second)
+
 		restartCmd.SetContext(ctx)
 		err := restartCmd.RunE(restartCmd, []string{})
 		require.NoError(t, err)

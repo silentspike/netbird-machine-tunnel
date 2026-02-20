@@ -82,8 +82,27 @@ jobs:
 
       - run: mv ${{ env.downloadPath }}/wintun/bin/amd64/wintun.dll 'C:\Windows\System32\'
 
-      - run: choco install -y sysinternals --ignore-checksums
-      - run: choco install -y mingw
+      - name: Install sysinternals (with retry)
+        run: |
+          $maxRetries = 3
+          for ($i = 1; $i -le $maxRetries; $i++) {
+            choco install -y sysinternals --ignore-checksums
+            if ($LASTEXITCODE -eq 0) { break }
+            Write-Host "Attempt $i failed, retrying in 15 seconds..."
+            Start-Sleep -Seconds 15
+          }
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: Install mingw (with retry)
+        run: |
+          $maxRetries = 3
+          for ($i = 1; $i -le $maxRetries; $i++) {
+            choco install -y mingw
+            if ($LASTEXITCODE -eq 0) { break }
+            Write-Host "Attempt $i failed, retrying in 15 seconds..."
+            Start-Sleep -Seconds 15
+          }
+          if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - run: PsExec64 -s -w ${{ github.workspace }} C:\hostedtoolcache\windows\go\${{ steps.go.outputs.go-version }}\x64\bin\go.exe env -w GOMODCACHE=${{ env.cache }}
       - run: PsExec64 -s -w ${{ github.workspace }} C:\hostedtoolcache\windows\go\${{ steps.go.outputs.go-version }}\x64\bin\go.exe env -w GOCACHE=${{ env.modcache }}
