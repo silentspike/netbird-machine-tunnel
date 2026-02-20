@@ -174,6 +174,7 @@ func (c *Controller) sendUpdateAccountPeers(ctx context.Context, accountID strin
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, 10)
 
+	account.InjectProxyPolicies(ctx)
 	dnsCache := &cache.DNSConfigCache{}
 	dnsDomain := c.GetDNSDomain(account.Settings)
 	peersCustomZone := account.GetPeersCustomZone(ctx, dnsDomain)
@@ -247,7 +248,10 @@ func (c *Controller) sendUpdateAccountPeers(ctx context.Context, accountID strin
 			update := grpc.ToSyncResponse(ctx, nil, c.config.HttpConfig, c.config.DeviceAuthorizationFlow, p, nil, nil, remotePeerNetworkMap, dnsDomain, postureChecks, dnsCache, account.Settings, extraSetting, maps.Keys(peerGroups), dnsFwdPort)
 			c.metrics.CountToSyncResponseDuration(time.Since(start))
 
-			c.peersUpdateManager.SendUpdate(ctx, p.ID, &network_map.UpdateMessage{Update: update})
+			c.peersUpdateManager.SendUpdate(ctx, p.ID, &network_map.UpdateMessage{
+				Update:      update,
+				MessageType: network_map.MessageTypeNetworkMap,
+			})
 		}(peer)
 	}
 
@@ -323,6 +327,7 @@ func (c *Controller) UpdateAccountPeer(ctx context.Context, accountId string, pe
 		return fmt.Errorf("failed to get validated peers: %v", err)
 	}
 
+	account.InjectProxyPolicies(ctx)
 	dnsCache := &cache.DNSConfigCache{}
 	dnsDomain := c.GetDNSDomain(account.Settings)
 	peersCustomZone := account.GetPeersCustomZone(ctx, dnsDomain)
@@ -370,7 +375,10 @@ func (c *Controller) UpdateAccountPeer(ctx context.Context, accountId string, pe
 	dnsFwdPort := computeForwarderPort(maps.Values(account.Peers), network_map.DnsForwarderPortMinVersion)
 
 	update := grpc.ToSyncResponse(ctx, nil, c.config.HttpConfig, c.config.DeviceAuthorizationFlow, peer, nil, nil, remotePeerNetworkMap, dnsDomain, postureChecks, dnsCache, account.Settings, extraSettings, maps.Keys(peerGroups), dnsFwdPort)
-	c.peersUpdateManager.SendUpdate(ctx, peer.ID, &network_map.UpdateMessage{Update: update})
+	c.peersUpdateManager.SendUpdate(ctx, peer.ID, &network_map.UpdateMessage{
+		Update:      update,
+		MessageType: network_map.MessageTypeNetworkMap,
+	})
 
 	return nil
 }
@@ -434,6 +442,8 @@ func (c *Controller) GetValidatedPeerWithMap(ctx context.Context, isRequiresAppr
 			return nil, nil, nil, 0, err
 		}
 	}
+
+	account.InjectProxyPolicies(ctx)
 
 	approvedPeersMap, err := c.integratedPeerValidator.GetValidatedPeers(ctx, account.Id, maps.Values(account.Groups), maps.Values(account.Peers), account.Settings.Extra)
 	if err != nil {
@@ -778,6 +788,7 @@ func (c *Controller) OnPeersDeleted(ctx context.Context, accountID string, peerI
 					},
 				},
 			},
+			MessageType: network_map.MessageTypeNetworkMap,
 		})
 		c.peersUpdateManager.CloseChannel(ctx, peerID)
 
@@ -840,6 +851,7 @@ func (c *Controller) GetNetworkMap(ctx context.Context, peerID string) (*types.N
 	if c.experimentalNetworkMap(peer.AccountID) {
 		networkMap = c.getPeerNetworkMapExp(ctx, peer.AccountID, peerID, validatedPeers, peersCustomZone, accountZones, nil)
 	} else {
+		account.InjectProxyPolicies(ctx)
 		resourcePolicies := account.GetResourcePoliciesMap()
 		routers := account.GetResourceRoutersMap()
 		networkMap = account.GetPeerNetworkMap(ctx, peer.ID, peersCustomZone, accountZones, validatedPeers, resourcePolicies, routers, nil, account.GetActiveGroupUsers())

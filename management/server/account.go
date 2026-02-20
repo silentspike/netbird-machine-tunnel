@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy"
 	"github.com/netbirdio/netbird/management/server/job"
 	"github.com/netbirdio/netbird/shared/auth"
 
@@ -82,8 +83,9 @@ type DefaultAccountManager struct {
 
 	requestBuffer *AccountRequestBuffer
 
-	proxyController port_forwarding.Controller
-	settingsManager settings.Manager
+	proxyController     port_forwarding.Controller
+	settingsManager     settings.Manager
+	reverseProxyManager reverseproxy.Manager
 
 	// config contains the management server configuration
 	config *nbconfig.Config
@@ -112,6 +114,10 @@ type DefaultAccountManager struct {
 }
 
 var _ account.Manager = (*DefaultAccountManager)(nil)
+
+func (am *DefaultAccountManager) SetServiceManager(serviceManager reverseproxy.Manager) {
+	am.reverseProxyManager = serviceManager
+}
 
 func isUniqueConstraintError(err error) bool {
 	switch {
@@ -291,6 +297,7 @@ func (am *DefaultAccountManager) UpdateAccountSettings(ctx context.Context, acco
 	var oldSettings *types.Settings
 	var updateAccountPeers bool
 	var groupChangesAffectPeers bool
+	var reloadReverseProxy bool
 
 	err = am.Store.ExecuteInTransaction(ctx, func(transaction store.Store) error {
 		var groupsUpdated bool
@@ -321,6 +328,7 @@ func (am *DefaultAccountManager) UpdateAccountSettings(ctx context.Context, acco
 			if err = am.reallocateAccountPeerIPs(ctx, transaction, accountID, newSettings.NetworkRange); err != nil {
 				return err
 			}
+			reloadReverseProxy = true
 			updateAccountPeers = true
 		}
 
@@ -384,6 +392,11 @@ func (am *DefaultAccountManager) UpdateAccountSettings(ctx context.Context, acco
 			"new_network_range": newSettings.NetworkRange.String(),
 		}
 		am.StoreEvent(ctx, userID, accountID, accountID, activity.AccountNetworkRangeUpdated, eventMeta)
+	}
+	if reloadReverseProxy {
+		if err = am.reverseProxyManager.ReloadAllServicesForAccount(ctx, accountID); err != nil {
+			log.WithContext(ctx).Warnf("failed to reload all services for account %s: %v", accountID, err)
+		}
 	}
 
 	if updateAccountPeers || extraSettingsChanged || groupChangesAffectPeers {
@@ -1670,13 +1683,13 @@ func domainIsUpToDate(domain string, domainCategory string, userAuth auth.UserAu
 	return domainCategory == types.PrivateCategory || userAuth.DomainCategory != types.PrivateCategory || domain != userAuth.Domain
 }
 
-func (am *DefaultAccountManager) SyncAndMarkPeer(ctx context.Context, accountID string, peerPubKey string, meta nbpeer.PeerSystemMeta, realIP net.IP) (*nbpeer.Peer, *types.NetworkMap, []*posture.Checks, int64, error) {
+func (am *DefaultAccountManager) SyncAndMarkPeer(ctx context.Context, accountID string, peerPubKey string, meta nbpeer.PeerSystemMeta, realIP net.IP, syncTime time.Time) (*nbpeer.Peer, *types.NetworkMap, []*posture.Checks, int64, error) {
 	peer, netMap, postureChecks, dnsfwdPort, err := am.SyncPeer(ctx, types.PeerSync{WireGuardPubKey: peerPubKey, Meta: meta}, accountID)
 	if err != nil {
 		return nil, nil, nil, 0, fmt.Errorf("error syncing peer: %w", err)
 	}
 
-	err = am.MarkPeerConnected(ctx, peerPubKey, true, realIP, accountID)
+	err = am.MarkPeerConnected(ctx, peerPubKey, true, realIP, accountID, syncTime)
 	if err != nil {
 		log.WithContext(ctx).Warnf("failed marking peer as connected %s %v", peerPubKey, err)
 	}
@@ -1697,7 +1710,7 @@ func (am *DefaultAccountManager) OnPeerDisconnected(ctx context.Context, account
 		return nil
 	}
 
-	err = am.MarkPeerConnected(ctx, peerPubKey, false, nil, accountID)
+	err = am.MarkPeerConnected(ctx, peerPubKey, false, nil, accountID, time.Now().UTC())
 	if err != nil {
 		log.WithContext(ctx).Warnf("failed marking peer as disconnected %s %v", peerPubKey, err)
 	}

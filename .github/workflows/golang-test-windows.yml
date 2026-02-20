@@ -95,7 +95,7 @@ jobs:
       # Upstream ref: netbirdio/netbird .github/workflows/golang-test-windows.yml
       - name: Write package list
         run: |
-          go list ./... | Where-Object { $_ -notmatch '/management' } | Where-Object { $_ -notmatch '/relay' } | Where-Object { $_ -notmatch '/signal' } | Out-File -FilePath packages.txt -Encoding utf8
+          go list ./... | Where-Object { $_ -notmatch '/management' } | Where-Object { $_ -notmatch '/relay' } | Where-Object { $_ -notmatch '/signal' } | Where-Object { $_ -notmatch '/proxy' } | Where-Object { $_ -notmatch '/combined' } | Out-File -FilePath packages.txt -Encoding utf8
 
       # [FORK EXTENSION] Test in batches of 30 packages via PsExec64.
       # Upstream runs all packages in a single cmd.exe invocation which works
