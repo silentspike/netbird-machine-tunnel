@@ -221,12 +221,6 @@ func (s *BaseServer) Start(ctx context.Context) error {
 	}
 	// === MACHINE-TUNNEL-FORK END ===
 
-	for _, fn := range s.afterInit {
-		if fn != nil {
-			fn(s)
-		}
-	}
-
 	log.WithContext(ctx).Infof("management server version %s", version.NetbirdVersion())
 	log.WithContext(ctx).Infof("running HTTP server and gRPC server on the same port: %s", s.listener.Addr().String())
 	s.serveGRPCWithHTTP(ctx, s.listener, rootHandler, tlsEnabled)

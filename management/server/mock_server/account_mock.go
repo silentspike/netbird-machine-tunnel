@@ -38,7 +38,7 @@ type MockAccountManager struct {
 	GetUserFromUserAuthFunc               func(ctx context.Context, userAuth auth.UserAuth) (*types.User, error)
 	ListUsersFunc                         func(ctx context.Context, accountID string) ([]*types.User, error)
 	GetPeersFunc                          func(ctx context.Context, accountID, userID, nameFilter, ipFilter string) ([]*nbpeer.Peer, error)
-	MarkPeerConnectedFunc                 func(ctx context.Context, peerKey string, connected bool, realIP net.IP, syncTime time.Time) error
+	MarkPeerConnectedFunc                 func(ctx context.Context, peerKey string, connected bool, realIP net.IP, accountID string, syncTime time.Time) error
 	SyncAndMarkPeerFunc                   func(ctx context.Context, accountID string, peerPubKey string, meta nbpeer.PeerSystemMeta, realIP net.IP, syncTime time.Time) (*nbpeer.Peer, *types.NetworkMap, []*posture.Checks, int64, error)
 	DeletePeerFunc                        func(ctx context.Context, accountID, peerKey, userID string) error
 	GetNetworkMapFunc                     func(ctx context.Context, peerKey string) (*types.NetworkMap, error)
@@ -329,7 +329,7 @@ func (am *MockAccountManager) GetAccountIDByUserID(ctx context.Context, userAuth
 // MarkPeerConnected mock implementation of MarkPeerConnected from server.AccountManager interface
 func (am *MockAccountManager) MarkPeerConnected(ctx context.Context, peerKey string, connected bool, realIP net.IP, accountID string, syncTime time.Time) error {
 	if am.MarkPeerConnectedFunc != nil {
-		return am.MarkPeerConnectedFunc(ctx, peerKey, connected, realIP, syncTime)
+		return am.MarkPeerConnectedFunc(ctx, peerKey, connected, realIP, accountID, syncTime)
 	}
 	return status.Errorf(codes.Unimplemented, "method MarkPeerConnected is not implemented")
 }
