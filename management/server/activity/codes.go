@@ -204,6 +204,10 @@ const (
 	UserInviteLinkRegenerated Activity = 106
 	UserInviteLinkDeleted     Activity = 107
 
+	ServiceCreated Activity = 108
+	ServiceUpdated Activity = 109
+	ServiceDeleted Activity = 110
+
 	// === MACHINE-TUNNEL-FORK START ===
 	// mTLS peer registration activity (ID 150+ reserved for fork extensions)
 	PeerAddedWithMTLS Activity = 150
@@ -342,6 +346,10 @@ var activityMap = map[Activity]Code{
 	UserInviteLinkAccepted:    {"User invite link accepted", "user.invite.link.accept"},
 	UserInviteLinkRegenerated: {"User invite link regenerated", "user.invite.link.regenerate"},
 	UserInviteLinkDeleted:     {"User invite link deleted", "user.invite.link.delete"},
+
+	ServiceCreated: {"Service created", "service.create"},
+	ServiceUpdated: {"Service updated", "service.update"},
+	ServiceDeleted: {"Service deleted", "service.delete"},
 
 	// === MACHINE-TUNNEL-FORK START ===
 	PeerAddedWithMTLS: {"Machine peer added via mTLS", "peer.mtls.add"},
