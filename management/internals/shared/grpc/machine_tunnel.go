@@ -233,7 +233,7 @@ func (s *Server) SyncMachinePeer(req *proto.MachineSyncRequest, srv proto.Manage
 	log.WithContext(ctx).Tracef("acquired peer lock for machine peer %s took %v", peer.Key, time.Since(start))
 
 	// SyncAndMarkPeer: get current NetworkMap and mark peer as connected
-	peer, netMap, postureChecks, _, err := s.accountManager.SyncAndMarkPeer(ctx, accountID, peer.Key, peerMeta, realIP)
+	peer, netMap, postureChecks, _, err := s.accountManager.SyncAndMarkPeer(ctx, accountID, peer.Key, peerMeta, realIP, time.Now().UTC())
 	if err != nil {
 		log.WithContext(ctx).Errorf("SyncMachinePeer: failed to sync peer %s: %v", identity.DNSName, err)
 		return status.Errorf(codes.Internal, "failed to sync peer: %v", err)
@@ -480,7 +480,7 @@ func (s *Server) ReportMachineStatus(ctx context.Context, req *proto.MachineStat
 
 	// Update peer connection status (non-critical: log errors but don't fail the RPC)
 	realIP := machineRealIP(ctx)
-	if err := s.accountManager.MarkPeerConnected(ctx, peer.Key, req.GetTunnelUp(), realIP, identity.AccountID); err != nil {
+	if err := s.accountManager.MarkPeerConnected(ctx, peer.Key, req.GetTunnelUp(), realIP, identity.AccountID, time.Now().UTC()); err != nil {
 		log.WithContext(ctx).Warnf("ReportMachineStatus: failed to update peer status for %s: %v",
 			identity.DNSName, err)
 	}
