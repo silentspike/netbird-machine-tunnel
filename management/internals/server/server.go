@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
-	"github.com/netbirdio/netbird/management/server/idp"
 	mgmtProto "github.com/netbirdio/netbird/shared/management/proto"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/metric"
