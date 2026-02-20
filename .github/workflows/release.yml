@@ -192,7 +192,7 @@ jobs:
           UPLOAD_DEBIAN_SECRET: ${{ secrets.PKG_UPLOAD_SECRET }}
           UPLOAD_YUM_SECRET: ${{ secrets.PKG_UPLOAD_SECRET }}
       - name: Tag and push PR images (amd64 only)
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && env.HAS_GHCR_CREDS == 'true'
         run: |
           PR_TAG="pr-${{ github.event.pull_request.number }}"
           echo '${{ steps.goreleaser.outputs.artifacts }}' | \
