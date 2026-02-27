@@ -34,7 +34,6 @@ import (
 	relayClient "github.com/netbirdio/netbird/shared/relay/client"
 	signal "github.com/netbirdio/netbird/shared/signal/client"
 	sProto "github.com/netbirdio/netbird/shared/signal/proto"
-	semaphoregroup "github.com/netbirdio/netbird/util/semaphore-group"
 )
 
 const (
@@ -64,9 +63,6 @@ type PeerEngine struct {
 
 	// STUN/TURN URLs as atomic.Value wrapper (engine.go pattern)
 	stunTurn icemaker.StunTurn
-
-	// GLOBAL Semaphore for concurrency limit (NOT per peer!)
-	semaphore *semaphoregroup.SemaphoreGroup
 
 	// Peer connections - Key = WG Public Key (msg.Key)
 	peerConns map[string]*peer.Conn
@@ -140,9 +136,6 @@ func NewPeerEngine(ctx context.Context, wgKey wgtypes.Key, cfg PeerEngineConfig)
 		peerConns: make(map[string]*peer.Conn),
 	}
 	pe.ctx, pe.cancel = context.WithCancel(ctx)
-
-	// 0. GLOBAL Semaphore for concurrency limit (NOT per peer!)
-	pe.semaphore = semaphoregroup.NewSemaphoreGroup(cfg.MaxConcurrent)
 
 	// 1. Create Signal Client (DIRECT REUSE)
 	// Engine Pattern: signal.NewClient() with backoff, then WaitStreamConnected()
@@ -418,7 +411,6 @@ func (pe *PeerEngine) ConnectPeer(ctx context.Context, remotePeerKey string, all
 		IFaceDiscover:  pe.ifaceDiscover,
 		RelayManager:   pe.relayManager,
 		SrWatcher:      pe.srWatcher,
-		Semaphore:      pe.semaphore, // GLOBAL, not newly created!
 		// PeerConnDispatcher: nil, // Engine also doesn't set this!
 	}
 
