@@ -28,6 +28,9 @@ const (
 	ManagementService_SyncMeta_FullMethodName                   = "/management.ManagementService/SyncMeta"
 	ManagementService_Logout_FullMethodName                     = "/management.ManagementService/Logout"
 	ManagementService_Job_FullMethodName                        = "/management.ManagementService/Job"
+	ManagementService_CreateExpose_FullMethodName               = "/management.ManagementService/CreateExpose"
+	ManagementService_RenewExpose_FullMethodName                = "/management.ManagementService/RenewExpose"
+	ManagementService_StopExpose_FullMethodName                 = "/management.ManagementService/StopExpose"
 	ManagementService_RegisterMachinePeer_FullMethodName        = "/management.ManagementService/RegisterMachinePeer"
 	ManagementService_SyncMachinePeer_FullMethodName            = "/management.ManagementService/SyncMachinePeer"
 	ManagementService_GetMachineRoutes_FullMethodName           = "/management.ManagementService/GetMachineRoutes"
@@ -72,6 +75,12 @@ type ManagementServiceClient interface {
 	Logout(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*Empty, error)
 	// Executes a job on a target peer (e.g., debug bundle)
 	Job(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[EncryptedMessage, EncryptedMessage], error)
+	// CreateExpose creates a temporary reverse proxy service for a peer
+	CreateExpose(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*EncryptedMessage, error)
+	// RenewExpose extends the TTL of an active expose session
+	RenewExpose(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*EncryptedMessage, error)
+	// StopExpose terminates an active expose session
+	StopExpose(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*EncryptedMessage, error)
 	// RegisterMachinePeer registers a machine peer using mTLS certificate authentication.
 	// The machine identity is extracted from the client certificate SAN DNSName.
 	// Requires: Valid machine certificate with SAN DNSName = "{hostname}.{domain}"
@@ -197,6 +206,36 @@ func (c *managementServiceClient) Job(ctx context.Context, opts ...grpc.CallOpti
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ManagementService_JobClient = grpc.BidiStreamingClient[EncryptedMessage, EncryptedMessage]
 
+func (c *managementServiceClient) CreateExpose(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*EncryptedMessage, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EncryptedMessage)
+	err := c.cc.Invoke(ctx, ManagementService_CreateExpose_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *managementServiceClient) RenewExpose(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*EncryptedMessage, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EncryptedMessage)
+	err := c.cc.Invoke(ctx, ManagementService_RenewExpose_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *managementServiceClient) StopExpose(ctx context.Context, in *EncryptedMessage, opts ...grpc.CallOption) (*EncryptedMessage, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EncryptedMessage)
+	err := c.cc.Invoke(ctx, ManagementService_StopExpose_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *managementServiceClient) RegisterMachinePeer(ctx context.Context, in *MachineRegisterRequest, opts ...grpc.CallOption) (*MachineRegisterResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MachineRegisterResponse)
@@ -284,6 +323,12 @@ type ManagementServiceServer interface {
 	Logout(context.Context, *EncryptedMessage) (*Empty, error)
 	// Executes a job on a target peer (e.g., debug bundle)
 	Job(grpc.BidiStreamingServer[EncryptedMessage, EncryptedMessage]) error
+	// CreateExpose creates a temporary reverse proxy service for a peer
+	CreateExpose(context.Context, *EncryptedMessage) (*EncryptedMessage, error)
+	// RenewExpose extends the TTL of an active expose session
+	RenewExpose(context.Context, *EncryptedMessage) (*EncryptedMessage, error)
+	// StopExpose terminates an active expose session
+	StopExpose(context.Context, *EncryptedMessage) (*EncryptedMessage, error)
 	// RegisterMachinePeer registers a machine peer using mTLS certificate authentication.
 	// The machine identity is extracted from the client certificate SAN DNSName.
 	// Requires: Valid machine certificate with SAN DNSName = "{hostname}.{domain}"
@@ -333,6 +378,15 @@ func (UnimplementedManagementServiceServer) Logout(context.Context, *EncryptedMe
 }
 func (UnimplementedManagementServiceServer) Job(grpc.BidiStreamingServer[EncryptedMessage, EncryptedMessage]) error {
 	return status.Error(codes.Unimplemented, "method Job not implemented")
+}
+func (UnimplementedManagementServiceServer) CreateExpose(context.Context, *EncryptedMessage) (*EncryptedMessage, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateExpose not implemented")
+}
+func (UnimplementedManagementServiceServer) RenewExpose(context.Context, *EncryptedMessage) (*EncryptedMessage, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenewExpose not implemented")
+}
+func (UnimplementedManagementServiceServer) StopExpose(context.Context, *EncryptedMessage) (*EncryptedMessage, error) {
+	return nil, status.Error(codes.Unimplemented, "method StopExpose not implemented")
 }
 func (UnimplementedManagementServiceServer) RegisterMachinePeer(context.Context, *MachineRegisterRequest) (*MachineRegisterResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RegisterMachinePeer not implemented")
@@ -511,6 +565,60 @@ func _ManagementService_Job_Handler(srv interface{}, stream grpc.ServerStream) e
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type ManagementService_JobServer = grpc.BidiStreamingServer[EncryptedMessage, EncryptedMessage]
 
+func _ManagementService_CreateExpose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EncryptedMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).CreateExpose(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_CreateExpose_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).CreateExpose(ctx, req.(*EncryptedMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ManagementService_RenewExpose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EncryptedMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).RenewExpose(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_RenewExpose_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).RenewExpose(ctx, req.(*EncryptedMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ManagementService_StopExpose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EncryptedMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).StopExpose(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_StopExpose_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).StopExpose(ctx, req.(*EncryptedMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ManagementService_RegisterMachinePeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MachineRegisterRequest)
 	if err := dec(in); err != nil {
@@ -610,6 +718,18 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Logout",
 			Handler:    _ManagementService_Logout_Handler,
+		},
+		{
+			MethodName: "CreateExpose",
+			Handler:    _ManagementService_CreateExpose_Handler,
+		},
+		{
+			MethodName: "RenewExpose",
+			Handler:    _ManagementService_RenewExpose_Handler,
+		},
+		{
+			MethodName: "StopExpose",
+			Handler:    _ManagementService_StopExpose_Handler,
 		},
 		{
 			MethodName: "RegisterMachinePeer",
