@@ -98,7 +98,7 @@ func (s *BaseServer) EventStore() activity.Store {
 
 func (s *BaseServer) APIHandler() http.Handler {
 	return Create(s, func() http.Handler {
-		httpAPIHandler, err := nbhttp.NewAPIHandler(context.Background(), s.AccountManager(), s.NetworksManager(), s.ResourcesManager(), s.RoutesManager(), s.GroupsManager(), s.GeoLocationManager(), s.AuthManager(), s.Metrics(), s.IntegratedValidator(), s.ProxyController(), s.PermissionsManager(), s.PeersManager(), s.SettingsManager(), s.ZonesManager(), s.RecordsManager(), s.NetworkMapController(), s.IdpManager(), s.ReverseProxyManager(), s.ReverseProxyDomainManager(), s.AccessLogsManager(), s.ReverseProxyGRPCServer(), s.Config.ReverseProxy.TrustedHTTPProxies)
+		httpAPIHandler, err := nbhttp.NewAPIHandler(context.Background(), s.AccountManager(), s.NetworksManager(), s.ResourcesManager(), s.RoutesManager(), s.GroupsManager(), s.GeoLocationManager(), s.AuthManager(), s.Metrics(), s.IntegratedValidator(), s.ProxyController(), s.PermissionsManager(), s.PeersManager(), s.SettingsManager(), s.ZonesManager(), s.RecordsManager(), s.NetworkMapController(), s.IdpManager(), s.ServiceManager(), s.ReverseProxyDomainManager(), s.AccessLogsManager(), s.ReverseProxyGRPCServer(), s.Config.ReverseProxy.TrustedHTTPProxies)
 		if err != nil {
 			log.Fatalf("failed to create API handler: %v", err)
 		}
@@ -158,7 +158,7 @@ func (s *BaseServer) GRPCServer() *grpc.Server {
 		if s.Config.HttpConfig.LetsEncryptDomain != "" {
 			certManager, err := encryption.CreateCertManager(s.Config.Datadir, s.Config.HttpConfig.LetsEncryptDomain)
 			if err != nil {
-				log.Fatalf("failed to create certificate manager: %v", err)
+				log.Fatalf("failed to create certificate service: %v", err)
 			}
 			transportCredentials := credentials.NewTLS(certManager.TLSConfig())
 			gRPCOpts = append(gRPCOpts, grpc.Creds(transportCredentials))
@@ -192,10 +192,10 @@ func (s *BaseServer) GRPCServer() *grpc.Server {
 		if err != nil {
 			log.Fatalf("failed to create management server: %v", err)
 		}
-		reverseProxyMgr := s.ReverseProxyManager()
-		srv.SetReverseProxyManager(reverseProxyMgr)
-		if reverseProxyMgr != nil {
-			reverseProxyMgr.StartExposeReaper(context.Background())
+		serviceMgr := s.ServiceManager()
+		srv.SetReverseProxyManager(serviceMgr)
+		if serviceMgr != nil {
+			serviceMgr.StartExposeReaper(context.Background())
 		}
 		mgmtProto.RegisterManagementServiceServer(gRPCAPIHandler, srv)
 
@@ -208,9 +208,10 @@ func (s *BaseServer) GRPCServer() *grpc.Server {
 
 func (s *BaseServer) ReverseProxyGRPCServer() *nbgrpc.ProxyServiceServer {
 	return Create(s, func() *nbgrpc.ProxyServiceServer {
-		proxyService := nbgrpc.NewProxyServiceServer(s.AccessLogsManager(), s.ProxyTokenStore(), s.proxyOIDCConfig(), s.PeersManager(), s.UsersManager())
+		proxyService := nbgrpc.NewProxyServiceServer(s.AccessLogsManager(), s.ProxyTokenStore(), s.PKCEVerifierStore(), s.proxyOIDCConfig(), s.PeersManager(), s.UsersManager(), s.ProxyManager())
 		s.AfterInit(func(s *BaseServer) {
-			proxyService.SetProxyManager(s.ReverseProxyManager())
+			proxyService.SetServiceManager(s.ServiceManager())
+			proxyService.SetProxyController(s.ServiceProxyController())
 		})
 		return proxyService
 	})
@@ -233,9 +234,22 @@ func (s *BaseServer) proxyOIDCConfig() nbgrpc.ProxyOIDCConfig {
 
 func (s *BaseServer) ProxyTokenStore() *nbgrpc.OneTimeTokenStore {
 	return Create(s, func() *nbgrpc.OneTimeTokenStore {
-		tokenStore := nbgrpc.NewOneTimeTokenStore(1 * time.Minute)
+		tokenStore, err := nbgrpc.NewOneTimeTokenStore(context.Background(), 5*time.Minute, 10*time.Minute, 100)
+		if err != nil {
+			log.Fatalf("failed to create proxy token store: %v", err)
+		}
 		log.Info("One-time token store initialized for proxy authentication")
 		return tokenStore
+	})
+}
+
+func (s *BaseServer) PKCEVerifierStore() *nbgrpc.PKCEVerifierStore {
+	return Create(s, func() *nbgrpc.PKCEVerifierStore {
+		pkceStore, err := nbgrpc.NewPKCEVerifierStore(context.Background(), 10*time.Minute, 10*time.Minute, 100)
+		if err != nil {
+			log.Fatalf("failed to create PKCE verifier store: %v", err)
+		}
+		return pkceStore
 	})
 }
 
