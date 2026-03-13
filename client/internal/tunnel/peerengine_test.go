@@ -57,7 +57,6 @@ func TestPeerEngine_New(t *testing.T) {
 		assert.NotNil(t, pe.relayManager)
 		assert.NotNil(t, pe.statusRecorder)
 		assert.NotNil(t, pe.signaler)
-		assert.NotNil(t, pe.semaphore)
 		assert.NotNil(t, pe.peerConns)
 	})
 
