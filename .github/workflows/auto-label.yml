@@ -67,18 +67,21 @@ jobs:
             const title = context.payload.pull_request.title.toLowerCase();
             const labels = [];
 
+            // Strip [tag] prefix if present (upstream format)
+            const stripped = title.replace(/^\[[^\]]+\]\s*/, '');
+
             // Type detection from Conventional Commit prefix
-            if (title.startsWith('feat:') || title.startsWith('feat(')) {
+            if (stripped.startsWith('feat:') || stripped.startsWith('feat(')) {
               labels.push('type:feature');
-            } else if (title.startsWith('fix:') || title.startsWith('fix(')) {
+            } else if (stripped.startsWith('fix:') || stripped.startsWith('fix(')) {
               labels.push('type:bug');
-            } else if (title.startsWith('docs:') || title.startsWith('docs(')) {
+            } else if (stripped.startsWith('docs:') || stripped.startsWith('docs(')) {
               labels.push('type:docs');
-            } else if (title.startsWith('refactor:') || title.startsWith('refactor(')) {
+            } else if (stripped.startsWith('refactor:') || stripped.startsWith('refactor(')) {
               labels.push('type:refactor');
-            } else if (title.startsWith('ci:') || title.startsWith('ci(')) {
+            } else if (stripped.startsWith('ci:') || stripped.startsWith('ci(')) {
               labels.push('type:ci');
-            } else if (title.startsWith('deps:') || title.startsWith('chore(deps)')) {
+            } else if (stripped.startsWith('deps:') || stripped.startsWith('chore(deps)')) {
               labels.push('type:deps');
             }
 
