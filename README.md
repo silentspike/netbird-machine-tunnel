@@ -78,6 +78,7 @@ This hits hardest with:
 
 Machine Tunnel breaks this cycle by connecting **before** any user logs in:
 
+<<<<<<< HEAD
 ```
 Computer boots → Machine Tunnel connects automatically (no user needed)
                             ↓
@@ -87,6 +88,12 @@ Computer boots → Machine Tunnel connects automatically (no user needed)
                             ↓
                     ✅ Problem solved!
 ```
+=======
+### Community projects
+-  [NetBird installer script](https://github.com/physk/netbird-installer)
+-  [NetBird ansible collection by Dominion Solutions](https://galaxy.ansible.com/ui/repo/published/dominion_solutions/netbird/)
+-  [netbird-tui](https://github.com/n0pashkov/netbird-tui) — terminal UI for managing NetBird peers, routes, and settings
+>>>>>>> upstream/main
 
 The secret: instead of user credentials, we use the **computer's own certificate** (issued by Active Directory Certificate Services) to authenticate.
 
