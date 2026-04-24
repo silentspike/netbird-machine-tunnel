@@ -57,10 +57,22 @@ This fork adds a **Machine Tunnel** feature: a Windows SYSTEM service (`NetBirdM
 ## Standard NetBird (upstream, unchanged)
 
 - [client/](client/): Standard NetBird client (mesh VPN, peer connections, DNS, firewall)
+- [client/internal/portforward/](client/internal/portforward/): Upstream v0.69 port-forwarding and PCP/NAT-PMP support, not enabled by default for Machine Tunnel PeerEngine
+- [client/internal/metrics/](client/internal/metrics/): Upstream v0.69 client connection metrics components
 - [management/](management/): Management server (accounts, peers, policies, routes)
 - [signal/](signal/): Signal server (WebRTC signaling for peer connections)
 - [relay/](relay/): Relay server (fallback when P2P fails)
+- [proxy/internal/crowdsec/](proxy/internal/crowdsec/): Upstream reverse-proxy CrowdSec integration, included but not enabled in the Machine Tunnel lab profile
+- [tools/idp-migrate/](tools/idp-migrate/): Upstream v0.69 IDP migration helper
 - [shared/](shared/): Shared libraries (proto definitions, auth, utilities)
+
+## Release & CI Notes
+
+- [.github/workflows/upstream-sync.yml](.github/workflows/upstream-sync.yml): Detects the latest upstream release tag and creates sync PRs against that tag, not `upstream/main`
+- [.github/workflows/release.yml](.github/workflows/release.yml): Public release workflow with fork-safe credential guards and Syft installation for SBOM generation
+- [.goreleaser.yaml](.goreleaser.yaml): Main release artifact config, including SPDX JSON SBOMs for archives and Linux packages
+- [.goreleaser_ui.yaml](.goreleaser_ui.yaml): UI Linux/Windows release config, including SPDX JSON SBOMs
+- [.goreleaser_ui_darwin.yaml](.goreleaser_ui_darwin.yaml): UI macOS release config, including SPDX JSON SBOMs
 
 ## Key Patterns
 

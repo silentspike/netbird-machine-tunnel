@@ -433,8 +433,9 @@ The following components are inherited from NetBird and verified through their C
 ## Building from Source
 
 **Requirements:**
-- Go 1.21+
+- Go 1.25.5+
 - For Windows builds from Linux: MinGW-w64
+- For public release SBOM generation: Syft (installed by the release workflow)
 
 **Build:**
 

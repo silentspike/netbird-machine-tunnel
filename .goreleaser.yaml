@@ -917,6 +917,32 @@ uploads:
     username: dev@wiretrustee.com
     method: PUT
 
+sboms:
+  - id: archive-sboms
+    artifacts: archive
+    documents:
+      - "${artifact}.sbom.spdx.json"
+    cmd: syft
+    args:
+      - "$artifact"
+      - "--output"
+      - "spdx-json=$document"
+      - "--enrich"
+      - "all"
+    disable: false
+  - id: package-sboms
+    artifacts: package
+    documents:
+      - "${artifact}.sbom.spdx.json"
+    cmd: syft
+    args:
+      - "$artifact"
+      - "--output"
+      - "spdx-json=$document"
+      - "--enrich"
+      - "all"
+    disable: false
+
 checksum:
   extra_files:
     - glob: ./infrastructure_files/getting-started-with-zitadel.sh

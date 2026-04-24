@@ -53,7 +53,7 @@ type PeerEngine struct {
 	mu sync.RWMutex
 
 	// Reused NetBird components (NO wrappers!)
-	// ALL 6 ServiceDependencies fields (except PeerConnDispatcher - unused)
+	// ServiceDependencies reused from upstream peer.Conn.
 	signalClient   signal.Client
 	relayManager   *relayClient.Manager
 	statusRecorder *peer.Status
@@ -88,8 +88,8 @@ type PeerEngineConfig struct {
 	SignalProtocol string // "https" or "http"
 
 	// Relay Config
-	RelayURLs      []string
-	RelayToken     *RelayToken // Optional HMAC token for relay auth
+	RelayURLs  []string
+	RelayToken *RelayToken // Optional HMAC token for relay auth
 
 	// STUN/TURN Config - will be parsed internally
 	StunURLs []string
@@ -189,9 +189,9 @@ func NewPeerEngine(ctx context.Context, wgKey wgtypes.Key, cfg PeerEngineConfig)
 // - Signal Receive-Loop starts BEFORE ConnectPeer() is called
 // - Messages for not-yet-connected peers are IGNORED (return nil + log)
 // - This is ACCEPTABLE because:
-//   1. peer.Conn.Open() initiates ICE handshake (we are initiator)
-//   2. Remote peer sends new offers when we initiate
-//   3. Error return would only cause unnecessary log spam
+//  1. peer.Conn.Open() initiates ICE handshake (we are initiator)
+//  2. Remote peer sends new offers when we initiate
+//  3. Error return would only cause unnecessary log spam
 //
 // Caller MUST call ConnectPeer() IMMEDIATELY after Start()!
 func (pe *PeerEngine) Start() error {
@@ -403,15 +403,20 @@ func (pe *PeerEngine) ConnectPeer(ctx context.Context, remotePeerKey string, all
 		ICEConfig:    iceConfig,
 	}
 
-	// ALL ServiceDependencies fields (except PeerConnDispatcher - unused in Engine)
+	// ServiceDependencies reused from upstream peer.Conn.
+	// PortForwardManager and MetricsRecorder are intentionally nil for Machine Tunnel:
+	// pre-login domain connectivity must stay deterministic and is validated through
+	// Machine Tunnel health checks rather than user-session port forwarding/metrics.
 	// Reference: engine.go:1392-1399
 	deps := peer.ServiceDependencies{
-		StatusRecorder: pe.statusRecorder,
-		Signaler:       pe.signaler,
-		IFaceDiscover:  pe.ifaceDiscover,
-		RelayManager:   pe.relayManager,
-		SrWatcher:      pe.srWatcher,
-		// PeerConnDispatcher: nil, // Engine also doesn't set this!
+		StatusRecorder:     pe.statusRecorder,
+		Signaler:           pe.signaler,
+		IFaceDiscover:      pe.ifaceDiscover,
+		RelayManager:       pe.relayManager,
+		SrWatcher:          pe.srWatcher,
+		PeerConnDispatcher: nil,
+		PortForwardManager: nil,
+		MetricsRecorder:    nil,
 	}
 
 	conn, err := peer.NewConn(connConfig, deps)
