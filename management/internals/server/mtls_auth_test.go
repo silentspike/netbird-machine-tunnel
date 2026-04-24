@@ -8,9 +8,11 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"math/big"
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"google.golang.org/grpc/credentials"
@@ -145,6 +147,106 @@ func TestExtractMTLSIdentityNoSAN(t *testing.T) {
 		t.Error("Expected error for cert without SAN DNSName")
 	}
 	t.Logf("✅ Correctly rejected cert without SAN: %v", err)
+}
+
+func TestExtractMTLSIdentityMultiSANAllowedWithinAccount(t *testing.T) {
+	SetMTLSConfig(&MTLSConfig{
+		DomainAccountMapping: map[string]string{
+			"test.local": "account-123",
+		},
+		AccountAllowedDomains: map[string][]string{
+			"account-123": {"test.local"},
+		},
+	})
+	defer func() { globalMTLSConfig = nil }()
+
+	ctx := newMTLSTestContext([]string{"host.evil.local", "WIN10.TEST.LOCAL."}, nil)
+
+	identity, err := extractMTLSIdentity(ctx)
+	if err != nil {
+		t.Fatalf("extractMTLSIdentity failed: %v", err)
+	}
+	if identity.DNSName != "win10.test.local" {
+		t.Fatalf("DNSName = %q, want win10.test.local", identity.DNSName)
+	}
+	if identity.AccountID != "account-123" {
+		t.Fatalf("AccountID = %q, want account-123", identity.AccountID)
+	}
+}
+
+func TestExtractMTLSIdentityRejectsUnmappedSANOnly(t *testing.T) {
+	SetMTLSConfig(&MTLSConfig{
+		DomainAccountMapping: map[string]string{
+			"test.local": "account-123",
+		},
+		AccountAllowedDomains: map[string][]string{
+			"account-123": {"test.local"},
+		},
+	})
+	defer func() { globalMTLSConfig = nil }()
+
+	ctx := newMTLSTestContext([]string{"host.evil.local"}, nil)
+
+	_, err := extractMTLSIdentity(ctx)
+	if err == nil {
+		t.Fatal("expected unmapped SAN to be rejected")
+	}
+	if !strings.Contains(err.Error(), "no valid SAN DNSName") {
+		t.Fatalf("error = %q, want no valid SAN DNSName", err.Error())
+	}
+}
+
+func TestExtractMTLSIdentityRejectsMultiAccountSpan(t *testing.T) {
+	SetMTLSConfig(&MTLSConfig{
+		DomainAccountMapping: map[string]string{
+			"test.local":     "account-123",
+			"customer.local": "account-456",
+		},
+		AccountAllowedDomains: map[string][]string{
+			"account-123": {"test.local"},
+			"account-456": {"customer.local"},
+		},
+	})
+	defer func() { globalMTLSConfig = nil }()
+
+	ctx := newMTLSTestContext([]string{"win10.test.local", "win10.customer.local"}, nil)
+
+	_, err := extractMTLSIdentity(ctx)
+	if err == nil {
+		t.Fatal("expected multi-account SAN span to be rejected")
+	}
+	if !strings.Contains(err.Error(), "span multiple accounts") {
+		t.Fatalf("error = %q, want multi-account span rejection", err.Error())
+	}
+}
+
+func TestExtractMTLSIdentityUsesVerifiedChainIssuerFingerprint(t *testing.T) {
+	SetMTLSConfig(&MTLSConfig{
+		DomainAccountMapping: map[string]string{
+			"test.local": "account-123",
+		},
+		AccountAllowedDomains: map[string][]string{
+			"account-123": {"test.local"},
+		},
+	})
+	defer func() { globalMTLSConfig = nil }()
+
+	spoofedAuthorityKeyID := []byte("spoofed-authority-key-id")
+	ctx := newMTLSTestContext([]string{"win10.test.local"}, spoofedAuthorityKeyID)
+
+	identity, err := extractMTLSIdentity(ctx)
+	if err != nil {
+		t.Fatalf("extractMTLSIdentity failed: %v", err)
+	}
+
+	want := fmt.Sprintf("%x", sha256.Sum256([]byte("verified-issuer-ca")))
+	spoofed := fmt.Sprintf("%x", sha256.Sum256(spoofedAuthorityKeyID))
+	if identity.IssuerFingerprint != want {
+		t.Fatalf("IssuerFingerprint = %q, want %q", identity.IssuerFingerprint, want)
+	}
+	if identity.IssuerFingerprint == spoofed {
+		t.Fatalf("IssuerFingerprint used spoofable AuthorityKeyId")
+	}
 }
 
 // TestCanonicalizeSAN tests SAN DNS name canonicalization.
@@ -286,6 +388,28 @@ func parseCertificatePEM(pemData []byte) (*x509.Certificate, error) {
 		return nil, fmt.Errorf("failed to decode PEM")
 	}
 	return x509.ParseCertificate(block.Bytes)
+}
+
+func newMTLSTestContext(dnsNames []string, authorityKeyID []byte) context.Context {
+	clientCert := &x509.Certificate{
+		SerialNumber:   big.NewInt(12345),
+		DNSNames:       dnsNames,
+		Raw:            []byte("client-cert"),
+		AuthorityKeyId: authorityKeyID,
+	}
+	caCert := &x509.Certificate{
+		SerialNumber: big.NewInt(67890),
+		Raw:          []byte("verified-issuer-ca"),
+	}
+	tlsState := tls.ConnectionState{
+		VerifiedChains: [][]*x509.Certificate{{clientCert, caCert}},
+	}
+	tlsInfo := credentials.TLSInfo{State: tlsState}
+	peerInfo := &peer.Peer{
+		Addr:     &net.IPAddr{IP: net.ParseIP("127.0.0.1")},
+		AuthInfo: tlsInfo,
+	}
+	return peer.NewContext(context.Background(), peerInfo)
 }
 
 // TestDecodeASN1String tests ASN.1 string decoding including BMPString.

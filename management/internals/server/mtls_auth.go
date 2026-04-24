@@ -178,12 +178,17 @@ func ValidateIssuerCA(accountID, issuerFingerprint string) error {
 	return fmt.Errorf("certificate issuer CA (FP: %s) not in allowed list for account %s", fpPreview, accountID)
 }
 
-// checkMultiAccountSpan detects if a certificate's SANs span multiple accounts.
-// This is a security warning - certificates should belong to a single account.
-func checkMultiAccountSpan(dnsNames []string) {
+// checkMultiAccountSpan rejects certificates whose SANs span multiple accounts.
+// Certificates may contain multiple DNS SANs, but all mapped SANs must belong to
+// the same account boundary.
+func checkMultiAccountSpan(dnsNames []string) error {
 	seenAccounts := make(map[string]bool)
 	for _, dnsName := range dnsNames {
-		_, domain, err := splitDNSName(dnsName)
+		canonicalName, err := canonicalizeSAN(dnsName)
+		if err != nil {
+			continue
+		}
+		_, domain, err := splitDNSName(canonicalName)
 		if err != nil {
 			continue
 		}
@@ -198,9 +203,11 @@ func checkMultiAccountSpan(dnsNames []string) {
 		for acc := range seenAccounts {
 			accounts = append(accounts, acc)
 		}
-		log.Warnf("SECURITY: Certificate spans multiple accounts: %v (SANs: %v). "+
-			"Using first valid match only.", accounts, dnsNames)
+		log.Warnf("SECURITY: Certificate spans multiple accounts: %v (SANs: %v). Rejecting certificate.",
+			accounts, dnsNames)
+		return fmt.Errorf("certificate SANs span multiple accounts: %v", accounts)
 	}
+	return nil
 }
 
 // MTLSUnaryInterceptor creates a gRPC unary interceptor for mTLS authentication.
@@ -311,8 +318,9 @@ func extractMTLSIdentity(ctx context.Context) (*MTLSIdentity, error) {
 		return nil, fmt.Errorf("certificate has no SAN DNSName")
 	}
 
-	// Security: Check if certificate SANs span multiple accounts (logging only)
-	checkMultiAccountSpan(clientCert.DNSNames)
+	if err := checkMultiAccountSpan(clientCert.DNSNames); err != nil {
+		return nil, err
+	}
 
 	// Find first valid SAN that maps to an account and passes validation
 	var validDNSName, validHostname, validDomain, accountID, matchedDomain string
@@ -491,11 +499,12 @@ func splitDNSName(dnsName string) (hostname, domain string, err error) {
 // This can be used to validate the certificate was issued from the expected template.
 //
 // The extension value is ASN.1 encoded as:
-// SEQUENCE {
-//   OBJECT IDENTIFIER (template OID)
-//   INTEGER (major version) OPTIONAL
-//   INTEGER (minor version) OPTIONAL
-// }
+//
+//	SEQUENCE {
+//	  OBJECT IDENTIFIER (template OID)
+//	  INTEGER (major version) OPTIONAL
+//	  INTEGER (minor version) OPTIONAL
+//	}
 func extractTemplateOID(cert *x509.Certificate) string {
 	// Microsoft Certificate Template OID (szOID_CERTIFICATE_TEMPLATE)
 	const templateExtOID = "1.3.6.1.4.1.311.21.7"
