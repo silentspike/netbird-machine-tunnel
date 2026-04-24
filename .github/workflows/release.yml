@@ -268,6 +268,29 @@ jobs:
             grep '^ghcr.io/' | while read -r SRC; do
               tag_and_push "$SRC"
             done
+      - name: Stage checksum-listed release assets
+        run: |
+          set -euo pipefail
+
+          cp infrastructure_files/getting-started-with-zitadel.sh dist/getting-started-with-zitadel.sh
+          cp infrastructure_files/getting-started.sh dist/getting-started.sh
+          cp release_files/install.sh dist/install.sh
+
+          checksum_file="$(find dist -maxdepth 1 -type f -name 'netbird_*_checksums.txt' | head -n 1)"
+          if [[ -z "$checksum_file" ]]; then
+            echo "ERROR: no netbird checksum file found in dist"
+            exit 1
+          fi
+
+          wasm_asset="$(awk '$2 ~ /^netbird_.*\.wasm$/ { print $2; exit }' "$checksum_file")"
+          if [[ -n "$wasm_asset" ]]; then
+            cp dist/netbird-wasm_js_wasm/netbird.wasm "dist/$wasm_asset"
+          fi
+
+          (
+            cd dist
+            sha256sum -c "$(basename "$checksum_file")"
+          )
       - name: upload non tags for debug purposes
         uses: actions/upload-artifact@v4
         with:
