@@ -157,6 +157,12 @@ jobs:
         with:
           go-version-file: "go.mod"
           cache: false
+      - name: Free disk space for GoReleaser
+        run: |
+          df -h
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet /opt/hostedtoolcache/CodeQL || true
+          docker system prune -af || true
+          df -h
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
