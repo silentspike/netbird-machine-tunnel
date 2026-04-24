@@ -23,7 +23,7 @@ This fork inherits and follows the same dual-license structure. See [LICENSE](LI
 
 ## Fork Information
 
-- **Fork Repository:** https://github.com/obtFusi/netbird-fork
+- **Fork Repository:** https://github.com/silentspike/netbird-machine-tunnel
 - **Fork Purpose:** Machine Tunnel for Windows Pre-Login VPN with AD Certificate Authentication
 
 ## Modifications
@@ -54,7 +54,7 @@ This fork includes the following modifications from upstream NetBird:
 
 As required by AGPL-3.0 (for the server components), the complete source code for this fork is available at:
 
-https://github.com/obtFusi/netbird-fork
+https://github.com/silentspike/netbird-machine-tunnel
 
 ## Original Authors
 

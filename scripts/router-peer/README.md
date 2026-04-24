@@ -129,6 +129,6 @@ echo 524288 > /proc/sys/net/netfilter/nf_conntrack_max
 
 ## References
 
-- [Issue #25](https://github.com/obtFusi/netbird-fork/issues/25) - Task description
+- [Issue #25](https://github.com/silentspike/netbird-machine-tunnel/issues/25) - Task description
 - [iptables Tutorial](https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html)
 - [Linux Kernel Networking Parameters](https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt)

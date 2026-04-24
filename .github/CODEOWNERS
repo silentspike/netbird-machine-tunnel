@@ -5,46 +5,46 @@
 # More specific rules below override less specific ones.
 
 # Default: all changes require maintainer review
-* @obtFusi
+* @silentspike/maintainers
 
 # ============================================================
 # Security-Critical Paths (require careful review)
 # ============================================================
 
 # mTLS authentication & certificate handling
-/management/internals/server/mtls_* @obtFusi
-/management/internals/shared/mtls/ @obtFusi
-/client/internal/auth/ @obtFusi
+/management/internals/server/mtls_* @silentspike/maintainers
+/management/internals/shared/mtls/ @silentspike/maintainers
+/client/internal/auth/ @silentspike/maintainers
 
 # Machine Tunnel core (fork-specific code)
-/client/internal/tunnel/ @obtFusi
-/client/cmd/netbird-machine/ @obtFusi
+/client/internal/tunnel/ @silentspike/maintainers
+/client/cmd/netbird-machine/ @silentspike/maintainers
 
 # DPAPI encryption & key management
-/client/internal/tunnel/security_windows.go @obtFusi
+/client/internal/tunnel/security_windows.go @silentspike/maintainers
 
 # ============================================================
 # Server-Side Changes (upstream-sensitive)
 # ============================================================
 
-/management/server/ @obtFusi
-/management/internals/ @obtFusi
-/shared/management/proto/ @obtFusi
+/management/server/ @silentspike/maintainers
+/management/internals/ @silentspike/maintainers
+/shared/management/proto/ @silentspike/maintainers
 
 # ============================================================
 # Infrastructure & CI/CD
 # ============================================================
 
-/.github/workflows/ @obtFusi
-/.github/CODEOWNERS @obtFusi
-/Makefile @obtFusi
+/.github/workflows/ @silentspike/maintainers
+/.github/CODEOWNERS @silentspike/maintainers
+/Makefile @silentspike/maintainers
 
 # ============================================================
 # Documentation & Public-Facing
 # ============================================================
 
-/README.md @obtFusi
-/SECURITY.md @obtFusi
-/CHANGELOG.md @obtFusi
-/NOTICE.md @obtFusi
-/LICENSE @obtFusi
+/README.md @silentspike/maintainers
+/SECURITY.md @silentspike/maintainers
+/CHANGELOG.md @silentspike/maintainers
+/NOTICE.md @silentspike/maintainers
+/LICENSE @silentspike/maintainers
