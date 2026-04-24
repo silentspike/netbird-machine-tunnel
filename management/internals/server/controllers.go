@@ -20,6 +20,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/integrations/integrated_validator"
 	"github.com/netbirdio/netbird/management/server/integrations/port_forwarding"
 	"github.com/netbirdio/netbird/management/server/job"
+	nbjwt "github.com/netbirdio/netbird/shared/auth/jwt"
 )
 
 func (s *BaseServer) PeersUpdateManager() network_map.PeersUpdateManager {
@@ -40,7 +41,8 @@ func (s *BaseServer) IntegratedValidator() integrated_validator.IntegratedValida
 			context.Background(),
 			s.PeersManager(),
 			s.SettingsManager(),
-			s.EventStore())
+			s.EventStore(),
+			s.CacheStore())
 		if err != nil {
 			log.Errorf("failed to create integrated peer validator: %v", err)
 		}
@@ -71,6 +73,7 @@ func (s *BaseServer) AuthManager() auth.Manager {
 	signingKeyRefreshEnabled := s.Config.HttpConfig.IdpSignKeyRefreshEnabled
 	issuer := s.Config.HttpConfig.AuthIssuer
 	userIDClaim := s.Config.HttpConfig.AuthUserIDClaim
+	var keyFetcher nbjwt.KeyFetcher
 
 	// Use embedded IdP configuration if available
 	if oauthProvider := s.OAuthConfigProvider(); oauthProvider != nil {
@@ -78,8 +81,11 @@ func (s *BaseServer) AuthManager() auth.Manager {
 		if len(audiences) > 0 {
 			audience = audiences[0] // Use the first client ID as the primary audience
 		}
-		// Use localhost keys location for internal validation (management has embedded Dex)
-		keysLocation = oauthProvider.GetLocalKeysLocation()
+		keyFetcher = oauthProvider.GetKeyFetcher()
+		// Fall back to default keys location if direct key fetching is not available
+		if keyFetcher == nil {
+			keysLocation = oauthProvider.GetLocalKeysLocation()
+		}
 		signingKeyRefreshEnabled = true
 		issuer = oauthProvider.GetIssuer()
 		userIDClaim = oauthProvider.GetUserIDClaim()
@@ -92,7 +98,8 @@ func (s *BaseServer) AuthManager() auth.Manager {
 			keysLocation,
 			userIDClaim,
 			audiences,
-			signingKeyRefreshEnabled)
+			signingKeyRefreshEnabled,
+			keyFetcher)
 	})
 }
 

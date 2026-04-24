@@ -32,14 +32,17 @@ Project-local hooks registered in `.claude/settings.json`:
 - Internal plan and lessons files are ignored by `.gitignore` through `docs/internal/`.
 - Current fork and upstream release configs do not show `sbom`, `syft`, or `cyclonedx` entries in the checked release workflow/config files. AC-SEC-08 remains a release blocker until SBOM generation is added, verified through GoReleaser/upstream release changes, or explicitly documented with an approved alternative.
 - Current `upstream-sync.yml` detects the latest tag but merges `upstream/main`; this must be fixed or disabled before the automation is trusted.
+- `v0.69.0` was merged by tag, not `upstream/main`. The actual conflict set matched the predicted five files: `.github/workflows/golang-test-windows.yml`, `.github/workflows/golangci-lint.yml`, `.github/workflows/release.yml`, `README.md`, and `shared/management/proto/management.pb.go`.
+- Conflict resolution is structurally clean: no unmerged paths, no conflict markers in Go/YAML/Proto/Markdown, workflow YAML parses, and staged diff whitespace check passes.
+- `client/internal/tunnel/bootstrap.go` still contains the old management client API calls at the expected lines. This is intentionally left for Phase 3 implementation, not counted as Phase 2 evidence.
 
 ## Task Table
 
 | Task | Scope | Status | Commit |
 |---|---|---|---|
-| 0. Phase 0: Preparation | Resolve preflight, issue, backup tag, tool and runner checks, SBOM/upstream-sync prechecks | DONE | this task commit |
-| 1. Phase 1: Branch and Merge | Ensure upgrade branch, merge `v0.69.0` only | PENDING | pending |
-| 2. Phase 2: Resolve Conflicts | Resolve predicted conflicts and inspect fork-sensitive auto-merges | PENDING | pending |
+| 0. Phase 0: Preparation | Resolve preflight, issue, backup tag, tool and runner checks, SBOM/upstream-sync prechecks | DONE | `a228e961` |
+| 1. Phase 1: Branch and Merge | Ensure upgrade branch, merge `v0.69.0` only | DONE | Task 1-2 merge-resolution commit |
+| 2. Phase 2: Resolve Conflicts | Resolve predicted conflicts and inspect fork-sensitive auto-merges | DONE | Task 1-2 merge-resolution commit |
 | 3. Phase 3: Implement Fork Adaptations | Bootstrap API, proto, release workflow, PeerEngine decision, Go version, docs | PENDING | pending |
 | 4. Phase 4: Local Validation | Go tests, lint, Windows builds, management build, targeted tests | PENDING | pending |
 | 5. Phase 5: Lab Deployment and E2E | Snapshots, management deploy, Windows fresh/upgrade, security and connectivity evidence | PENDING | pending |
@@ -119,6 +122,20 @@ Acceptance criteria:
 - Merge target is tag `v0.69.0`.
 - No unplanned branch strategy change occurs without user-visible decision.
 
+Evidence:
+
+- PASS: `git branch --show-current` -> `sync/upstream-v0.69.0`.
+- PASS: `git merge-base --is-ancestor origin/main HEAD` succeeded before merge.
+- PASS: `git rev-parse --verify v0.69.0` resolved the target release tag.
+- PASS: `git log --oneline v0.69.0..upstream/main | wc -l` -> `17`; these untagged commits were intentionally excluded.
+- PASS: `git merge v0.69.0 --no-edit` was the only upstream merge command. It stopped for the expected five conflicts:
+  - `.github/workflows/golang-test-windows.yml`
+  - `.github/workflows/golangci-lint.yml`
+  - `.github/workflows/release.yml`
+  - `README.md`
+  - `shared/management/proto/management.pb.go`
+- PASS: no branch strategy change occurred. Direct tag sync remains the path; v0.68.x fallback was not needed.
+
 ### Task 2: Phase 2 - Resolve Conflicts
 
 Checklist:
@@ -131,6 +148,29 @@ Acceptance criteria:
 
 - AC-SRC-03, AC-SRC-04, AC-SRC-05, AC-SRC-06, and AC-SRC-07 have structural and command evidence.
 - Proto generated files match merged `.proto`.
+
+Evidence:
+
+- PASS: `git diff --name-only --diff-filter=U` produced no output after resolution.
+- PASS: conflict marker scan over Go/YAML/Proto/Markdown produced no output:
+  `rg -n "^<<<<<<<|^=======|^>>>>>>>" --glob '*.go' --glob '*.yml' --glob '*.yaml' --glob '*.proto' --glob '*.md' .`
+- PASS: `git diff --check --cached` produced no output after removing upstream trailing whitespace in `CONTRIBUTOR_LICENSE_AGREEMENT.md`.
+- PASS: workflow YAML parse succeeded for:
+  - `.github/workflows/golang-test-windows.yml`
+  - `.github/workflows/golangci-lint.yml`
+  - `.github/workflows/release.yml`
+- PASS: `make generate` completed after merging `shared/management/proto/management.proto`.
+- PASS: generated proto contains fork Machine Tunnel RPCs and upstream expose additions:
+  - `RegisterMachinePeer`, `SyncMachinePeer`, `GetMachineRoutes`, `ReportMachineStatus`
+  - `EXPOSE_TLS`, `ListenPort`, `PortAutoAssigned`
+- PASS: activity ID duplicate check returned `ACTIVITY_DUPLICATES_OK`; upstream codes 116/117 and fork code 150 are present.
+- PASS: high-risk auto-merges inspected:
+  - `management/internals/server/boot.go` contains `CacheStore`, `MTLSUnaryInterceptor`, and `MTLSStreamInterceptor`.
+  - `management/internals/server/server.go` contains `startMTLSServer`, `mtlsServer.Stop`, and `ManagementService registered on mTLS port`.
+  - `management/server/mock_server/account_mock.go` has the updated `MarkPeerConnectedFunc` and `GetGroupByNameFunc` signatures.
+  - `.github/workflows/release.yml` keeps `ubuntu-latest`, preserves fork publish guards, adds guarded RPM GPG env/cleanup, and does not adopt upstream-only `ubuntu-latest-m`.
+- DEFERRED TO PHASE 3: `client/internal/tunnel/bootstrap.go` still contains `GetServerPublicKey`, `Register(*serverKey, ...)`, and `Login(*serverKey, ...)`.
+- DEFERRED TO PHASE 3: `.github/workflows/upstream-sync.yml` still merges `upstream/main`.
 
 ### Task 3: Phase 3 - Implement Fork Adaptations
 
