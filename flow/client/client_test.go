@@ -458,17 +458,17 @@ func TestReceive_ProtocolErrorStreamReconnect(t *testing.T) {
 	client, err := flow.NewClient("http://"+server.addr, "test-payload", "test-signature", 1*time.Second)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		err := client.Close()
-		assert.NoError(t, err, "failed to close flow")
+		_ = client.Close()
 	})
 
 	// Track acks received before and after server-side stream close
 	var ackCount atomic.Int32
 	receivedFirst := make(chan struct{})
 	receivedAfterReconnect := make(chan struct{})
+	receiveDone := make(chan error, 1)
 
 	go func() {
-		err := client.Receive(ctx, 1*time.Second, func(msg *proto.FlowEventAck) error {
+		receiveDone <- client.Receive(ctx, 1*time.Second, func(msg *proto.FlowEventAck) error {
 			if msg.IsInitiator || len(msg.EventId) == 0 {
 				return nil
 			}
@@ -481,9 +481,6 @@ func TestReceive_ProtocolErrorStreamReconnect(t *testing.T) {
 			}
 			return nil
 		})
-		if err != nil && !errors.Is(err, context.Canceled) {
-			t.Logf("receive error: %v", err)
-		}
 	}()
 
 	// Wait for stream to be established, then send first ack
@@ -533,4 +530,16 @@ func TestReceive_ProtocolErrorStreamReconnect(t *testing.T) {
 
 	assert.GreaterOrEqual(t, int(ackCount.Load()), 2, "should have received acks before and after stream close")
 	assert.GreaterOrEqual(t, server.listener.connCount(), 2, "client should have created at least 2 TCP connections (original + reconnect)")
+
+	cancel()
+	require.NoError(t, client.Close(), "failed to close flow")
+
+	select {
+	case err := <-receiveDone:
+		if err != nil && !errors.Is(err, context.Canceled) && status.Code(err) != codes.Canceled {
+			t.Fatalf("receive returned unexpected error during cleanup: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Receive did not exit after cleanup")
+	}
 }
