@@ -30,6 +30,20 @@ archives:
   - builds:
       - netbird-ui-darwin
 
+sboms:
+  - id: archive-sboms
+    artifacts: archive
+    documents:
+      - "${artifact}.sbom.spdx.json"
+    cmd: syft
+    args:
+      - "$artifact"
+      - "--output"
+      - "spdx-json=$document"
+      - "--enrich"
+      - "all"
+    disable: false
+
 checksum:
   name_template: "{{ .ProjectName }}_darwin_checksums.txt"
 changelog:

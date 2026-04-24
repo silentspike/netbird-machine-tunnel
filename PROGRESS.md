@@ -34,7 +34,8 @@ Project-local hooks registered in `.claude/settings.json`:
 - Current `upstream-sync.yml` detects the latest tag but merges `upstream/main`; this must be fixed or disabled before the automation is trusted.
 - `v0.69.0` was merged by tag, not `upstream/main`. The actual conflict set matched the predicted five files: `.github/workflows/golang-test-windows.yml`, `.github/workflows/golangci-lint.yml`, `.github/workflows/release.yml`, `README.md`, and `shared/management/proto/management.pb.go`.
 - Conflict resolution is structurally clean: no unmerged paths, no conflict markers in Go/YAML/Proto/Markdown, workflow YAML parses, and staged diff whitespace check passes.
-- `client/internal/tunnel/bootstrap.go` still contains the old management client API calls at the expected lines. This is intentionally left for Phase 3 implementation, not counted as Phase 2 evidence.
+- Phase 2 intentionally left the old `client/internal/tunnel/bootstrap.go` management client API calls for Phase 3; Phase 3 has now removed them.
+- Phase 3 removed the old Machine Tunnel setup-key bootstrap API calls, explicitly documented nil `PortForwardManager`/`MetricsRecorder`, changed upstream-sync automation to merge release tags, and added Syft-backed SPDX JSON SBOM generation to GoReleaser release configs.
 
 ## Task Table
 
@@ -43,7 +44,7 @@ Project-local hooks registered in `.claude/settings.json`:
 | 0. Phase 0: Preparation | Resolve preflight, issue, backup tag, tool and runner checks, SBOM/upstream-sync prechecks | DONE | `a228e961` |
 | 1. Phase 1: Branch and Merge | Ensure upgrade branch, merge `v0.69.0` only | DONE | Task 1-2 merge-resolution commit |
 | 2. Phase 2: Resolve Conflicts | Resolve predicted conflicts and inspect fork-sensitive auto-merges | DONE | Task 1-2 merge-resolution commit |
-| 3. Phase 3: Implement Fork Adaptations | Bootstrap API, proto, release workflow, PeerEngine decision, Go version, docs | PENDING | pending |
+| 3. Phase 3: Implement Fork Adaptations | Bootstrap API, proto, release workflow, PeerEngine decision, Go version, docs | DONE | this task commit |
 | 4. Phase 4: Local Validation | Go tests, lint, Windows builds, management build, targeted tests | PENDING | pending |
 | 5. Phase 5: Lab Deployment and E2E | Snapshots, management deploy, Windows fresh/upgrade, security and connectivity evidence | PENDING | pending |
 | 6. Phase 6: PR and CI | Push branch, create PR, monitor required CI checks | PENDING | pending |
@@ -187,6 +188,22 @@ Acceptance criteria:
 
 - AC-SRC-04 through AC-SRC-08 are proven.
 - Public repository ACs touched by docs/version changes are mapped for later verification.
+
+Evidence:
+
+- PASS: Machine Tunnel setup-key bootstrap uses the v0.69 management client API; `rg -n "GetServerPublicKey|Register\\(\\*serverKey|Login\\(\\*serverKey" client/internal/tunnel/bootstrap.go` produced no output.
+- PASS: `client/internal/tunnel/peerengine.go` explicitly sets `PortForwardManager: nil` and `MetricsRecorder: nil` with an inline rationale for pre-login Machine Tunnel behavior.
+- PASS: `go.mod` contains `go 1.25.5`.
+- PASS: `.github/workflows/upstream-sync.yml` now checks tag ancestry with `git merge-base --is-ancestor "$UPSTREAM_VERSION" HEAD` and merges `git merge "$VERSION" --no-edit`; the only `upstream/main` occurrence is explanatory text saying not to use it.
+- PASS: release workflow installs Syft before all three GoReleaser jobs; `.goreleaser.yaml`, `.goreleaser_ui.yaml`, and `.goreleaser_ui_darwin.yaml` contain `sboms:` sections for SPDX JSON release SBOMs.
+- PASS: public docs updated in `README.md`, `CHANGELOG.md`, and `llms.txt` for the upstream v0.69.0 sync, Go requirement, SBOMs, CrowdSec inclusion state, and CI/release notes.
+- PASS: `go test ./client/internal/tunnel` -> `ok github.com/netbirdio/netbird/client/internal/tunnel 63.654s`.
+- PASS: `GOOS=windows GOARCH=amd64 go test -c -o /tmp/netbird-tunnel.test.exe ./client/internal/tunnel && file /tmp/netbird-tunnel.test.exe` -> `PE32+ executable for MS Windows 6.01 (console), x86-64`.
+- PASS: Workflow/YAML checks:
+  - Ruby YAML parse passed for `release.yml`, `upstream-sync.yml`, and all three GoReleaser configs.
+  - `go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/release.yml .github/workflows/upstream-sync.yml` exited 0.
+- PARTIAL: `go run github.com/goreleaser/goreleaser/v2@v2.14.3 check --config ...` accepted the config shape but exited nonzero because existing upstream GoReleaser configs use deprecated properties (`archives.builds`, `nfpms.builds`, old docker/brews keys). No invalid `sboms` keys were reported. Full release validation remains Phase 9.
+- INVALID EVIDENCE REPLACED: `GOOS=windows GOARCH=amd64 go test ./client/internal/tunnel` cannot execute the Windows test binary on Linux and failed with `exec format error`; Windows cross-compile evidence is therefore recorded through `go test -c` and later lab tests.
 
 ### Task 4: Phase 4 - Local Validation
 

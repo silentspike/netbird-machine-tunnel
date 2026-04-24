@@ -40,8 +40,9 @@ jobs:
           echo "Latest upstream version: $UPSTREAM_VERSION"
           echo "upstream_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
 
-          # Check if we already synced this version
-          if git log --oneline -100 | grep -q "sync: Upstream NetBird $UPSTREAM_VERSION"; then
+          # Check if the selected release tag is already contained in this branch.
+          # Do not use commit message matching; manual sync commits may use a different format.
+          if git merge-base --is-ancestor "$UPSTREAM_VERSION" HEAD; then
             echo "Already synced to $UPSTREAM_VERSION"
             echo "needs_sync=false" >> $GITHUB_OUTPUT
           else
@@ -88,8 +89,9 @@ jobs:
 
           git checkout -b "$BRANCH_NAME"
 
-          # Attempt merge - capture conflict info
-          if git merge upstream/main --no-edit 2>&1; then
+          # Attempt tag merge - capture conflict info.
+          # Public fork syncs must target the selected release tag, not upstream/main.
+          if git merge "$VERSION" --no-edit 2>&1; then
             echo "merge_status=clean" >> $GITHUB_OUTPUT
             echo "conflict_files=" >> $GITHUB_OUTPUT
           else
@@ -217,7 +219,7 @@ jobs:
              \`\`\`bash
              git fetch upstream
              git checkout -b sync/upstream-$VERSION
-             git merge upstream/main
+             git merge $VERSION
              # Resolve conflicts
              git push -u origin sync/upstream-$VERSION
              \`\`\`
