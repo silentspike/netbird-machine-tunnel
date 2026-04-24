@@ -8,7 +8,7 @@ This is a fork of [NetBird](https://github.com/netbirdio/netbird) that adds a Ma
 
 | Type | Where |
 |------|-------|
-| Machine Tunnel bugs/features | [This repository](https://github.com/obtFusi/netbird-fork/issues) |
+| Machine Tunnel bugs/features | [This repository](https://github.com/silentspike/netbird-machine-tunnel/issues) |
 | Standard NetBird bugs/features | [Upstream NetBird](https://github.com/netbirdio/netbird/issues) |
 | Security vulnerabilities | See [SECURITY.md](SECURITY.md) |
 | General questions | [Upstream NetBird Discussions](https://github.com/netbirdio/netbird/discussions) |
@@ -24,9 +24,9 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/<your_username>/netbird-fork.git
-cd netbird-fork
-git remote add upstream https://github.com/obtFusi/netbird-fork.git
+git clone https://github.com/<your_username>/netbird-machine-tunnel.git
+cd netbird-machine-tunnel
+git remote add upstream https://github.com/silentspike/netbird-machine-tunnel.git
 ```
 
 ### 2. Create a Branch
@@ -175,5 +175,5 @@ By submitting a pull request, you agree to the terms of the [Contributor License
 
 - Read the [Architecture Documentation](docs/ARCHITECTURE.md) to understand the system
 - Check the [Troubleshooting Guide](docs/TROUBLESHOOTING.md) for common issues
-- Review existing [issues](https://github.com/obtFusi/netbird-fork/issues) for context
+- Review existing [issues](https://github.com/silentspike/netbird-machine-tunnel/issues) for context
 - Open a discussion if you need guidance on an approach

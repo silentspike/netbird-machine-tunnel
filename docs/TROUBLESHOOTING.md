@@ -419,7 +419,7 @@ If you can't solve the problem:
    - [Original NetBird Docs](https://docs.netbird.io/)
 
 3. **Report issues:**
-   - [GitHub Issues](https://github.com/obtFusi/netbird-fork/issues)
+   - [GitHub Issues](https://github.com/silentspike/netbird-machine-tunnel/issues)
 
 ---
 
