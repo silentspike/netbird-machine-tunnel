@@ -39,11 +39,11 @@ jobs:
             exit 0
           fi
 
-          invalid_versions=$(printf '%s\n' "$version_changes" | grep -Ev '^\+[[:space:]]*//[[:space:]]+(protoc-gen-go[[:space:]]+v1\.36\.11|protoc-gen-go[[:space:]]+v1\.36\.6|protoc-gen-go[[:space:]]+v1\.26\.0|protoc-gen-go-grpc[[:space:]]+v1\.6\.1|protoc[[:space:]]+v7\.34\.1|protoc[[:space:]]+v6\.33\.1)$' || true)
+          invalid_versions=$(printf '%s\n' "$version_changes" | grep -Ev '^\+[[:space:]]*//[[:space:]]+(protoc-gen-go[[:space:]]+v1\.36\.11|protoc-gen-go[[:space:]]+v1\.36\.6|protoc-gen-go[[:space:]]+v1\.26\.0|protoc-gen-go-grpc[[:space:]]+v1\.6\.1|protoc[[:space:]]+v7\.34\.1|protoc[[:space:]]+v6\.33\.3|protoc[[:space:]]+v6\.33\.1)$' || true)
 
           if [ -n "$invalid_versions" ]; then
             echo "Generated proto files use unexpected tool versions."
-            echo "Allowed versions: protoc v7.34.1/v6.33.1, protoc-gen-go v1.36.11/v1.36.6/v1.26.0, protoc-gen-go-grpc v1.6.1."
+            echo "Allowed versions: protoc v7.34.1/v6.33.3/v6.33.1, protoc-gen-go v1.36.11/v1.36.6/v1.26.0, protoc-gen-go-grpc v1.6.1."
             printf '%s\n' "$invalid_versions"
             exit 1
           fi
