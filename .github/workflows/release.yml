@@ -65,8 +65,23 @@ jobs:
           copyback: false
           release: "15.0"
           prepare: |
+            retry() {
+              attempts=0
+              until "$@"; do
+                attempts=$((attempts + 1))
+                if [ "$attempts" -ge 3 ]; then
+                  return 1
+                fi
+                sleep $((attempts * 5))
+              done
+            }
+
+            # Force-refresh package metadata. FreeBSD package mirrors can return
+            # truncated signature metadata during VM bootstrap.
+            retry pkg update -f
+
             # Install required packages
-            pkg install -y git curl portlint go
+            retry pkg install -y git curl portlint go
 
             # Install Go for building
             GO_TARBALL="go1.25.5.freebsd-amd64.tar.gz"
