@@ -38,6 +38,20 @@ builds:
     tags:
       - load_wgnt_from_rsrc
 
+  - id: netbird-machine
+    dir: client/cmd/netbird-machine
+    binary: netbird-machine
+    env: [CGO_ENABLED=0]
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.Version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    tags:
+      - load_wgnt_from_rsrc
+
   - id: netbird-static
     dir: client
     binary: netbird
@@ -190,6 +204,10 @@ archives:
     builds:
       - netbird-idp-migrate
     name_template: "netbird-idp-migrate_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - id: netbird-machine
+    builds:
+      - netbird-machine
+    name_template: "netbird-machine_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 nfpms:
   - maintainer: Netbird <dev@netbird.io>
