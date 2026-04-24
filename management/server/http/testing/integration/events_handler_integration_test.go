@@ -46,36 +46,57 @@ func Test_Events_GetAll(t *testing.T) {
 			apiHandler.ServeHTTP(createRecorder, createReq)
 			assert.Equal(t, http.StatusOK, createRecorder.Code, "Failed to create group to generate event")
 
-			// Now query events
-			req := testing_tools.BuildRequest(t, []byte{}, http.MethodGet, "/api/events", user.userId)
-			recorder := httptest.NewRecorder()
-			apiHandler.ServeHTTP(recorder, req)
-
-			content, expectResponse := testing_tools.ReadResponse(t, recorder, http.StatusOK, user.expectResponse)
-			if !expectResponse {
+			if !user.expectResponse {
+				getEvents(t, apiHandler, user.userId, false)
 				return
 			}
 
-			got := []api.Event{}
-			if err := json.Unmarshal(content, &got); err != nil {
-				t.Fatalf("Sent content is not in correct json format; %v", err)
-			}
-
+			got, found := getEventsUntilGroupAdd(t, apiHandler, user.userId)
 			assert.GreaterOrEqual(t, len(got), 1, "Expected at least one event after creating a group")
-
-			// Verify the group creation event exists
-			found := false
-			for _, event := range got {
-				if event.ActivityCode == "group.add" {
-					found = true
-					assert.Equal(t, testing_tools.TestAdminId, event.InitiatorId)
-					assert.Equal(t, "Group created", event.Activity)
-					break
-				}
-			}
 			assert.True(t, found, "Expected to find a group.add event")
 		})
 	}
+}
+
+func getEventsUntilGroupAdd(t *testing.T, apiHandler http.Handler, userID string) ([]api.Event, bool) {
+	t.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		got := getEvents(t, apiHandler, userID, true)
+		for _, event := range got {
+			if event.ActivityCode == "group.add" {
+				assert.Equal(t, testing_tools.TestAdminId, event.InitiatorId)
+				assert.Equal(t, "Group created", event.Activity)
+				return got, true
+			}
+		}
+
+		if time.Now().After(deadline) {
+			return got, false
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+func getEvents(t *testing.T, apiHandler http.Handler, userID string, expectResponse bool) []api.Event {
+	t.Helper()
+
+	req := testing_tools.BuildRequest(t, []byte{}, http.MethodGet, "/api/events", userID)
+	recorder := httptest.NewRecorder()
+	apiHandler.ServeHTTP(recorder, req)
+
+	content, expectResponse := testing_tools.ReadResponse(t, recorder, http.StatusOK, expectResponse)
+	if !expectResponse {
+		return nil
+	}
+
+	got := []api.Event{}
+	if err := json.Unmarshal(content, &got); err != nil {
+		t.Fatalf("Sent content is not in correct json format; %v", err)
+	}
+
+	return got
 }
 
 func Test_Events_GetAll_Empty(t *testing.T) {
