@@ -36,6 +36,7 @@ Project-local hooks registered in `.claude/settings.json`:
 - Conflict resolution is structurally clean: no unmerged paths, no conflict markers in Go/YAML/Proto/Markdown, workflow YAML parses, and staged diff whitespace check passes.
 - Phase 2 intentionally left the old `client/internal/tunnel/bootstrap.go` management client API calls for Phase 3; Phase 3 has now removed them.
 - Phase 3 removed the old Machine Tunnel setup-key bootstrap API calls, explicitly documented nil `PortForwardManager`/`MetricsRecorder`, changed upstream-sync automation to merge release tags, and added Syft-backed SPDX JSON SBOM generation to GoReleaser release configs.
+- Phase 4 policy correction: broad NetBird validation is not run by installing missing dependencies on this workstation. Heavy gates (`go test ./...`, full lint, release workflows) must run on CI/runner and lab. This host is limited to lightweight source, workflow, secret-scan, and targeted compile evidence.
 
 ## Task Table
 
@@ -45,7 +46,7 @@ Project-local hooks registered in `.claude/settings.json`:
 | 1. Phase 1: Branch and Merge | Ensure upgrade branch, merge `v0.69.0` only | DONE | Task 1-2 merge-resolution commit |
 | 2. Phase 2: Resolve Conflicts | Resolve predicted conflicts and inspect fork-sensitive auto-merges | DONE | Task 1-2 merge-resolution commit |
 | 3. Phase 3: Implement Fork Adaptations | Bootstrap API, proto, release workflow, PeerEngine decision, Go version, docs | DONE | this task commit |
-| 4. Phase 4: Local Validation | Go tests, lint, Windows builds, management build, targeted tests | PENDING | pending |
+| 4. Phase 4: Local/CI Validation Prep | Lightweight local gates, CI secret scan, targeted builds/tests; heavy gates move to runner/lab | IN_PROGRESS | pending |
 | 5. Phase 5: Lab Deployment and E2E | Snapshots, management deploy, Windows fresh/upgrade, security and connectivity evidence | PENDING | pending |
 | 6. Phase 6: PR and CI | Push branch, create PR, monitor required CI checks | PENDING | pending |
 | 7. Phase 7: Merge Gate | Evidence summary and explicit user merge approval | PENDING | pending |
@@ -209,17 +210,37 @@ Evidence:
 
 Checklist:
 
-- Run `go test ./...`.
-- Run focused fork tests.
-- Run `golangci-lint run --timeout=12m`.
-- Build Windows Machine Tunnel binary with standard and CGO paths as applicable.
-- Build management binary and verify executable type.
-- Run secret scan.
+- Run focused fork tests and targeted builds that do not mutate the workstation.
+- Keep full `go test ./...` and full `golangci-lint` on CI/runner because they require project system dependencies such as `libpcap-dev`.
+- Build Windows Machine Tunnel binary with standard and CGO paths as applicable, then remove local artifacts.
+- Build management binary and verify executable type, then remove local artifacts.
+- Run secret scan with committed test-fixture allowlist and CI workflow.
 
 Acceptance criteria:
 
 - AC-BLD-01 through AC-BLD-06 and AC-SEC-06 have command evidence.
 - Any failing validation blocks downstream tasks unless explicitly isolated.
+
+Evidence so far:
+
+- PASS: `go test ./client/internal/tunnel ./management/internals/server ./management/internals/shared/grpc ./management/internals/shared/mtls`
+  - `client/internal/tunnel` passed from cache after a previous `63.654s` run.
+  - `management/internals/server` -> `ok ... 0.236s`.
+  - `management/internals/shared/grpc` -> `ok ... 3.862s`.
+  - `management/internals/shared/mtls` -> `ok ... 0.009s`.
+- PASS: `GOOS=windows GOARCH=amd64 go build -o bin/netbird-machine.exe ./client/cmd/netbird-machine && file bin/netbird-machine.exe`
+  -> `PE32+ executable for MS Windows 6.01 (console), x86-64, 16 sections`.
+- PASS: `CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -o bin/netbird-machine-cgo.exe ./client/cmd/netbird-machine && file bin/netbird-machine-cgo.exe`
+  -> `PE32+ executable for MS Windows 6.01 (console), x86-64, 16 sections`.
+- PASS: `go build -o bin/netbird-mgmt ./management/ && file bin/netbird-mgmt`
+  -> `ELF 64-bit LSB executable, x86-64`.
+- PASS: local build artifacts `bin/netbird-machine.exe`, `bin/netbird-machine-cgo.exe`, `bin/netbird-mgmt`, and `/tmp/netbird-tunnel.test.exe` were removed after the workstation-scope correction.
+- PASS: added `.gitleaks.toml` for known non-secret test fixtures and `.github/workflows/secret-scan.yml` for CI.
+- PASS: `gitleaks detect --source . --no-git --verbose` with repo config -> `no leaks found`.
+- PASS: `ruby -e 'require "yaml"; ...'` parsed `secret-scan.yml` and `golangci-lint.yml`.
+- PASS: `go run github.com/rhysd/actionlint/cmd/actionlint@latest .github/workflows/secret-scan.yml .github/workflows/golangci-lint.yml` exited 0.
+- PASS: `git diff --check` exited 0.
+- ISOLATED: local `go test ./...` was stopped after showing missing workstation dependency `pcap.h`/`libpcap-devel`; CI already installs `libpcap-dev` in `golang-test-linux.yml`, so the authoritative full-suite run is the runner/PR workflow.
 
 ### Task 5: Phase 5 - Lab Deployment and E2E
 

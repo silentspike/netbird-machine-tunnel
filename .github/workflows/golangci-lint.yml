@@ -42,7 +42,8 @@ jobs:
       - name: Check for duplicate constants
         if: matrix.os == 'ubuntu-latest'
         run: |
-          ! awk '/const \(/,/)/{print $0}' management/server/activity/codes.go | grep -o '= [0-9]*' | sort | uniq -d | grep .
+          DUPS=$(grep -oE 'Activity[[:space:]]*=[[:space:]]*[0-9]+' management/server/activity/codes.go | sed -E 's/.*=[[:space:]]*//' | sort | uniq -d)
+          test -z "$DUPS" || { echo "DUPLICATE ACTIVITY IDS: $DUPS"; exit 1; }
       - name: Install Go
         uses: actions/setup-go@v5
         with:

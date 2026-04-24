@@ -1,0 +1,29 @@
+title = "NetBird Machine Tunnel gitleaks configuration"
+
+[allowlist]
+description = "Known non-secret test fixtures and public test keys used by upstream NetBird and the Machine Tunnel fork"
+paths = [
+  '''^client/cmd/up_daemon_test\.go$''',
+  '''^client/iface/configurer/usp_test\.go$''',
+  '''^client/internal/engine_test\.go$''',
+  '''^client/internal/peer/conn_test\.go$''',
+  '''^client/internal/tunnel/cmd/securitytest/main\.go$''',
+  '''^client/internal/updater/reposign/certs/root-pub\.pem$''',
+  '''^client/internal/updater/reposign/certsdev/root-pub\.pem$''',
+  '''^client/ssh/server/jwt_test\.go$''',
+  '''^client/testdata/management\.json$''',
+  '''^management/cmd/management_test\.go$''',
+  '''^management/server/account_test\.go$''',
+  '''^management/server/auth/manager_test\.go$''',
+  '''^management/server/auth/test_data/sample_key$''',
+  '''^management/server/dns_test\.go$''',
+  '''^management/server/management_proto_test\.go$''',
+  '''^management/server/management_test\.go$''',
+  '''^management/server/nameserver_test\.go$''',
+  '''^management/server/peer_test\.go$''',
+  '''^management/server/route_test\.go$''',
+  '''^management/server/store/sql_store_test\.go$''',
+  '''^management/server/testdata/management\.json$''',
+  '''^management/server/types/proxy_access_token_test\.go$''',
+  '''^shared/management/client/client_test\.go$''',
+]
