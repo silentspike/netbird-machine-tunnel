@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   HAS_DOCKER_CREDS: ${{ secrets.DOCKER_USER != '' }}
