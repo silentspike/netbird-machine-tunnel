@@ -18,6 +18,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 
 	"github.com/netbirdio/netbird/client/internal/auth"
 	"github.com/netbirdio/netbird/client/internal/profilemanager"
@@ -39,6 +40,31 @@ func TestAuthMethodString(t *testing.T) {
 			assert.Equal(t, tt.expected, tt.method.String())
 		})
 	}
+}
+
+func TestMachinePublicKeyFromConfigUsesPersistedPrivateKey(t *testing.T) {
+	wgKey, err := wgtypes.GeneratePrivateKey()
+	require.NoError(t, err)
+
+	got, err := machinePublicKeyFromConfig(&MachineConfig{
+		Config: &profilemanager.Config{
+			PrivateKey: wgKey.String(),
+		},
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, []byte(wgKey.PublicKey().String()), got)
+}
+
+func TestMachinePublicKeyFromConfigRejectsInvalidPrivateKey(t *testing.T) {
+	_, err := machinePublicKeyFromConfig(&MachineConfig{
+		Config: &profilemanager.Config{
+			PrivateKey: "not-a-wireguard-key",
+		},
+	})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to parse persisted WireGuard private key")
 }
 
 func TestHasMachineCert_NoPaths(t *testing.T) {
