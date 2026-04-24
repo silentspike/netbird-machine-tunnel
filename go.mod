@@ -1,6 +1,6 @@
 module github.com/netbirdio/netbird
 
-go 1.25
+go 1.25.0
 
 toolchain go1.25.5
 
@@ -19,8 +19,8 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.9
 	github.com/vishvananda/netlink v1.3.1
-	golang.org/x/crypto v0.46.0
-	golang.org/x/sys v0.39.0
+	golang.org/x/crypto v0.49.0
+	golang.org/x/sys v0.42.0
 	golang.zx2c4.com/wireguard v0.0.0-20230704135630-469159ecf7d1
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230429144221-925a1e7659e6
 	golang.zx2c4.com/wireguard/windows v0.5.3
@@ -66,7 +66,7 @@ require (
 	github.com/libdns/route53 v1.5.0
 	github.com/libp2p/go-netroute v0.2.1
 	github.com/lrh3321/ipset-go v0.0.0-20250619021614-54a0a98ace81
-	github.com/mdlayher/socket v0.5.1
+	github.com/mdlayher/socket v0.6.0
 	github.com/miekg/dns v1.1.59
 	github.com/mitchellh/hashstructure/v2 v2.0.2
 	github.com/netbirdio/management-integrations/integrations v0.0.0-20260210160626-df4b180c7b25
@@ -113,11 +113,11 @@ require (
 	goauthentik.io/api/v3 v3.2023051.3
 	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	golang.org/x/mobile v0.0.0-20251113184115-a159579294ab
-	golang.org/x/mod v0.30.0
-	golang.org/x/net v0.47.0
+	golang.org/x/mod v0.33.0
+	golang.org/x/net v0.52.0
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/sync v0.19.0
-	golang.org/x/term v0.38.0
+	golang.org/x/sync v0.20.0
+	golang.org/x/term v0.41.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.257.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -277,8 +277,8 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/image v0.33.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
-	golang.org/x/tools v0.39.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/tools v0.42.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
