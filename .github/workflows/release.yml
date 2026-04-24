@@ -63,7 +63,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          release: "15.0"
+          release: "14.2"
           prepare: |
             retry() {
               attempts=0
