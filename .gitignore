@@ -81,6 +81,8 @@ Thumbs.db
 .env.local
 .env.*.local
 docker-compose.override.yml
+.claude/settings.json
+.claude/settings.local.json
 
 # Security Audits - NICHT ins Public Repo!
 docs/AUDIT-*.md
@@ -93,3 +95,4 @@ docs/INVESTIGATION-*.md
 MAINTAINING.md
 docs/MAINTAINING.md
 docs/internal/
+docs/upgrade.md
