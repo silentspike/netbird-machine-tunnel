@@ -526,11 +526,16 @@ jobs:
 
       - name: Test
         run: |
+          BENCHTIME_FLAGS=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BENCHTIME_FLAGS="-benchtime=1x"
+          fi
+
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
           NETBIRD_STORE_ENGINE=${{ matrix.store }} \
           CI=true \
           GIT_BRANCH=${{ github.ref_name }} \
-          go test -tags devcert -run=^$ -bench=. \
+          go test -tags devcert -run=^$ -bench=. $BENCHTIME_FLAGS \
           -exec 'sudo --preserve-env=CI,NETBIRD_STORE_ENGINE,GIT_BRANCH,GITHUB_RUN_ID' \
           -timeout 20m ./management/... ./shared/management/... $(go list ./management/... ./shared/management/... | grep -v -e /management/server/http)
 
@@ -618,13 +623,18 @@ jobs:
 
       - name: Test
         run: |
+          BENCHTIME_FLAGS=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BENCHTIME_FLAGS="-benchtime=1x"
+          fi
+
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
           NETBIRD_STORE_ENGINE=${{ matrix.store }} \
           CI=true \
           GIT_BRANCH=${{ github.ref_name }} \
           go test -tags=benchmark \
             -run=^$ \
-            -bench=. \
+            -bench=. $BENCHTIME_FLAGS \
             -exec 'sudo --preserve-env=CI,NETBIRD_STORE_ENGINE,GIT_BRANCH,GITHUB_RUN_ID' \
             -timeout 20m ./management/server/http/...
 
