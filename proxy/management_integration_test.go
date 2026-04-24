@@ -22,6 +22,7 @@ import (
 	nbproxy "github.com/netbirdio/netbird/management/internals/modules/reverseproxy/proxy"
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/service"
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
+	nbcache "github.com/netbirdio/netbird/management/server/cache"
 	"github.com/netbirdio/netbird/management/server/store"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/management/server/users"
@@ -113,11 +114,11 @@ func setupIntegrationTest(t *testing.T) *integrationTestSetup {
 	}
 
 	// Create real token store
-	tokenStore, err := nbgrpc.NewOneTimeTokenStore(ctx, 5*time.Minute, 10*time.Minute, 100)
+	cacheStore, err := nbcache.NewStore(ctx, 30*time.Minute, 10*time.Minute, 100)
 	require.NoError(t, err)
 
-	pkceStore, err := nbgrpc.NewPKCEVerifierStore(ctx, 10*time.Minute, 10*time.Minute, 100)
-	require.NoError(t, err)
+	tokenStore := nbgrpc.NewOneTimeTokenStore(ctx, cacheStore)
+	pkceStore := nbgrpc.NewPKCEVerifierStore(ctx, cacheStore)
 
 	// Create real users manager
 	usersManager := users.NewManager(testStore)
@@ -200,7 +201,7 @@ func (m *testAccessLogManager) GetAllAccessLogs(_ context.Context, _, _ string, 
 // testProxyManager is a mock implementation of proxy.Manager for testing.
 type testProxyManager struct{}
 
-func (m *testProxyManager) Connect(_ context.Context, _, _, _ string) error {
+func (m *testProxyManager) Connect(_ context.Context, _, _, _ string, _ *nbproxy.Capabilities) error {
 	return nil
 }
 
@@ -208,12 +209,28 @@ func (m *testProxyManager) Disconnect(_ context.Context, _ string) error {
 	return nil
 }
 
-func (m *testProxyManager) Heartbeat(_ context.Context, _ string) error {
+func (m *testProxyManager) Heartbeat(_ context.Context, _, _, _ string) error {
 	return nil
 }
 
 func (m *testProxyManager) GetActiveClusterAddresses(_ context.Context) ([]string, error) {
 	return nil, nil
+}
+
+func (m *testProxyManager) GetActiveClusters(_ context.Context) ([]nbproxy.Cluster, error) {
+	return nil, nil
+}
+
+func (m *testProxyManager) ClusterSupportsCustomPorts(_ context.Context, _ string) *bool {
+	return nil
+}
+
+func (m *testProxyManager) ClusterRequireSubdomain(_ context.Context, _ string) *bool {
+	return nil
+}
+
+func (m *testProxyManager) ClusterSupportsCrowdSec(_ context.Context, _ string) *bool {
+	return nil
 }
 
 func (m *testProxyManager) CleanupStale(_ context.Context, _ time.Duration) error {
@@ -318,6 +335,10 @@ func (m *storeBackedServiceManager) StopServiceFromPeer(_ context.Context, _, _,
 }
 
 func (m *storeBackedServiceManager) StartExposeReaper(_ context.Context) {}
+
+func (m *storeBackedServiceManager) GetActiveClusters(_ context.Context, _, _ string) ([]nbproxy.Cluster, error) {
+	return nil, nil
+}
 
 func strPtr(s string) *string {
 	return &s
@@ -486,7 +507,7 @@ func TestIntegration_ProxyConnection_ReconnectDoesNotDuplicateState(t *testing.T
 	logger := log.New()
 	logger.SetLevel(log.WarnLevel)
 
-	authMw := auth.NewMiddleware(logger, nil)
+	authMw := auth.NewMiddleware(logger, nil, nil)
 	proxyHandler := proxy.NewReverseProxy(nil, "auto", nil, logger)
 
 	clusterAddress := "test.proxy.io"
@@ -505,15 +526,16 @@ func TestIntegration_ProxyConnection_ReconnectDoesNotDuplicateState(t *testing.T
 					nil,
 					"",
 					0,
-					mapping.GetAccountId(),
-					mapping.GetId(),
+					proxytypes.AccountID(mapping.GetAccountId()),
+					proxytypes.ServiceID(mapping.GetId()),
+					nil,
 				)
 				require.NoError(t, err)
 
 				// Apply to real proxy (idempotent)
 				proxyHandler.AddMapping(proxy.Mapping{
 					Host:      mapping.GetDomain(),
-					ID:        mapping.GetId(),
+					ID:        proxytypes.ServiceID(mapping.GetId()),
 					AccountID: proxytypes.AccountID(mapping.GetAccountId()),
 				})
 			}

@@ -121,7 +121,7 @@ type Store interface {
 	GetAccountGroups(ctx context.Context, lockStrength LockingStrength, accountID string) ([]*types.Group, error)
 	GetResourceGroups(ctx context.Context, lockStrength LockingStrength, accountID, resourceID string) ([]*types.Group, error)
 	GetGroupByID(ctx context.Context, lockStrength LockingStrength, accountID, groupID string) (*types.Group, error)
-	GetGroupByName(ctx context.Context, lockStrength LockingStrength, groupName, accountID string) (*types.Group, error)
+	GetGroupByName(ctx context.Context, lockStrength LockingStrength, accountID, groupName string) (*types.Group, error)
 	GetGroupsByIDs(ctx context.Context, lockStrength LockingStrength, accountID string, groupIDs []string) (map[string]*types.Group, error)
 	CreateGroups(ctx context.Context, accountID string, groups []*types.Group) error
 	UpdateGroups(ctx context.Context, accountID string, groups []*types.Group) error
@@ -261,10 +261,12 @@ type Store interface {
 	GetServices(ctx context.Context, lockStrength LockingStrength) ([]*rpservice.Service, error)
 	GetAccountServices(ctx context.Context, lockStrength LockingStrength, accountID string) ([]*rpservice.Service, error)
 
-	RenewEphemeralService(ctx context.Context, accountID, peerID, domain string) error
+	RenewEphemeralService(ctx context.Context, accountID, peerID, serviceID string) error
 	GetExpiredEphemeralServices(ctx context.Context, ttl time.Duration, limit int) ([]*rpservice.Service, error)
 	CountEphemeralServicesByPeer(ctx context.Context, lockStrength LockingStrength, accountID, peerID string) (int64, error)
 	EphemeralServiceExists(ctx context.Context, lockStrength LockingStrength, accountID, peerID, domain string) (bool, error)
+	GetServicesByClusterAndPort(ctx context.Context, lockStrength LockingStrength, proxyCluster string, mode string, listenPort uint16) ([]*rpservice.Service, error)
+	GetServicesByCluster(ctx context.Context, lockStrength LockingStrength, proxyCluster string) ([]*rpservice.Service, error)
 
 	GetCustomDomain(ctx context.Context, accountID string, domainID string) (*domain.Domain, error)
 	ListFreeDomains(ctx context.Context, accountID string) ([]string, error)
@@ -282,11 +284,17 @@ type Store interface {
 	DeleteServiceTargets(ctx context.Context, accountID string, serviceID string) error
 
 	SaveProxy(ctx context.Context, proxy *proxy.Proxy) error
-	UpdateProxyHeartbeat(ctx context.Context, proxyID string) error
+	UpdateProxyHeartbeat(ctx context.Context, proxyID, clusterAddress, ipAddress string) error
 	GetActiveProxyClusterAddresses(ctx context.Context) ([]string, error)
+	GetActiveProxyClusters(ctx context.Context) ([]proxy.Cluster, error)
+	GetClusterSupportsCustomPorts(ctx context.Context, clusterAddr string) *bool
+	GetClusterRequireSubdomain(ctx context.Context, clusterAddr string) *bool
+	GetClusterSupportsCrowdSec(ctx context.Context, clusterAddr string) *bool
 	CleanupStaleProxies(ctx context.Context, inactivityDuration time.Duration) error
 
 	GetCustomDomainsCounts(ctx context.Context) (total int64, validated int64, err error)
+
+	GetRoutingPeerNetworks(ctx context.Context, accountID, peerID string) ([]string, error)
 }
 
 const (
@@ -440,6 +448,12 @@ func getMigrationsPreAuto(ctx context.Context) []migrationFunc {
 		},
 		func(db *gorm.DB) error {
 			return migration.RemoveDuplicatePeerKeys(ctx, db)
+		},
+		func(db *gorm.DB) error {
+			return migration.CleanupOrphanedResources[rpservice.Service, types.Account](ctx, db, "account_id")
+		},
+		func(db *gorm.DB) error {
+			return migration.CleanupOrphanedResources[domain.Domain, types.Account](ctx, db, "account_id")
 		},
 	}
 }

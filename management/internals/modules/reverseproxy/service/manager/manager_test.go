@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	cachestore "github.com/eko/gocache/lib/v4/store"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +19,9 @@ import (
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
 	"github.com/netbirdio/netbird/management/server/account"
 	"github.com/netbirdio/netbird/management/server/activity"
+	nbcache "github.com/netbirdio/netbird/management/server/cache"
 	"github.com/netbirdio/netbird/management/server/mock_server"
+	resourcetypes "github.com/netbirdio/netbird/management/server/networks/resources/types"
 	nbpeer "github.com/netbirdio/netbird/management/server/peer"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/permissions/modules"
@@ -27,6 +30,13 @@ import (
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/shared/management/status"
 )
+
+func testCacheStore(t *testing.T) cachestore.StoreInterface {
+	t.Helper()
+	s, err := nbcache.NewStore(context.Background(), 30*time.Minute, 10*time.Minute, 100)
+	require.NoError(t, err)
+	return s
+}
 
 func TestInitializeServiceForCreate(t *testing.T) {
 	ctx := context.Background()
@@ -421,10 +431,8 @@ func TestDeletePeerService_SourcePeerValidation(t *testing.T) {
 
 	newProxyServer := func(t *testing.T) *nbgrpc.ProxyServiceServer {
 		t.Helper()
-		tokenStore, err := nbgrpc.NewOneTimeTokenStore(context.Background(), 1*time.Hour, 10*time.Minute, 100)
-		require.NoError(t, err)
-		pkceStore, err := nbgrpc.NewPKCEVerifierStore(context.Background(), 10*time.Minute, 10*time.Minute, 100)
-		require.NoError(t, err)
+		tokenStore := nbgrpc.NewOneTimeTokenStore(context.Background(), testCacheStore(t))
+		pkceStore := nbgrpc.NewPKCEVerifierStore(context.Background(), testCacheStore(t))
 		srv := nbgrpc.NewProxyServiceServer(nil, tokenStore, pkceStore, nbgrpc.ProxyOIDCConfig{}, nil, nil, nil)
 		return srv
 	}
@@ -697,15 +705,13 @@ func setupIntegrationTest(t *testing.T) (*Manager, store.Store) {
 	accountMgr := &mock_server.MockAccountManager{
 		StoreEventFunc:         func(_ context.Context, _, _, _ string, _ activity.ActivityDescriber, _ map[string]any) {},
 		UpdateAccountPeersFunc: func(_ context.Context, _ string) {},
-		GetGroupByNameFunc: func(ctx context.Context, accountID, groupName string) (*types.Group, error) {
-			return testStore.GetGroupByName(ctx, store.LockingStrengthNone, groupName, accountID)
+		GetGroupByNameFunc: func(ctx context.Context, groupName, accountID, userID string) (*types.Group, error) {
+			return testStore.GetGroupByName(ctx, store.LockingStrengthNone, accountID, groupName)
 		},
 	}
 
-	tokenStore, err := nbgrpc.NewOneTimeTokenStore(ctx, 1*time.Hour, 10*time.Minute, 100)
-	require.NoError(t, err)
-	pkceStore, err := nbgrpc.NewPKCEVerifierStore(ctx, 10*time.Minute, 10*time.Minute, 100)
-	require.NoError(t, err)
+	tokenStore := nbgrpc.NewOneTimeTokenStore(ctx, testCacheStore(t))
+	pkceStore := nbgrpc.NewPKCEVerifierStore(ctx, testCacheStore(t))
 	proxySrv := nbgrpc.NewProxyServiceServer(nil, tokenStore, pkceStore, nbgrpc.ProxyOIDCConfig{}, nil, nil, nil)
 
 	proxyController, err := proxymanager.NewGRPCController(proxySrv, noop.NewMeterProvider().Meter(""))
@@ -803,8 +809,8 @@ func TestCreateServiceFromPeer(t *testing.T) {
 		mgr, testStore := setupIntegrationTest(t)
 
 		req := &rpservice.ExposeServiceRequest{
-			Port:     8080,
-			Protocol: "http",
+			Port: 8080,
+			Mode: "http",
 		}
 
 		resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
@@ -826,9 +832,9 @@ func TestCreateServiceFromPeer(t *testing.T) {
 		mgr, _ := setupIntegrationTest(t)
 
 		req := &rpservice.ExposeServiceRequest{
-			Port:     80,
-			Protocol: "http",
-			Domain:   "example.com",
+			Port:   80,
+			Mode:   "http",
+			Domain: "example.com",
 		}
 
 		resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
@@ -847,8 +853,8 @@ func TestCreateServiceFromPeer(t *testing.T) {
 		require.NoError(t, err)
 
 		req := &rpservice.ExposeServiceRequest{
-			Port:     8080,
-			Protocol: "http",
+			Port: 8080,
+			Mode: "http",
 		}
 
 		_, err = mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
@@ -860,8 +866,8 @@ func TestCreateServiceFromPeer(t *testing.T) {
 		mgr, _ := setupIntegrationTest(t)
 
 		req := &rpservice.ExposeServiceRequest{
-			Port:     0,
-			Protocol: "http",
+			Port: 0,
+			Mode: "http",
 		}
 
 		_, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
@@ -878,62 +884,52 @@ func TestExposeServiceRequestValidate(t *testing.T) {
 	}{
 		{
 			name:    "valid http request",
-			req:     rpservice.ExposeServiceRequest{Port: 8080, Protocol: "http"},
+			req:     rpservice.ExposeServiceRequest{Port: 8080, Mode: "http"},
 			wantErr: "",
 		},
 		{
-			name:    "valid https request with pin",
-			req:     rpservice.ExposeServiceRequest{Port: 443, Protocol: "https", Pin: "123456"},
-			wantErr: "",
+			name:    "https mode rejected",
+			req:     rpservice.ExposeServiceRequest{Port: 443, Mode: "https", Pin: "123456"},
+			wantErr: "unsupported mode",
 		},
 		{
 			name:    "port zero rejected",
-			req:     rpservice.ExposeServiceRequest{Port: 0, Protocol: "http"},
+			req:     rpservice.ExposeServiceRequest{Port: 0, Mode: "http"},
 			wantErr: "port must be between 1 and 65535",
 		},
 		{
-			name:    "negative port rejected",
-			req:     rpservice.ExposeServiceRequest{Port: -1, Protocol: "http"},
-			wantErr: "port must be between 1 and 65535",
-		},
-		{
-			name:    "port above 65535 rejected",
-			req:     rpservice.ExposeServiceRequest{Port: 65536, Protocol: "http"},
-			wantErr: "port must be between 1 and 65535",
-		},
-		{
-			name:    "unsupported protocol",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "tcp"},
-			wantErr: "unsupported protocol",
+			name:    "unsupported mode",
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "ftp"},
+			wantErr: "unsupported mode",
 		},
 		{
 			name:    "invalid pin format",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "http", Pin: "abc"},
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "http", Pin: "abc"},
 			wantErr: "invalid pin",
 		},
 		{
 			name:    "pin too short",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "http", Pin: "12345"},
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "http", Pin: "12345"},
 			wantErr: "invalid pin",
 		},
 		{
 			name:    "valid 6-digit pin",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "http", Pin: "000000"},
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "http", Pin: "000000"},
 			wantErr: "",
 		},
 		{
 			name:    "empty user group name",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "http", UserGroups: []string{"valid", ""}},
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "http", UserGroups: []string{"valid", ""}},
 			wantErr: "user group name cannot be empty",
 		},
 		{
 			name:    "invalid name prefix",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "http", NamePrefix: "INVALID"},
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "http", NamePrefix: "INVALID"},
 			wantErr: "invalid name prefix",
 		},
 		{
 			name:    "valid name prefix",
-			req:     rpservice.ExposeServiceRequest{Port: 80, Protocol: "http", NamePrefix: "my-service"},
+			req:     rpservice.ExposeServiceRequest{Port: 80, Mode: "http", NamePrefix: "my-service"},
 			wantErr: "",
 		},
 	}
@@ -966,14 +962,14 @@ func TestDeleteServiceFromPeer_ByDomain(t *testing.T) {
 
 		// First create a service
 		req := &rpservice.ExposeServiceRequest{
-			Port:     8080,
-			Protocol: "http",
+			Port: 8080,
+			Mode: "http",
 		}
 		resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
 		require.NoError(t, err)
 
-		// Delete by domain using unexported method
-		err = mgr.deleteServiceFromPeer(ctx, testAccountID, testPeerID, resp.Domain, false)
+		svcID := resolveServiceIDByDomain(t, testStore, resp.Domain)
+		err = mgr.deleteServiceFromPeer(ctx, testAccountID, testPeerID, svcID, false)
 		require.NoError(t, err)
 
 		// Verify service is deleted
@@ -982,16 +978,17 @@ func TestDeleteServiceFromPeer_ByDomain(t *testing.T) {
 	})
 
 	t.Run("expire uses correct activity", func(t *testing.T) {
-		mgr, _ := setupIntegrationTest(t)
+		mgr, testStore := setupIntegrationTest(t)
 
 		req := &rpservice.ExposeServiceRequest{
-			Port:     8080,
-			Protocol: "http",
+			Port: 8080,
+			Mode: "http",
 		}
 		resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
 		require.NoError(t, err)
 
-		err = mgr.deleteServiceFromPeer(ctx, testAccountID, testPeerID, resp.Domain, true)
+		svcID := resolveServiceIDByDomain(t, testStore, resp.Domain)
+		err = mgr.deleteServiceFromPeer(ctx, testAccountID, testPeerID, svcID, true)
 		require.NoError(t, err)
 	})
 }
@@ -1003,13 +1000,14 @@ func TestStopServiceFromPeer(t *testing.T) {
 		mgr, testStore := setupIntegrationTest(t)
 
 		req := &rpservice.ExposeServiceRequest{
-			Port:     8080,
-			Protocol: "http",
+			Port: 8080,
+			Mode: "http",
 		}
 		resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, req)
 		require.NoError(t, err)
 
-		err = mgr.StopServiceFromPeer(ctx, testAccountID, testPeerID, resp.Domain)
+		svcID := resolveServiceIDByDomain(t, testStore, resp.Domain)
+		err = mgr.StopServiceFromPeer(ctx, testAccountID, testPeerID, svcID)
 		require.NoError(t, err)
 
 		_, err = testStore.GetServiceByDomain(ctx, resp.Domain)
@@ -1022,8 +1020,8 @@ func TestDeleteService_DeletesEphemeralExpose(t *testing.T) {
 	mgr, testStore := setupIntegrationTest(t)
 
 	resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, &rpservice.ExposeServiceRequest{
-		Port:     8080,
-		Protocol: "http",
+		Port: 8080,
+		Mode: "http",
 	})
 	require.NoError(t, err)
 
@@ -1042,8 +1040,8 @@ func TestDeleteService_DeletesEphemeralExpose(t *testing.T) {
 	assert.Equal(t, int64(0), count, "ephemeral service should be deleted after API delete")
 
 	_, err = mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, &rpservice.ExposeServiceRequest{
-		Port:     9090,
-		Protocol: "http",
+		Port: 9090,
+		Mode: "http",
 	})
 	assert.NoError(t, err, "new expose should succeed after API delete")
 }
@@ -1054,8 +1052,8 @@ func TestDeleteAllServices_DeletesEphemeralExposes(t *testing.T) {
 
 	for i := range 3 {
 		_, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, &rpservice.ExposeServiceRequest{
-			Port:     8080 + i,
-			Protocol: "http",
+			Port: uint16(8080 + i),
+			Mode: "http",
 		})
 		require.NoError(t, err)
 	}
@@ -1076,21 +1074,22 @@ func TestRenewServiceFromPeer(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("renews tracked expose", func(t *testing.T) {
-		mgr, _ := setupIntegrationTest(t)
+		mgr, testStore := setupIntegrationTest(t)
 
 		resp, err := mgr.CreateServiceFromPeer(ctx, testAccountID, testPeerID, &rpservice.ExposeServiceRequest{
-			Port:     8080,
-			Protocol: "http",
+			Port: 8080,
+			Mode: "http",
 		})
 		require.NoError(t, err)
 
-		err = mgr.RenewServiceFromPeer(ctx, testAccountID, testPeerID, resp.Domain)
+		svcID := resolveServiceIDByDomain(t, testStore, resp.Domain)
+		err = mgr.RenewServiceFromPeer(ctx, testAccountID, testPeerID, svcID)
 		require.NoError(t, err)
 	})
 
 	t.Run("fails for untracked domain", func(t *testing.T) {
 		mgr, _ := setupIntegrationTest(t)
-		err := mgr.RenewServiceFromPeer(ctx, testAccountID, testPeerID, "nonexistent.com")
+		err := mgr.RenewServiceFromPeer(ctx, testAccountID, testPeerID, "nonexistent-service-id")
 		require.Error(t, err)
 	})
 }
@@ -1134,10 +1133,8 @@ func TestDeleteService_DeletesTargets(t *testing.T) {
 	mockPerms := permissions.NewMockManager(ctrl)
 	mockAcct := account.NewMockManager(ctrl)
 
-	tokenStore, err := nbgrpc.NewOneTimeTokenStore(ctx, 1*time.Hour, 10*time.Minute, 100)
-	require.NoError(t, err)
-	pkceStore, err := nbgrpc.NewPKCEVerifierStore(ctx, 10*time.Minute, 10*time.Minute, 100)
-	require.NoError(t, err)
+	tokenStore := nbgrpc.NewOneTimeTokenStore(ctx, testCacheStore(t))
+	pkceStore := nbgrpc.NewPKCEVerifierStore(ctx, testCacheStore(t))
 	proxySrv := nbgrpc.NewProxyServiceServer(nil, tokenStore, pkceStore, nbgrpc.ProxyOIDCConfig{}, nil, nil, nil)
 
 	proxyController, err := proxymanager.NewGRPCController(proxySrv, noop.NewMeterProvider().Meter(""))
@@ -1190,4 +1187,157 @@ func TestDeleteService_DeletesTargets(t *testing.T) {
 	targets, err := sqlStore.GetTargetsByServiceID(ctx, store.LockingStrengthNone, accountID, service.ID)
 	require.NoError(t, err)
 	assert.Len(t, targets, 0, "All targets should be deleted when service is deleted")
+}
+
+func TestValidateProtocolChange(t *testing.T) {
+	tests := []struct {
+		name    string
+		oldP    string
+		newP    string
+		wantErr bool
+	}{
+		{"empty to http", "", "http", false},
+		{"http to http", "http", "http", false},
+		{"same protocol", "tcp", "tcp", false},
+		{"empty new proto", "tcp", "", false},
+		{"http to tcp", "http", "tcp", true},
+		{"tcp to udp", "tcp", "udp", true},
+		{"tls to http", "tls", "http", true},
+		{"udp to tls", "udp", "tls", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateProtocolChange(tt.oldP, tt.newP)
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "cannot change mode")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateTargetReferences_ResourceTypeMismatch(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	mockStore := store.NewMockStore(ctrl)
+	accountID := "test-account"
+
+	tests := []struct {
+		name         string
+		targetType   rpservice.TargetType
+		resourceType resourcetypes.NetworkResourceType
+		wantErr      bool
+	}{
+		{"host matches host", rpservice.TargetTypeHost, resourcetypes.Host, false},
+		{"domain matches domain", rpservice.TargetTypeDomain, resourcetypes.Domain, false},
+		{"subnet matches subnet", rpservice.TargetTypeSubnet, resourcetypes.Subnet, false},
+		{"host but resource is domain", rpservice.TargetTypeHost, resourcetypes.Domain, true},
+		{"domain but resource is host", rpservice.TargetTypeDomain, resourcetypes.Host, true},
+		{"host but resource is subnet", rpservice.TargetTypeHost, resourcetypes.Subnet, true},
+		{"subnet but resource is domain", rpservice.TargetTypeSubnet, resourcetypes.Domain, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockStore.EXPECT().
+				GetNetworkResourceByID(gomock.Any(), store.LockingStrengthShare, accountID, "resource-1").
+				Return(&resourcetypes.NetworkResource{Type: tt.resourceType}, nil)
+
+			targets := []*rpservice.Target{
+				{TargetId: "resource-1", TargetType: tt.targetType, Host: "10.0.0.1"},
+			}
+			err := validateTargetReferences(ctx, mockStore, accountID, targets)
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "target_type")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateTargetReferences_PeerValid(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	mockStore := store.NewMockStore(ctrl)
+	accountID := "test-account"
+
+	mockStore.EXPECT().
+		GetPeerByID(gomock.Any(), store.LockingStrengthShare, accountID, "peer-1").
+		Return(&nbpeer.Peer{}, nil)
+
+	targets := []*rpservice.Target{
+		{TargetId: "peer-1", TargetType: rpservice.TargetTypePeer},
+	}
+	require.NoError(t, validateTargetReferences(ctx, mockStore, accountID, targets))
+}
+
+func TestValidateSubdomainRequirement(t *testing.T) {
+	ptrBool := func(b bool) *bool { return &b }
+
+	tests := []struct {
+		name             string
+		domain           string
+		cluster          string
+		requireSubdomain *bool
+		wantErr          bool
+	}{
+		{
+			name:             "subdomain present, require_subdomain true",
+			domain:           "app.eu1.proxy.netbird.io",
+			cluster:          "eu1.proxy.netbird.io",
+			requireSubdomain: ptrBool(true),
+			wantErr:          false,
+		},
+		{
+			name:             "bare cluster domain, require_subdomain true",
+			domain:           "eu1.proxy.netbird.io",
+			cluster:          "eu1.proxy.netbird.io",
+			requireSubdomain: ptrBool(true),
+			wantErr:          true,
+		},
+		{
+			name:             "bare cluster domain, require_subdomain false",
+			domain:           "eu1.proxy.netbird.io",
+			cluster:          "eu1.proxy.netbird.io",
+			requireSubdomain: ptrBool(false),
+			wantErr:          false,
+		},
+		{
+			name:             "bare cluster domain, require_subdomain nil (default)",
+			domain:           "eu1.proxy.netbird.io",
+			cluster:          "eu1.proxy.netbird.io",
+			requireSubdomain: nil,
+			wantErr:          false,
+		},
+		{
+			name:             "custom domain apex is not the cluster",
+			domain:           "example.com",
+			cluster:          "eu1.proxy.netbird.io",
+			requireSubdomain: ptrBool(true),
+			wantErr:          false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			mockCaps := proxy.NewMockManager(ctrl)
+			mockCaps.EXPECT().ClusterRequireSubdomain(gomock.Any(), tc.cluster).Return(tc.requireSubdomain).AnyTimes()
+
+			mgr := &Manager{capabilities: mockCaps}
+			err := mgr.validateSubdomainRequirement(context.Background(), tc.domain, tc.cluster)
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "requires a subdomain label")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
