@@ -23,7 +23,7 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 ### Notes
 
 - CrowdSec code is included from upstream but is not enabled in the Machine Tunnel lab profile.
-- Machine Tunnel public release validation still requires the full local, CI, lab, release-candidate, and go-live acceptance criteria from the upgrade plan.
+- Machine Tunnel public release validation has passed local, CI, and lab gates on the upgrade branch; post-merge main smoke, release-candidate artifact validation, and final go-live approval remain required before publishing a public tag.
 
 ## [1.0.0-machine-tunnel] - 2026-02-05
 
@@ -207,7 +207,7 @@ Windows Client ──► WireGuard Mesh ──► Router-Peer VM ──► Domai
 | **mTLS Enforcement** | Machine-specific RPCs require client certificates |
 | **Domain Isolation** | Per-account AllowedDomains prevents cross-tenant access |
 | **Issuer Validation** | SHA256 fingerprint check of certificate issuer CA |
-| **Multi-Account Detection** | Warns if certificate SANs span multiple accounts |
+| **Multi-Account Detection** | Rejects certificate SANs that span multiple accounts |
 
 ### Technical Details
 
