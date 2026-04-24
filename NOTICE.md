@@ -44,10 +44,11 @@ This fork includes the following modifications from upstream NetBird:
 - **SCM Integration:** Windows Service Control Manager with recovery actions
 - **Bootstrap Flow:** Two-phase authentication (Setup Key, then mTLS)
 
-### Server Extensions (management/server/)
+### Server Extensions (management/internals/server/, management/internals/shared/)
 - **Machine Peer Registration:** RegisterMachinePeer RPC for machine authentication
 - **mTLS Validation:** Certificate validation with AllowedDomains per account
 - **Issuer Fingerprint:** Strong binding via certificate chain validation
+- **Multi-Account Protection:** Rejects certificate identities whose SANs span multiple accounts
 
 ## Source Code Availability
 
