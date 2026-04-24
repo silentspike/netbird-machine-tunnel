@@ -27,8 +27,20 @@ jobs:
           copyback: false
           release: "14.2"
           prepare: |
-            pkg install -y curl pkgconf xorg
-            GO_TARBALL="go1.25.3.freebsd-amd64.tar.gz"
+            retry() {
+              attempts=0
+              until "$@"; do
+                attempts=$((attempts + 1))
+                if [ "$attempts" -ge 3 ]; then
+                  return 1
+                fi
+                sleep $((attempts * 5))
+              done
+            }
+
+            retry pkg update -f
+            retry pkg install -y curl pkgconf xorg
+            GO_TARBALL="go1.25.5.freebsd-amd64.tar.gz"
             GO_URL="https://go.dev/dl/$GO_TARBALL"
             curl -vLO "$GO_URL"
             tar -C /usr/local -vxzf "$GO_TARBALL"            
