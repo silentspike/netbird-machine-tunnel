@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    name: "Client / Unit"
+    name: "Darwin / Client / Unit"
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -47,4 +47,3 @@ jobs:
 
       - name: Test
         run: NETBIRD_STORE_ENGINE=${{ matrix.store }} CI=true go test -tags=devcert -exec 'sudo --preserve-env=CI,NETBIRD_STORE_ENGINE' -timeout 5m -p 1 $(go list ./... | grep -v -e /management -e /signal -e /relay -e /proxy -e /combined)
-

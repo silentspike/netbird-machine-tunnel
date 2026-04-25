@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    name: "Client / Unit"
+    name: "FreeBSD / Client / Unit"
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
