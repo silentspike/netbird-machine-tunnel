@@ -30,6 +30,8 @@ import (
 
 	"github.com/netbirdio/netbird/client/internal"
 	"github.com/netbirdio/netbird/client/internal/peer"
+	"github.com/netbirdio/netbird/client/internal/statemanager"
+	"github.com/netbirdio/netbird/client/internal/updater"
 	"github.com/netbirdio/netbird/client/proto"
 	"github.com/netbirdio/netbird/version"
 )
@@ -51,6 +53,7 @@ const (
 	errRestoreResidualState   = "failed to restore residual state: %v"
 	errProfilesDisabled       = "profiles are disabled, you cannot use this feature without profiles enabled"
 	errUpdateSettingsDisabled = "update settings are disabled, you cannot use this feature without update settings enabled"
+	errNetworksDisabled       = "network selection is disabled by the administrator"
 )
 
 var ErrServiceNotUp = errors.New("service is not up")
@@ -86,8 +89,11 @@ type Server struct {
 	profileManager         *profilemanager.ServiceManager
 	profilesDisabled       bool
 	updateSettingsDisabled bool
+	networksDisabled       bool
 
 	sleepHandler *sleephandler.SleepHandler
+
+	updateManager *updater.Manager
 
 	jwtCache *jwtCache
 }
@@ -100,7 +106,7 @@ type oauthAuthFlow struct {
 }
 
 // New server instance constructor.
-func New(ctx context.Context, logFile string, configFile string, profilesDisabled bool, updateSettingsDisabled bool) *Server {
+func New(ctx context.Context, logFile string, configFile string, profilesDisabled bool, updateSettingsDisabled bool, networksDisabled bool) *Server {
 	s := &Server{
 		rootCtx:                ctx,
 		logFile:                logFile,
@@ -109,6 +115,7 @@ func New(ctx context.Context, logFile string, configFile string, profilesDisable
 		profileManager:         profilemanager.NewServiceManager(configFile),
 		profilesDisabled:       profilesDisabled,
 		updateSettingsDisabled: updateSettingsDisabled,
+		networksDisabled:       networksDisabled,
 		jwtCache:               newJWTCache(),
 	}
 	agent := &serverAgent{s}
@@ -133,6 +140,12 @@ func (s *Server) Start() error {
 
 	if err := restoreResidualState(s.rootCtx, s.profileManager.GetStatePath()); err != nil {
 		log.Warnf(errRestoreResidualState, err)
+	}
+
+	if s.updateManager == nil {
+		stateMgr := statemanager.New(s.profileManager.GetStatePath())
+		s.updateManager = updater.NewManager(s.statusRecorder, stateMgr)
+		s.updateManager.CheckUpdateSuccess(s.rootCtx)
 	}
 
 	// if current state contains any error, return it
@@ -192,14 +205,14 @@ func (s *Server) Start() error {
 	s.clientRunning = true
 	s.clientRunningChan = make(chan struct{})
 	s.clientGiveUpChan = make(chan struct{})
-	go s.connectWithRetryRuns(ctx, config, s.statusRecorder, false, s.clientRunningChan, s.clientGiveUpChan)
+	go s.connectWithRetryRuns(ctx, config, s.statusRecorder, s.clientRunningChan, s.clientGiveUpChan)
 	return nil
 }
 
 // connectWithRetryRuns runs the client connection with a backoff strategy where we retry the operation as additional
 // mechanism to keep the client connected even when the connection is lost.
 // we cancel retry if the client receive a stop or down command, or if disable auto connect is configured.
-func (s *Server) connectWithRetryRuns(ctx context.Context, profileConfig *profilemanager.Config, statusRecorder *peer.Status, doInitialAutoUpdate bool, runningChan chan struct{}, giveUpChan chan struct{}) {
+func (s *Server) connectWithRetryRuns(ctx context.Context, profileConfig *profilemanager.Config, statusRecorder *peer.Status, runningChan chan struct{}, giveUpChan chan struct{}) {
 	defer func() {
 		s.mutex.Lock()
 		s.clientRunning = false
@@ -207,7 +220,7 @@ func (s *Server) connectWithRetryRuns(ctx context.Context, profileConfig *profil
 	}()
 
 	if s.config.DisableAutoConnect {
-		if err := s.connect(ctx, s.config, s.statusRecorder, doInitialAutoUpdate, runningChan); err != nil {
+		if err := s.connect(ctx, s.config, s.statusRecorder, runningChan); err != nil {
 			log.Debugf("run client connection exited with error: %v", err)
 		}
 		log.Tracef("client connection exited")
@@ -236,8 +249,7 @@ func (s *Server) connectWithRetryRuns(ctx context.Context, profileConfig *profil
 	}()
 
 	runOperation := func() error {
-		err := s.connect(ctx, profileConfig, statusRecorder, doInitialAutoUpdate, runningChan)
-		doInitialAutoUpdate = false
+		err := s.connect(ctx, profileConfig, statusRecorder, runningChan)
 		if err != nil {
 			log.Debugf("run client connection exited with error: %v. Will retry in the background", err)
 			return err
@@ -717,11 +729,7 @@ func (s *Server) Up(callerCtx context.Context, msg *proto.UpRequest) (*proto.UpR
 	s.clientRunningChan = make(chan struct{})
 	s.clientGiveUpChan = make(chan struct{})
 
-	var doAutoUpdate bool
-	if msg != nil && msg.AutoUpdate != nil && *msg.AutoUpdate {
-		doAutoUpdate = true
-	}
-	go s.connectWithRetryRuns(ctx, s.config, s.statusRecorder, doAutoUpdate, s.clientRunningChan, s.clientGiveUpChan)
+	go s.connectWithRetryRuns(ctx, s.config, s.statusRecorder, s.clientRunningChan, s.clientGiveUpChan)
 
 	s.mutex.Unlock()
 	return s.waitForUp(callerCtx)
@@ -1354,6 +1362,10 @@ func (s *Server) ExposeService(req *proto.ExposeServiceRequest, srv proto.Daemon
 		return gstatus.Errorf(codes.FailedPrecondition, "engine not initialized")
 	}
 
+	if engine.IsBlockInbound() {
+		return gstatus.Errorf(codes.FailedPrecondition, "expose requires inbound connections but 'block inbound' is enabled, disable it first")
+	}
+
 	mgr := engine.GetExposeManager()
 	if mgr == nil {
 		return gstatus.Errorf(codes.Internal, "expose manager not available")
@@ -1373,9 +1385,10 @@ func (s *Server) ExposeService(req *proto.ExposeServiceRequest, srv proto.Daemon
 	if err := srv.Send(&proto.ExposeServiceEvent{
 		Event: &proto.ExposeServiceEvent_Ready{
 			Ready: &proto.ExposeServiceReady{
-				ServiceName: result.ServiceName,
-				ServiceUrl:  result.ServiceURL,
-				Domain:      result.Domain,
+				ServiceName:      result.ServiceName,
+				ServiceUrl:       result.ServiceURL,
+				Domain:           result.Domain,
+				PortAutoAssigned: result.PortAutoAssigned,
 			},
 		},
 	}); err != nil {
@@ -1618,14 +1631,16 @@ func (s *Server) GetFeatures(ctx context.Context, msg *proto.GetFeaturesRequest)
 	features := &proto.GetFeaturesResponse{
 		DisableProfiles:       s.checkProfilesDisabled(),
 		DisableUpdateSettings: s.checkUpdateSettingsDisabled(),
+		DisableNetworks:       s.networksDisabled,
 	}
 
 	return features, nil
 }
 
-func (s *Server) connect(ctx context.Context, config *profilemanager.Config, statusRecorder *peer.Status, doInitialAutoUpdate bool, runningChan chan struct{}) error {
+func (s *Server) connect(ctx context.Context, config *profilemanager.Config, statusRecorder *peer.Status, runningChan chan struct{}) error {
 	log.Tracef("running client connection")
-	client := internal.NewConnectClient(ctx, config, statusRecorder, doInitialAutoUpdate)
+	client := internal.NewConnectClient(ctx, config, statusRecorder)
+	client.SetUpdateManager(s.updateManager)
 	client.SetSyncResponsePersistence(s.persistSyncResponse)
 
 	s.mutex.Lock()
@@ -1654,6 +1669,14 @@ func (s *Server) checkUpdateSettingsDisabled() bool {
 	}
 
 	return false
+}
+
+func (s *Server) startUpdateManagerForGUI() {
+	if s.updateManager == nil {
+		return
+	}
+	s.updateManager.Start(s.rootCtx)
+	s.updateManager.NotifyUI()
 }
 
 func (s *Server) onSessionExpire() {

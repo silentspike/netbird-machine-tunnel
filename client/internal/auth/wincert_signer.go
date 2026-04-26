@@ -192,9 +192,13 @@ func (s *WinCertSigner) signRSA(digest []byte, opts crypto.SignerOpts) ([]byte, 
 
 	// Check if PSS padding is requested
 	if pssOpts, ok := opts.(*rsa.PSSOptions); ok {
+		saltLength, err := ncryptPSSSaltLength(pssOpts)
+		if err != nil {
+			return nil, err
+		}
 		pssInfo := &BCRYPT_PSS_PADDING_INFO{
 			pszAlgId: hashAlg,
-			cbSalt:   uint32(pssOpts.SaltLength),
+			cbSalt:   saltLength,
 		}
 		paddingInfo = unsafe.Pointer(pssInfo)
 		flags |= BCRYPT_PAD_PSS

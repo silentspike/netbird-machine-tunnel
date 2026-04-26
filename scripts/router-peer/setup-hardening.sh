@@ -11,8 +11,8 @@
 #
 # Network assumptions (adjust as needed):
 # - eth0: Management network (SSH access)
-# - eth1: DC network (vmbr1 - 192.168.100.0/24)
-# - eth2: Client network (vmbr2 - 192.168.101.0/24)
+# - eth1: DC network (for example, 10.20.0.0/24)
+# - eth2: Client network (for example, 10.30.0.0/24)
 # - wt0: WireGuard tunnel interface (100.64.0.0/10)
 
 set -euo pipefail

@@ -181,7 +181,7 @@ func (am *DefaultAccountManager) getJWTGroupsChanges(user *types.User, groups []
 	return modified, newUserAutoGroups, newGroupsToCreate, nil
 }
 
-// BuildManager creates a new DefaultAccountManager with a provided Store
+// BuildManager creates a new DefaultAccountManager with all dependencies.
 func BuildManager(
 	ctx context.Context,
 	config *nbconfig.Config,
@@ -199,6 +199,7 @@ func BuildManager(
 	settingsManager settings.Manager,
 	permissionsManager permissions.Manager,
 	disableDefaultPolicy bool,
+	sharedCacheStore cacheStore.StoreInterface,
 ) (*DefaultAccountManager, error) {
 	start := time.Now()
 	defer func() {
@@ -247,16 +248,12 @@ func BuildManager(
 		log.WithContext(ctx).Infof("single account mode disabled, accounts number %d", accountsCounter)
 	}
 
-	cacheStore, err := nbcache.NewStore(ctx, nbcache.DefaultIDPCacheExpirationMax, nbcache.DefaultIDPCacheCleanupInterval, nbcache.DefaultIDPCacheOpenConn)
-	if err != nil {
-		return nil, fmt.Errorf("getting cache store: %s", err)
-	}
-	am.externalCacheManager = nbcache.NewUserDataCache(cacheStore)
-	am.cacheManager = nbcache.NewAccountUserDataCache(am.loadAccount, cacheStore)
+	am.externalCacheManager = nbcache.NewUserDataCache(sharedCacheStore)
+	am.cacheManager = nbcache.NewAccountUserDataCache(am.loadAccount, sharedCacheStore)
 
 	if !isNil(am.idpManager) && !IsEmbeddedIdp(am.idpManager) {
 		go func() {
-			err := am.warmupIDPCache(ctx, cacheStore)
+			err := am.warmupIDPCache(ctx, sharedCacheStore)
 			if err != nil {
 				log.WithContext(ctx).Warnf("failed warming up cache due to error: %v", err)
 				// todo retry?
@@ -335,7 +332,8 @@ func (am *DefaultAccountManager) UpdateAccountSettings(ctx context.Context, acco
 		if oldSettings.RoutingPeerDNSResolutionEnabled != newSettings.RoutingPeerDNSResolutionEnabled ||
 			oldSettings.LazyConnectionEnabled != newSettings.LazyConnectionEnabled ||
 			oldSettings.DNSDomain != newSettings.DNSDomain ||
-			oldSettings.AutoUpdateVersion != newSettings.AutoUpdateVersion {
+			oldSettings.AutoUpdateVersion != newSettings.AutoUpdateVersion ||
+			oldSettings.AutoUpdateAlways != newSettings.AutoUpdateAlways {
 			updateAccountPeers = true
 		}
 
@@ -376,6 +374,7 @@ func (am *DefaultAccountManager) UpdateAccountSettings(ctx context.Context, acco
 	am.handlePeerLoginExpirationSettings(ctx, oldSettings, newSettings, userID, accountID)
 	am.handleGroupsPropagationSettings(ctx, oldSettings, newSettings, userID, accountID)
 	am.handleAutoUpdateVersionSettings(ctx, oldSettings, newSettings, userID, accountID)
+	am.handleAutoUpdateAlwaysSettings(ctx, oldSettings, newSettings, userID, accountID)
 	am.handlePeerExposeSettings(ctx, oldSettings, newSettings, userID, accountID)
 	if err = am.handleInactivityExpirationSettings(ctx, oldSettings, newSettings, userID, accountID); err != nil {
 		return nil, err
@@ -490,6 +489,16 @@ func (am *DefaultAccountManager) handleAutoUpdateVersionSettings(ctx context.Con
 		am.StoreEvent(ctx, userID, accountID, accountID, activity.AccountAutoUpdateVersionUpdated, map[string]any{
 			"version": newSettings.AutoUpdateVersion,
 		})
+	}
+}
+
+func (am *DefaultAccountManager) handleAutoUpdateAlwaysSettings(ctx context.Context, oldSettings, newSettings *types.Settings, userID, accountID string) {
+	if oldSettings.AutoUpdateAlways != newSettings.AutoUpdateAlways {
+		if newSettings.AutoUpdateAlways {
+			am.StoreEvent(ctx, userID, accountID, accountID, activity.AccountAutoUpdateAlwaysEnabled, nil)
+		} else {
+			am.StoreEvent(ctx, userID, accountID, accountID, activity.AccountAutoUpdateAlwaysDisabled, nil)
+		}
 	}
 }
 
@@ -728,11 +737,6 @@ func (am *DefaultAccountManager) DeleteAccount(ctx context.Context, accountID, u
 	userInfosMap, err := am.BuildUserInfosForAccount(ctx, accountID, userID, maps.Values(account.Users))
 	if err != nil {
 		return status.Errorf(status.Internal, "failed to build user infos for account %s: %v", accountID, err)
-	}
-
-	err = am.serviceManager.DeleteAllServices(ctx, accountID, userID)
-	if err != nil {
-		return status.Errorf(status.Internal, "failed to delete service %s: %v", accountID, err)
 	}
 
 	for _, otherUser := range account.Users {

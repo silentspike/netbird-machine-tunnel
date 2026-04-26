@@ -1,18 +1,18 @@
 ##  Contributor License Agreement
 
-This Contributor License Agreement (referred to as the "Agreement") is entered into by the individual 
-submitting this Agreement and NetBird GmbH, c/o Max-Beer-Straße 2-4 Münzstraße 12 10178 Berlin, Germany, 
-referred to as "NetBird" (collectively, the "Parties"). The Agreement outlines the terms and conditions 
-under which NetBird may utilize software contributions provided by the Contributor for inclusion in 
-its software development projects. By submitting this Agreement, the Contributor confirms their acceptance 
-of the terms and conditions outlined below. The Contributor further represents that they are authorized to 
+This Contributor License Agreement (referred to as the "Agreement") is entered into by the individual
+submitting this Agreement and NetBird GmbH, Brunnenstraße 196, 10119 Berlin, Germany,
+referred to as "NetBird" (collectively, the "Parties"). The Agreement outlines the terms and conditions
+under which NetBird may utilize software contributions provided by the Contributor for inclusion in
+its software development projects. By submitting this Agreement, the Contributor confirms their acceptance
+of the terms and conditions outlined below. The Contributor further represents that they are authorized to
 complete this process as described herein.
 
 
 ## 1 Preamble
-In order to clarify the IP Rights situation with regard to Contributions from any person or entity, NetBird 
-must have a contributor license agreement on file to be signed by each Contributor, containing the license 
-terms below. This license serves as protection for both the Contributor as well as NetBird and its software users; 
+In order to clarify the IP Rights situation with regard to Contributions from any person or entity, NetBird
+must have a contributor license agreement on file to be signed by each Contributor, containing the license
+terms below. This license serves as protection for both the Contributor as well as NetBird and its software users;
 it does not change Contributor’s rights to use his/her own Contributions for any other purpose.
 
 ## 2 Definitions
@@ -51,14 +51,13 @@ Contributor agrees to notify NetBird of any facts or circumstances of which Cont
 Should Contributor wish to submit work that is not Contributor’s original creation, Contributor may submit it to NetBird separately from any Contribution, identifying the complete details of its source and of any license or other restriction (including, but not limited to, related patents, trademarks, and license agreements) of which Contributor are personally aware, and conspicuously marking the work as "Submitted on behalf of a third-party: [named here]".
 
 ## 7 No Consideration
-Unless compensation is mandatory under statutory law, no compensation for any license under this agreement shall be payable. 
+Unless compensation is mandatory under statutory law, no compensation for any license under this agreement shall be payable.
 
 ## 8 Final Provisions
-8.1 Laws. This Agreement is governed by the laws of the Federal Republic of Germany. 
+8.1 Laws. This Agreement is governed by the laws of the Federal Republic of Germany.
 
-8.2 Venue. Place of jurisdiction shall, to the extent legally permissible, be Berlin, Germany. 
+8.2 Venue. Place of jurisdiction shall, to the extent legally permissible, be Berlin, Germany.
 
-8.3 Severability. If any provision in this agreement is unlawful, invalid or ineffective, it shall not affect the enforceability or effectiveness of the remainder of this agreement. The parties agree to replace any unlawful, invalid or ineffective provision with a provision that comes as close as possible to the commercial intent and purpose of the original provision. This section also applies accordingly to any gaps in the contract. 
+8.3 Severability. If any provision in this agreement is unlawful, invalid or ineffective, it shall not affect the enforceability or effectiveness of the remainder of this agreement. The parties agree to replace any unlawful, invalid or ineffective provision with a provision that comes as close as possible to the commercial intent and purpose of the original provision. This section also applies accordingly to any gaps in the contract.
 
 8.4 Variations. Any variations, amendments or supplements to this Agreement must be in writing. This also applies to any variation of this Section 8.4.
-

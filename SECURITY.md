@@ -18,9 +18,9 @@ We recommend always running the latest release. Security patches are backported 
 
 ### How to Report
 
-1. **GitHub Security Advisories (preferred):** Use the [private vulnerability reporting](https://github.com/obtFusi/netbird-fork/security/advisories/new) feature on this repository.
+1. **GitHub Security Advisories (preferred):** Use the [private vulnerability reporting](https://github.com/silentspike/netbird-machine-tunnel/security/advisories/new) feature on this repository.
 
-2. **Email:** Send details to the repository maintainer via the contact information on the [obtFusi GitHub profile](https://github.com/obtFusi).
+2. **Maintainer contact:** If private vulnerability reporting is unavailable, contact the repository maintainers listed in [CODEOWNERS](.github/CODEOWNERS).
 
 ### What to Include
 

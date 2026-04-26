@@ -6,6 +6,25 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 
 ---
 
+## [Unreleased] - 2026-04-24
+
+### Changed
+
+- Synced the fork base to upstream NetBird `v0.69.0`.
+- Updated Machine Tunnel setup-key bootstrap to the new upstream management client API (`Login(sysInfo, sshKey, dnsLabels)` and `Register(setupKey, jwtToken, sysInfo, sshKey, dnsLabels)`).
+- Kept Machine Tunnel peer connections deterministic by explicitly leaving upstream `PortForwardManager` and `MetricsRecorder` disabled for the pre-login PeerEngine path.
+- Updated release workflow and GoReleaser configs to generate SPDX JSON SBOMs for release archives and Linux packages through Syft.
+- Fixed the upstream-sync workflow to merge the selected upstream release tag instead of `upstream/main`.
+
+### Added
+
+- Upstream `v0.69.0` client and proxy features, including port-forwarding, client connection metrics, reverse-proxy L4/CrowdSec-related code, IDP migration helpers, and expanded management API tests.
+
+### Notes
+
+- CrowdSec code is included from upstream but is not enabled in the Machine Tunnel lab profile.
+- Machine Tunnel public release validation has passed local, CI, and lab gates on the upgrade branch; post-merge main smoke, release-candidate artifact validation, and final go-live approval remain required before publishing a public tag.
+
 ## [1.0.0-machine-tunnel] - 2026-02-05
 
 This is the first release of the Machine Tunnel feature. It enables Windows machines to establish a VPN connection before user login, allowing domain authentication (Kerberos) to work for remote users.
@@ -188,7 +207,7 @@ Windows Client ──► WireGuard Mesh ──► Router-Peer VM ──► Domai
 | **mTLS Enforcement** | Machine-specific RPCs require client certificates |
 | **Domain Isolation** | Per-account AllowedDomains prevents cross-tenant access |
 | **Issuer Validation** | SHA256 fingerprint check of certificate issuer CA |
-| **Multi-Account Detection** | Warns if certificate SANs span multiple accounts |
+| **Multi-Account Detection** | Rejects certificate SANs that span multiple accounts |
 
 ### Technical Details
 

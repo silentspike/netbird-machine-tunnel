@@ -23,7 +23,7 @@ This fork inherits and follows the same dual-license structure. See [LICENSE](LI
 
 ## Fork Information
 
-- **Fork Repository:** https://github.com/obtFusi/netbird-fork
+- **Fork Repository:** https://github.com/silentspike/netbird-machine-tunnel
 - **Fork Purpose:** Machine Tunnel for Windows Pre-Login VPN with AD Certificate Authentication
 
 ## Modifications
@@ -44,16 +44,17 @@ This fork includes the following modifications from upstream NetBird:
 - **SCM Integration:** Windows Service Control Manager with recovery actions
 - **Bootstrap Flow:** Two-phase authentication (Setup Key, then mTLS)
 
-### Server Extensions (management/server/)
+### Server Extensions (management/internals/server/, management/internals/shared/)
 - **Machine Peer Registration:** RegisterMachinePeer RPC for machine authentication
 - **mTLS Validation:** Certificate validation with AllowedDomains per account
 - **Issuer Fingerprint:** Strong binding via certificate chain validation
+- **Multi-Account Protection:** Rejects certificate identities whose SANs span multiple accounts
 
 ## Source Code Availability
 
 As required by AGPL-3.0 (for the server components), the complete source code for this fork is available at:
 
-https://github.com/obtFusi/netbird-fork
+https://github.com/silentspike/netbird-machine-tunnel
 
 ## Original Authors
 

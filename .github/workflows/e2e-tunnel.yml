@@ -25,7 +25,7 @@ on:
       domain_name:
         description: 'Domain name for SRV lookups'
         required: true
-        default: 'test.local'
+        default: 'ad.example.internal'
       test_results:
         description: 'Test results summary (for documentation)'
         required: false
@@ -101,8 +101,10 @@ jobs:
           ${{ github.event.inputs.test_results }}
 
           ## Test Script
-          The following test script was used:
-          - `${{ env.TEST_SCRIPT }}`
+          The following test scripts were used:
+          - `scripts/tests/Test-TunnelEstablishment.ps1`
+          - `scripts/tests/Test-Baseline.ps1`
+          - `scripts/tests/Test-GoNoGoMatrix.ps1`
 
           ## Test Cases
           | Test | Description |

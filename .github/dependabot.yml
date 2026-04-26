@@ -1,10 +1,39 @@
 version: 2
 updates:
-  # Go dependencies
+  # Go dependencies - primary module
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  # Go dependencies - metrics ingest helper module
+  - package-ecosystem: "gomod"
+    directory: "/client/internal/metrics/infra/ingest"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:15"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  # JavaScript dependencies
+  - package-ecosystem: "npm"
+    directory: "/proxy/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:30"
+      timezone: "Europe/Vienna"
     commit-message:
       prefix: "deps"
     labels:
@@ -15,16 +44,118 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:45"
+      timezone: "Europe/Vienna"
     commit-message:
       prefix: "ci"
     labels:
       - "type:ci"
 
-  # Docker dependencies
+  # Docker dependencies - one entry per Dockerfile directory.
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/client"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/management"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:05"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/relay"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:10"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/signal"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:15"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/upload-server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:20"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/combined"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:25"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/proxy"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:30"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/client/internal/metrics/infra/ingest"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:35"
+      timezone: "Europe/Vienna"
+    commit-message:
+      prefix: "deps"
+    labels:
+      - "type:deps"
+
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:40"
+      timezone: "Europe/Vienna"
     commit-message:
       prefix: "deps"
     labels:
