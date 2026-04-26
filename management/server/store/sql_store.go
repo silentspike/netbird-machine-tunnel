@@ -2748,6 +2748,11 @@ func (s *SqlStore) GetPostureCheckByChecksDefinition(accountID string, checks *p
 
 // Close closes the underlying DB connection
 func (s *SqlStore) Close(_ context.Context) error {
+	if s.pool != nil {
+		s.pool.Close()
+		s.pool = nil
+	}
+
 	sql, err := s.db.DB()
 	if err != nil {
 		return fmt.Errorf("get db: %w", err)

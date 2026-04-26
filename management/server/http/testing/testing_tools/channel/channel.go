@@ -52,13 +52,16 @@ import (
 )
 
 func BuildApiBlackBoxWithDBState(t testing_tools.TB, sqlFile string, expectedPeerUpdate *network_map.UpdateMessage, validateUpdate bool) (http.Handler, account.Manager, chan struct{}) {
-	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), sqlFile, t.TempDir())
+	ctx, cancel := context.WithCancel(context.Background())
+
+	store, cleanup, err := storetest.NewTestStoreFromSQL(ctx, sqlFile, t.TempDir())
 	if err != nil {
 		t.Fatalf("Failed to create test store: %v", err)
 	}
 	t.Cleanup(cleanup)
+	t.Cleanup(cancel)
 
-	metrics, err := telemetry.NewDefaultAppMetrics(context.Background())
+	metrics, err := telemetry.NewDefaultAppMetrics(ctx)
 	if err != nil {
 		t.Fatalf("Failed to create metrics: %v", err)
 	}
@@ -87,8 +90,6 @@ func BuildApiBlackBoxWithDBState(t testing_tools.TB, sqlFile string, expectedPee
 
 	jobManager := job.NewJobManager(nil, store, peersManager)
 
-	ctx := context.Background()
-
 	cacheStore, err := nbcache.NewStore(ctx, 100*time.Millisecond, 300*time.Millisecond, 100)
 	if err != nil {
 		t.Fatalf("Failed to create cache store: %v", err)
@@ -110,6 +111,7 @@ func BuildApiBlackBoxWithDBState(t testing_tools.TB, sqlFile string, expectedPee
 		t.Fatalf("Failed to create proxy manager: %v", err)
 	}
 	proxyServiceServer := nbgrpc.NewProxyServiceServer(accessLogsManager, proxyTokenStore, pkceverifierStore, nbgrpc.ProxyOIDCConfig{}, peersManager, userManager, proxyMgr)
+	t.Cleanup(proxyServiceServer.Close)
 	domainManager := manager.NewManager(store, proxyMgr, permissionsManager, am)
 	serviceProxyController, err := proxymanager.NewGRPCController(proxyServiceServer, noopMeter)
 	if err != nil {
@@ -135,7 +137,7 @@ func BuildApiBlackBoxWithDBState(t testing_tools.TB, sqlFile string, expectedPee
 	customZonesManager := zonesManager.NewManager(store, am, permissionsManager, "")
 	zoneRecordsManager := recordsManager.NewManager(store, am, permissionsManager)
 
-	apiHandler, err := http2.NewAPIHandler(context.Background(), am, networksManager, resourcesManager, routersManager, groupsManager, geoMock, authManagerMock, metrics, validatorMock, proxyController, permissionsManager, peersManager, settingsManager, customZonesManager, zoneRecordsManager, networkMapController, nil, serviceManager, nil, nil, nil, nil)
+	apiHandler, err := http2.NewAPIHandler(ctx, am, networksManager, resourcesManager, routersManager, groupsManager, geoMock, authManagerMock, metrics, validatorMock, proxyController, permissionsManager, peersManager, settingsManager, customZonesManager, zoneRecordsManager, networkMapController, nil, serviceManager, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to create API handler: %v", err)
 	}
@@ -192,13 +194,16 @@ func PeerShouldNotReceiveAnyUpdate(t testing_tools.TB, updateMessage <-chan *net
 // BuildApiBlackBoxWithDBStateAndPeerChannel creates the API handler and returns
 // the peer update channel directly so tests can verify updates inline.
 func BuildApiBlackBoxWithDBStateAndPeerChannel(t testing_tools.TB, sqlFile string) (http.Handler, account.Manager, <-chan *network_map.UpdateMessage) {
-	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), sqlFile, t.TempDir())
+	ctx, cancel := context.WithCancel(context.Background())
+
+	store, cleanup, err := storetest.NewTestStoreFromSQL(ctx, sqlFile, t.TempDir())
 	if err != nil {
 		t.Fatalf("Failed to create test store: %v", err)
 	}
 	t.Cleanup(cleanup)
+	t.Cleanup(cancel)
 
-	metrics, err := telemetry.NewDefaultAppMetrics(context.Background())
+	metrics, err := telemetry.NewDefaultAppMetrics(ctx)
 	if err != nil {
 		t.Fatalf("Failed to create metrics: %v", err)
 	}
@@ -215,8 +220,6 @@ func BuildApiBlackBoxWithDBStateAndPeerChannel(t testing_tools.TB, sqlFile strin
 	peersManager := peers.NewManager(store, permissionsManager)
 
 	jobManager := job.NewJobManager(nil, store, peersManager)
-
-	ctx := context.Background()
 
 	cacheStore, err := nbcache.NewStore(ctx, 100*time.Millisecond, 300*time.Millisecond, 100)
 	if err != nil {
@@ -239,6 +242,7 @@ func BuildApiBlackBoxWithDBStateAndPeerChannel(t testing_tools.TB, sqlFile strin
 		t.Fatalf("Failed to create proxy manager: %v", err)
 	}
 	proxyServiceServer := nbgrpc.NewProxyServiceServer(accessLogsManager, proxyTokenStore, pkceverifierStore, nbgrpc.ProxyOIDCConfig{}, peersManager, userManager, proxyMgr)
+	t.Cleanup(proxyServiceServer.Close)
 	domainManager := manager.NewManager(store, proxyMgr, permissionsManager, am)
 	serviceProxyController, err := proxymanager.NewGRPCController(proxyServiceServer, noopMeter)
 	if err != nil {
@@ -264,7 +268,7 @@ func BuildApiBlackBoxWithDBStateAndPeerChannel(t testing_tools.TB, sqlFile strin
 	customZonesManager := zonesManager.NewManager(store, am, permissionsManager, "")
 	zoneRecordsManager := recordsManager.NewManager(store, am, permissionsManager)
 
-	apiHandler, err := http2.NewAPIHandler(context.Background(), am, networksManager, resourcesManager, routersManager, groupsManager, geoMock, authManagerMock, metrics, validatorMock, proxyController, permissionsManager, peersManager, settingsManager, customZonesManager, zoneRecordsManager, networkMapController, nil, serviceManager, nil, nil, nil, nil)
+	apiHandler, err := http2.NewAPIHandler(ctx, am, networksManager, resourcesManager, routersManager, groupsManager, geoMock, authManagerMock, metrics, validatorMock, proxyController, permissionsManager, peersManager, settingsManager, customZonesManager, zoneRecordsManager, networkMapController, nil, serviceManager, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("Failed to create API handler: %v", err)
 	}
