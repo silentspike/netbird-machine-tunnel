@@ -14,6 +14,7 @@ import (
 	"github.com/netbirdio/management-integrations/integrations"
 
 	nbcache "github.com/netbirdio/netbird/management/server/cache"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 
 	"github.com/netbirdio/netbird/management/internals/controllers/network_map/controller"
 	"github.com/netbirdio/netbird/management/internals/controllers/network_map/update_channel"
@@ -31,7 +32,6 @@ import (
 	"github.com/netbirdio/netbird/management/server/integrations/port_forwarding"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/settings"
-	"github.com/netbirdio/netbird/management/server/store"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/types"
 	mgmtProto "github.com/netbirdio/netbird/shared/management/proto"
@@ -85,7 +85,7 @@ func startManagement(t *testing.T, config *config.Config, testFile string) (*grp
 		t.Fatal(err)
 	}
 	s := grpc.NewServer()
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), testFile, t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), testFile, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

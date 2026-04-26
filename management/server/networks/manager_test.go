@@ -12,7 +12,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/networks/routers"
 	"github.com/netbirdio/netbird/management/server/networks/types"
 	"github.com/netbirdio/netbird/management/server/permissions"
-	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 )
 
 func Test_GetAllNetworksReturnsNetworks(t *testing.T) {
@@ -20,7 +20,7 @@ func Test_GetAllNetworksReturnsNetworks(t *testing.T) {
 	accountID := "testAccountId"
 	userID := "testAdminId"
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func Test_GetAllNetworksReturnsPermissionDenied(t *testing.T) {
 	accountID := "testAccountId"
 	userID := "testUserId"
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +66,7 @@ func Test_GetNetworkReturnsNetwork(t *testing.T) {
 	userID := "testAdminId"
 	networkID := "testNetworkId"
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func Test_GetNetworkReturnsPermissionDenied(t *testing.T) {
 	userID := "testUserId"
 	networkID := "testNetworkId"
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func Test_CreateNetworkSuccessfully(t *testing.T) {
 		Name:      "new-network",
 	}
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func Test_CreateNetworkFailsWithPermissionDenied(t *testing.T) {
 		Name:      "new-network",
 	}
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +162,7 @@ func Test_DeleteNetworkSuccessfully(t *testing.T) {
 	userID := "testAdminId"
 	networkID := "testNetworkId"
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,7 +184,7 @@ func Test_DeleteNetworkFailsWithPermissionDenied(t *testing.T) {
 	userID := "testUserId"
 	networkID := "testNetworkId"
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +209,7 @@ func Test_UpdateNetworkSuccessfully(t *testing.T) {
 		Name:      "new-network",
 	}
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +235,7 @@ func Test_UpdateNetworkFailsWithPermissionDenied(t *testing.T) {
 		Name:      "new-network",
 	}
 
-	s, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
+	s, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

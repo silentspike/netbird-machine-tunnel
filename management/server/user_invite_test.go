@@ -13,6 +13,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/idp"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/shared/management/status"
 	"github.com/netbirdio/netbird/util/crypt"
@@ -35,7 +36,7 @@ func setupInviteTestManagerWithEmbeddedIdP(t *testing.T) (*DefaultAccountManager
 	require.NoError(t, os.MkdirAll(dexDataDir, 0700))
 
 	// Create test store
-	s, cleanup, err := store.NewTestStoreFromSQL(ctx, "", tmpDir)
+	s, cleanup, err := storetest.NewTestStoreFromSQL(ctx, "", tmpDir)
 	require.NoError(t, err, "Error when creating store")
 
 	// Enable encryption
@@ -859,7 +860,7 @@ func TestUserInviteRecord_Copy(t *testing.T) {
 }
 
 func TestCreateUserInvite_NonEmbeddedIdP(t *testing.T) {
-	s, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	s, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	require.NoError(t, err)
 	defer cleanup()
 

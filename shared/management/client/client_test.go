@@ -25,6 +25,7 @@ import (
 	"github.com/netbirdio/netbird/management/internals/modules/peers"
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
 	"github.com/netbirdio/netbird/management/server/job"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 
 	"github.com/netbirdio/netbird/client/system"
 	"github.com/netbirdio/netbird/encryption"
@@ -37,7 +38,6 @@ import (
 	"github.com/netbirdio/netbird/management/server/mock_server"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/settings"
-	"github.com/netbirdio/netbird/management/server/store"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/types"
 	mgmtProto "github.com/netbirdio/netbird/shared/management/proto"
@@ -68,7 +68,7 @@ func startManagement(t *testing.T) (*grpc.Server, net.Listener) {
 		t.Fatal(err)
 	}
 	s := grpc.NewServer()
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../../management/server/testdata/store.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../../management/server/testdata/store.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

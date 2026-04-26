@@ -26,6 +26,7 @@ import (
 
 	"github.com/netbirdio/netbird/client/internal/stdnet"
 	"github.com/netbirdio/netbird/management/server/job"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 
 	"github.com/netbirdio/management-integrations/integrations"
 
@@ -59,7 +60,6 @@ import (
 	"github.com/netbirdio/netbird/management/server/integrations/port_forwarding"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/settings"
-	"github.com/netbirdio/netbird/management/server/store"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/monotime"
@@ -1620,7 +1620,7 @@ func startManagement(t *testing.T, dataDir, testFile string) (*grpc.Server, stri
 	}
 	s := grpc.NewServer(grpc.KeepaliveEnforcementPolicy(kaep), grpc.KeepaliveParams(kasp))
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), testFile, config.Datadir)
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), testFile, config.Datadir)
 	if err != nil {
 		return nil, "", err
 	}

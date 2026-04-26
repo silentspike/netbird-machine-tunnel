@@ -30,6 +30,7 @@ import (
 	ephemeral_manager "github.com/netbirdio/netbird/management/internals/modules/peers/ephemeral/manager"
 	"github.com/netbirdio/netbird/management/server/integrations/port_forwarding"
 	"github.com/netbirdio/netbird/management/server/job"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 
 	"github.com/netbirdio/netbird/management/server"
 	"github.com/netbirdio/netbird/management/server/account"
@@ -45,14 +46,13 @@ import (
 	"github.com/netbirdio/netbird/management/server/networks/routers"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/settings"
-	"github.com/netbirdio/netbird/management/server/store"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/users"
 	"github.com/netbirdio/netbird/shared/auth"
 )
 
 func BuildApiBlackBoxWithDBState(t testing_tools.TB, sqlFile string, expectedPeerUpdate *network_map.UpdateMessage, validateUpdate bool) (http.Handler, account.Manager, chan struct{}) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), sqlFile, t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), sqlFile, t.TempDir())
 	if err != nil {
 		t.Fatalf("Failed to create test store: %v", err)
 	}
@@ -192,7 +192,7 @@ func PeerShouldNotReceiveAnyUpdate(t testing_tools.TB, updateMessage <-chan *net
 // BuildApiBlackBoxWithDBStateAndPeerChannel creates the API handler and returns
 // the peer update channel directly so tests can verify updates inline.
 func BuildApiBlackBoxWithDBStateAndPeerChannel(t testing_tools.TB, sqlFile string) (http.Handler, account.Manager, <-chan *network_map.UpdateMessage) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), sqlFile, t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), sqlFile, t.TempDir())
 	if err != nil {
 		t.Fatalf("Failed to create test store: %v", err)
 	}

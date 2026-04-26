@@ -17,6 +17,7 @@ import (
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/service"
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/sessionkey"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/proxy/auth"
 	"github.com/netbirdio/netbird/shared/management/proto"
@@ -32,7 +33,7 @@ func setupValidateSessionTest(t *testing.T) *validateSessionTestSetup {
 	t.Helper()
 
 	ctx := context.Background()
-	testStore, storeCleanup, err := store.NewTestStoreFromSQL(ctx, "../../../server/testdata/auth_callback.sql", t.TempDir())
+	testStore, storeCleanup, err := storetest.NewTestStoreFromSQL(ctx, "../../../server/testdata/auth_callback.sql", t.TempDir())
 	require.NoError(t, err)
 
 	serviceManager := &testValidateSessionServiceManager{store: testStore}

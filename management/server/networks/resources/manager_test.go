@@ -12,7 +12,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/mock_server"
 	"github.com/netbirdio/netbird/management/server/networks/resources/types"
 	"github.com/netbirdio/netbird/management/server/permissions"
-	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/shared/management/status"
 )
 
@@ -22,7 +22,7 @@ func Test_GetAllResourcesInNetworkReturnsResources(t *testing.T) {
 	userID := "testAdminId"
 	networkID := "testNetworkId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func Test_GetAllResourcesInNetworkReturnsPermissionDenied(t *testing.T) {
 	userID := "testUserId"
 	networkID := "testNetworkId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func Test_GetAllResourcesInAccountReturnsResources(t *testing.T) {
 	accountID := "testAccountId"
 	userID := "testAdminId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func Test_GetAllResourcesInAccountReturnsPermissionDenied(t *testing.T) {
 	accountID := "testAccountId"
 	userID := "testUserId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func Test_GetResourceInNetworkReturnsResources(t *testing.T) {
 	networkID := "testNetworkId"
 	resourceID := "testResourceId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func Test_GetResourceInNetworkReturnsPermissionDenied(t *testing.T) {
 	networkID := "testNetworkId"
 	resourceID := "testResourceId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func Test_CreateResourceSuccessfully(t *testing.T) {
 		Address:     "192.168.1.1",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +196,7 @@ func Test_CreateResourceFailsWithPermissionDenied(t *testing.T) {
 		Address:     "192.168.1.1",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +225,7 @@ func Test_CreateResourceFailsWithInvalidAddress(t *testing.T) {
 		Address:     "-invalid",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,7 +253,7 @@ func Test_CreateResourceFailsWithUsedName(t *testing.T) {
 		Address:     "example.com",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,7 +285,7 @@ func Test_UpdateResourceSuccessfully(t *testing.T) {
 		Address:     "1.2.3.0/24",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -320,7 +320,7 @@ func Test_UpdateResourceFailsWithResourceNotFound(t *testing.T) {
 		Address:     "1.2.3.0/24",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -352,7 +352,7 @@ func Test_UpdateResourceFailsWithNameInUse(t *testing.T) {
 		Address:     "1.2.3.0/24",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,7 +383,7 @@ func Test_UpdateResourceFailsWithPermissionDenied(t *testing.T) {
 		Address:     "1.2.3.0/24",
 	}
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -407,7 +407,7 @@ func Test_DeleteResourceSuccessfully(t *testing.T) {
 	networkID := "testNetworkId"
 	resourceID := "testResourceId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -431,7 +431,7 @@ func Test_DeleteResourceFailsWithPermissionDenied(t *testing.T) {
 	networkID := "testNetworkId"
 	resourceID := "testResourceId"
 
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "../../testdata/networks.sql", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

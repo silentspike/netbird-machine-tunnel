@@ -53,6 +53,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/posture"
 	"github.com/netbirdio/netbird/management/server/settings"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/testutil"
 	"github.com/netbirdio/netbird/management/server/types"
@@ -3160,7 +3161,7 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 func createStore(t testing.TB) (store.Store, error) {
 	t.Helper()
 	dataDir := t.TempDir()
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "", dataDir)
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "", dataDir)
 	if err != nil {
 		return nil, err
 	}

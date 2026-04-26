@@ -26,7 +26,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/job"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/settings"
-	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/shared/auth"
@@ -38,7 +38,7 @@ func createManagerWithEmbeddedIdP(t testing.TB) (*DefaultAccountManager, *update
 	ctx := context.Background()
 
 	dataDir := t.TempDir()
-	testStore, cleanUp, err := store.NewTestStoreFromSQL(ctx, "", dataDir)
+	testStore, cleanUp, err := storetest.NewTestStoreFromSQL(ctx, "", dataDir)
 	if err != nil {
 		return nil, nil, err
 	}

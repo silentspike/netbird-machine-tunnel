@@ -27,6 +27,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/permissions/modules"
 	"github.com/netbirdio/netbird/management/server/permissions/operations"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/shared/management/status"
 )
@@ -657,7 +658,7 @@ func setupIntegrationTest(t *testing.T) (*Manager, store.Store) {
 	t.Helper()
 
 	ctx := context.Background()
-	testStore, cleanup, err := store.NewTestStoreFromSQL(ctx, "", t.TempDir())
+	testStore, cleanup, err := storetest.NewTestStoreFromSQL(ctx, "", t.TempDir())
 	require.NoError(t, err)
 	t.Cleanup(cleanup)
 

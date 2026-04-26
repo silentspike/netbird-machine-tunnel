@@ -24,6 +24,7 @@ import (
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
 	nbcache "github.com/netbirdio/netbird/management/server/cache"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/management/server/users"
 	"github.com/netbirdio/netbird/proxy/internal/auth"
@@ -48,7 +49,7 @@ func setupIntegrationTest(t *testing.T) *integrationTestSetup {
 	ctx := context.Background()
 
 	// Create real SQLite store
-	testStore, cleanup, err := store.NewTestStoreFromSQL(ctx, "", t.TempDir())
+	testStore, cleanup, err := storetest.NewTestStoreFromSQL(ctx, "", t.TempDir())
 	require.NoError(t, err)
 
 	// Create test account
