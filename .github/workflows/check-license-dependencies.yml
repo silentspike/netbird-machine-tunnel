@@ -6,12 +6,12 @@ on:
     paths:
       - 'go.mod'
       - 'go.sum'
-      - '.github/workflows/check-license-dependencies.yml'
+      - '.github/workflows/**'
   pull_request:
     paths:
       - 'go.mod'
       - 'go.sum'
-      - '.github/workflows/check-license-dependencies.yml'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
