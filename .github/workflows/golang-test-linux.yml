@@ -5,6 +5,13 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
+    inputs:
+      full_benchmarks:
+        description: "Run full management benchmarks instead of smoke benchtime"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -12,6 +19,7 @@ permissions:
 
 env:
   HAS_DOCKER_CREDS: ${{ secrets.DOCKER_USER != '' }}
+  FULL_BENCHMARKS: ${{ github.event_name == 'workflow_dispatch' && inputs.full_benchmarks == true }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || github.actor_id }}
@@ -33,6 +41,7 @@ jobs:
           filters: |
             management:
               - 'management/**'
+              - '.github/workflows/golang-test-linux.yml'
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -247,7 +256,6 @@ jobs:
           cache: false
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: sudo apt update && sudo apt install -y gcc-multilib g++-multilib libc6-dev-i386
 
       - name: Get Go environment
@@ -344,7 +352,6 @@ jobs:
           cache: false
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: sudo apt update && sudo apt install -y gcc-multilib g++-multilib libc6-dev-i386
 
       - name: Get Go environment
@@ -526,9 +533,9 @@ jobs:
 
       - name: Test
         run: |
-          BENCHTIME_FLAGS=""
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BENCHTIME_FLAGS="-benchtime=1x"
+          BENCHTIME_FLAGS="-benchtime=1x"
+          if [ "$FULL_BENCHMARKS" = "true" ]; then
+            BENCHTIME_FLAGS=""
           fi
 
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
@@ -623,9 +630,9 @@ jobs:
 
       - name: Test
         run: |
-          BENCHTIME_FLAGS=""
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BENCHTIME_FLAGS="-benchtime=1x"
+          BENCHTIME_FLAGS="-benchtime=1x"
+          if [ "$FULL_BENCHMARKS" = "true" ]; then
+            BENCHTIME_FLAGS=""
           fi
 
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
