@@ -17,14 +17,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/netbirdio/netbird/management/server/auth"
-	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	nbauth "github.com/netbirdio/netbird/shared/auth"
 	nbjwt "github.com/netbirdio/netbird/shared/auth/jwt"
 )
 
 func TestAuthManager_GetAccountInfoFromPAT(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -65,7 +65,7 @@ func TestAuthManager_GetAccountInfoFromPAT(t *testing.T) {
 }
 
 func TestAuthManager_MarkPATUsed(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -107,7 +107,7 @@ func TestAuthManager_MarkPATUsed(t *testing.T) {
 }
 
 func TestAuthManager_EnsureUserAccessByJWTGroups(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
