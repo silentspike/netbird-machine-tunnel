@@ -3104,6 +3104,7 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 
 	store, err := createStore(t, ctx)
 	if err != nil {
+		cancel()
 		return nil, nil, err
 	}
 	t.Cleanup(cancel)
