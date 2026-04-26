@@ -290,12 +290,6 @@ func bootstrapWithSetupKey(ctx context.Context, cfg *MachineConfig) (*BootstrapR
 		}
 	}()
 
-	// Get server public key
-	serverKey, err := mgmClient.GetServerPublicKey()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get server public key: %w", err)
-	}
-
 	// Generate SSH key for registration
 	pubSSHKey, err := ssh.GeneratePublicKey([]byte(cfg.SSHKey))
 	if err != nil {
@@ -306,7 +300,7 @@ func bootstrapWithSetupKey(ctx context.Context, cfg *MachineConfig) (*BootstrapR
 	sysInfo := system.GetInfo(ctx)
 	setSystemFlags(sysInfo, cfg.Config)
 
-	loginResp, err := mgmClient.Login(*serverKey, sysInfo, pubSSHKey, cfg.DNSLabels)
+	loginResp, err := mgmClient.Login(sysInfo, pubSSHKey, cfg.DNSLabels)
 	if err == nil {
 		// Already registered, login successful
 		log.Info("Setup-Key bootstrap: peer already registered, login successful")
@@ -333,7 +327,7 @@ func bootstrapWithSetupKey(ctx context.Context, cfg *MachineConfig) (*BootstrapR
 
 	// Register new peer with setup key
 	log.Debug("Peer not registered, registering with Setup-Key")
-	loginResp, err = mgmClient.Register(*serverKey, cfg.SetupKey, "", sysInfo, pubSSHKey, cfg.DNSLabels)
+	loginResp, err = mgmClient.Register(cfg.SetupKey, "", sysInfo, pubSSHKey, cfg.DNSLabels)
 	if err != nil {
 		return nil, fmt.Errorf("registration with setup key failed: %w", err)
 	}
@@ -399,10 +393,9 @@ func bootstrapWithMTLS(ctx context.Context, cfg *MachineConfig) (*BootstrapResul
 	// Create management service client
 	client := mgmProto.NewManagementServiceClient(conn)
 
-	// Generate WireGuard key for this machine tunnel
-	wgKey, err := wgtypes.GenerateKey()
+	wgPubKey, err := machinePublicKeyFromConfig(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate WireGuard key: %w", err)
+		return nil, err
 	}
 
 	// Get system info
@@ -414,7 +407,7 @@ func bootstrapWithMTLS(ctx context.Context, cfg *MachineConfig) (*BootstrapResul
 	// we don't need to send it explicitly
 	req := &mgmProto.MachineRegisterRequest{
 		Meta:     infoToProtoMeta(sysInfo),
-		WgPubKey: []byte(wgKey.PublicKey().String()),
+		WgPubKey: wgPubKey,
 	}
 
 	// Call RegisterMachinePeer RPC
@@ -433,6 +426,19 @@ func bootstrapWithMTLS(ctx context.Context, cfg *MachineConfig) (*BootstrapResul
 		AllowedDCRoutes: resp.AllowedDcRoutes,
 		DNSConfig:       resp.DnsConfig,
 	}, nil
+}
+
+func machinePublicKeyFromConfig(cfg *MachineConfig) ([]byte, error) {
+	if cfg == nil || cfg.Config == nil {
+		return nil, fmt.Errorf("config is required")
+	}
+
+	wgKey, err := wgtypes.ParseKey(cfg.Config.PrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse persisted WireGuard private key for mTLS bootstrap: %w", err)
+	}
+
+	return []byte(wgKey.PublicKey().String()), nil
 }
 
 // getMgmClient creates a standard management gRPC client.

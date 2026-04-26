@@ -17,6 +17,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/permissions/modules"
 	"github.com/netbirdio/netbird/management/server/permissions/roles"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/users"
 	"github.com/netbirdio/netbird/management/server/util"
 	"github.com/netbirdio/netbird/shared/auth"
@@ -54,7 +55,7 @@ const (
 )
 
 func TestUser_CreatePAT_ForSameUser(t *testing.T) {
-	s, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	s, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -101,7 +102,7 @@ func TestUser_CreatePAT_ForSameUser(t *testing.T) {
 }
 
 func TestUser_CreatePAT_ForDifferentUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -129,7 +130,7 @@ func TestUser_CreatePAT_ForDifferentUser(t *testing.T) {
 }
 
 func TestUser_CreatePAT_ForServiceUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -161,7 +162,7 @@ func TestUser_CreatePAT_ForServiceUser(t *testing.T) {
 }
 
 func TestUser_CreatePAT_WithWrongExpiration(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -186,7 +187,7 @@ func TestUser_CreatePAT_WithWrongExpiration(t *testing.T) {
 }
 
 func TestUser_CreatePAT_WithEmptyName(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -211,7 +212,7 @@ func TestUser_CreatePAT_WithEmptyName(t *testing.T) {
 }
 
 func TestUser_DeletePAT(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -254,7 +255,7 @@ func TestUser_DeletePAT(t *testing.T) {
 }
 
 func TestUser_GetPAT(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -294,7 +295,7 @@ func TestUser_GetPAT(t *testing.T) {
 }
 
 func TestUser_GetAllPATs(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -334,6 +335,104 @@ func TestUser_GetAllPATs(t *testing.T) {
 	}
 
 	assert.Equal(t, 2, len(pats))
+}
+
+func TestUser_PAT_CrossAccountProtection(t *testing.T) {
+	const (
+		accountAID     = "accountA"
+		accountBID     = "accountB"
+		userAID        = "userA"
+		adminBID       = "adminB"
+		serviceUserBID = "serviceUserB"
+		regularUserBID = "regularUserB"
+		tokenBID       = "tokenB1"
+		hashedTokenB   = "SoMeHaShEdToKeNB"
+	)
+
+	setupStore := func(t *testing.T) (*DefaultAccountManager, func()) {
+		t.Helper()
+
+		s, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+		require.NoError(t, err, "creating store")
+
+		accountA := newAccountWithId(context.Background(), accountAID, userAID, "", "", "", false)
+		require.NoError(t, s.SaveAccount(context.Background(), accountA))
+
+		accountB := newAccountWithId(context.Background(), accountBID, adminBID, "", "", "", false)
+		accountB.Users[serviceUserBID] = &types.User{
+			Id:              serviceUserBID,
+			AccountID:       accountBID,
+			IsServiceUser:   true,
+			ServiceUserName: "svcB",
+			Role:            types.UserRoleAdmin,
+			PATs: map[string]*types.PersonalAccessToken{
+				tokenBID: {
+					ID:          tokenBID,
+					HashedToken: hashedTokenB,
+				},
+			},
+		}
+		accountB.Users[regularUserBID] = &types.User{
+			Id:        regularUserBID,
+			AccountID: accountBID,
+			Role:      types.UserRoleUser,
+		}
+		require.NoError(t, s.SaveAccount(context.Background(), accountB))
+
+		pm := permissions.NewManager(s)
+		am := &DefaultAccountManager{
+			Store:              s,
+			eventStore:         &activity.InMemoryEventStore{},
+			permissionsManager: pm,
+		}
+		return am, cleanup
+	}
+
+	t.Run("CreatePAT for user in different account is denied", func(t *testing.T) {
+		am, cleanup := setupStore(t)
+		t.Cleanup(cleanup)
+
+		_, err := am.CreatePAT(context.Background(), accountAID, userAID, serviceUserBID, "xss-token", 7)
+		require.Error(t, err, "cross-account CreatePAT must fail")
+
+		_, err = am.CreatePAT(context.Background(), accountAID, userAID, regularUserBID, "xss-token", 7)
+		require.Error(t, err, "cross-account CreatePAT for regular user must fail")
+
+		_, err = am.CreatePAT(context.Background(), accountBID, adminBID, serviceUserBID, "legit-token", 7)
+		require.NoError(t, err, "same-account CreatePAT should succeed")
+	})
+
+	t.Run("DeletePAT for user in different account is denied", func(t *testing.T) {
+		am, cleanup := setupStore(t)
+		t.Cleanup(cleanup)
+
+		err := am.DeletePAT(context.Background(), accountAID, userAID, serviceUserBID, tokenBID)
+		require.Error(t, err, "cross-account DeletePAT must fail")
+	})
+
+	t.Run("GetPAT for user in different account is denied", func(t *testing.T) {
+		am, cleanup := setupStore(t)
+		t.Cleanup(cleanup)
+
+		_, err := am.GetPAT(context.Background(), accountAID, userAID, serviceUserBID, tokenBID)
+		require.Error(t, err, "cross-account GetPAT must fail")
+	})
+
+	t.Run("GetAllPATs for user in different account is denied", func(t *testing.T) {
+		am, cleanup := setupStore(t)
+		t.Cleanup(cleanup)
+
+		_, err := am.GetAllPATs(context.Background(), accountAID, userAID, serviceUserBID)
+		require.Error(t, err, "cross-account GetAllPATs must fail")
+	})
+
+	t.Run("CreatePAT with forged accountID targeting foreign user is denied", func(t *testing.T) {
+		am, cleanup := setupStore(t)
+		t.Cleanup(cleanup)
+
+		_, err := am.CreatePAT(context.Background(), accountAID, userAID, adminBID, "forged", 7)
+		require.Error(t, err, "forged accountID CreatePAT must fail")
+	})
 }
 
 func TestUser_Copy(t *testing.T) {
@@ -406,7 +505,7 @@ func validateStruct(s interface{}) (err error) {
 }
 
 func TestUser_CreateServiceUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -453,7 +552,7 @@ func TestUser_CreateServiceUser(t *testing.T) {
 }
 
 func TestUser_CreateUser_ServiceUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -501,7 +600,7 @@ func TestUser_CreateUser_ServiceUser(t *testing.T) {
 }
 
 func TestUser_CreateUser_RegularUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -532,7 +631,7 @@ func TestUser_CreateUser_RegularUser(t *testing.T) {
 }
 
 func TestUser_InviteNewUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -639,7 +738,7 @@ func TestUser_DeleteUser_ServiceUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+			store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 			if err != nil {
 				t.Fatalf("Error when creating store: %s", err)
 			}
@@ -678,7 +777,7 @@ func TestUser_DeleteUser_ServiceUser(t *testing.T) {
 }
 
 func TestUser_DeleteUser_SelfDelete(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -705,7 +804,7 @@ func TestUser_DeleteUser_SelfDelete(t *testing.T) {
 }
 
 func TestUser_DeleteUser_regularUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -799,7 +898,7 @@ func TestUser_DeleteUser_regularUser(t *testing.T) {
 }
 
 func TestUser_DeleteUser_RegularUsers(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -967,7 +1066,7 @@ func TestUser_DeleteUser_RegularUsers(t *testing.T) {
 }
 
 func TestDefaultAccountManager_GetUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1003,7 +1102,7 @@ func TestDefaultAccountManager_GetUser(t *testing.T) {
 }
 
 func TestDefaultAccountManager_ListUsers(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1045,7 +1144,7 @@ func TestDefaultAccountManager_ListUsers(t *testing.T) {
 }
 
 func TestDefaultAccountManager_ExternalCache(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1117,7 +1216,7 @@ func TestUser_IsAdmin(t *testing.T) {
 }
 
 func TestUser_GetUsersFromAccount_ForAdmin(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1151,7 +1250,7 @@ func TestUser_GetUsersFromAccount_ForAdmin(t *testing.T) {
 }
 
 func TestUser_GetUsersFromAccount_ForUser(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1518,7 +1617,7 @@ func TestUserAccountPeersUpdate(t *testing.T) {
 }
 
 func TestSaveOrAddUser_PreventAccountSwitch(t *testing.T) {
-	s, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	s, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1554,7 +1653,7 @@ func TestSaveOrAddUser_PreventAccountSwitch(t *testing.T) {
 }
 
 func TestDefaultAccountManager_GetCurrentUserInfo(t *testing.T) {
-	store, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	store, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	if err != nil {
 		t.Fatalf("Error when creating store: %s", err)
 	}
@@ -1912,7 +2011,7 @@ func TestUser_Operations_WithEmbeddedIDP(t *testing.T) {
 	defer func() { _ = embeddedIdp.Stop(ctx) }()
 
 	// Create test store
-	testStore, cleanup, err := store.NewTestStoreFromSQL(ctx, "", tmpDir)
+	testStore, cleanup, err := storetest.NewTestStoreFromSQL(ctx, "", tmpDir)
 	require.NoError(t, err)
 	defer cleanup()
 
@@ -2033,7 +2132,7 @@ func TestUser_Operations_WithEmbeddedIDP(t *testing.T) {
 }
 
 func TestProcessUserUpdate_RejectsStaleInitiatorRole(t *testing.T) {
-	s, cleanup, err := store.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
+	s, cleanup, err := storetest.NewTestStoreFromSQL(context.Background(), "", t.TempDir())
 	require.NoError(t, err)
 	t.Cleanup(cleanup)
 

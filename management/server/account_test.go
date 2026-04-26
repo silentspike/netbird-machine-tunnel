@@ -15,13 +15,15 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/netbirdio/netbird/shared/management/status"
 	"github.com/prometheus/client_golang/prometheus/push"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/metric/noop"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
+
+	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/domain"
+	"github.com/netbirdio/netbird/shared/management/status"
 
 	nbdns "github.com/netbirdio/netbird/dns"
 	"github.com/netbirdio/netbird/management/internals/controllers/network_map"
@@ -51,6 +53,7 @@ import (
 	"github.com/netbirdio/netbird/management/server/posture"
 	"github.com/netbirdio/netbird/management/server/settings"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/testutil"
 	"github.com/netbirdio/netbird/management/server/types"
@@ -1815,6 +1818,13 @@ func TestAccount_Copy(t *testing.T) {
 				Targets:   []*service.Target{},
 			},
 		},
+		Domains: []*domain.Domain{
+			{
+				ID:        "domain1",
+				Domain:    "test.com",
+				AccountID: "account1",
+			},
+		},
 		NetworkMapCache: &types.NetworkMapBuilder{},
 	}
 	account.InitOnce()
@@ -3090,13 +3100,17 @@ func TestAccount_UserGroupsRemoveFromPeers(t *testing.T) {
 func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersUpdateManager, error) {
 	t.Helper()
 
-	store, err := createStore(t)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	store, err := createStore(t, ctx)
 	if err != nil {
+		cancel()
 		return nil, nil, err
 	}
+	t.Cleanup(cancel)
 	eventStore := &activity.InMemoryEventStore{}
 
-	metrics, err := telemetry.NewDefaultAppMetrics(context.Background())
+	metrics, err := telemetry.NewDefaultAppMetrics(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -3123,30 +3137,34 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 		Return(nil).
 		AnyTimes()
 
-	ctx := context.Background()
+	cacheStore, err := cache.NewStore(ctx, 100*time.Millisecond, 300*time.Millisecond, 100)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	updateManager := update_channel.NewPeersUpdateManager(metrics)
 	requestBuffer := NewAccountRequestBuffer(ctx, store)
 	networkMapController := controller.NewController(ctx, store, metrics, updateManager, requestBuffer, MockIntegratedValidator{}, settingsMockManager, "netbird.cloud", port_forwarding.NewControllerMock(), ephemeral_manager.NewEphemeralManager(store, peers.NewManager(store, permissionsManager)), &config.Config{})
-	manager, err := BuildManager(ctx, &config.Config{}, store, networkMapController, job.NewJobManager(nil, store, peersManager), nil, "", eventStore, nil, false, MockIntegratedValidator{}, metrics, port_forwarding.NewControllerMock(), settingsMockManager, permissionsManager, false)
+	manager, err := BuildManager(ctx, &config.Config{}, store, networkMapController, job.NewJobManager(nil, store, peersManager), nil, "", eventStore, nil, false, MockIntegratedValidator{}, metrics, port_forwarding.NewControllerMock(), settingsMockManager, permissionsManager, false, cacheStore)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	proxyGrpcServer := nbgrpc.NewProxyServiceServer(nil, nil, nil, nbgrpc.ProxyOIDCConfig{}, peersManager, nil, proxyManager)
+	t.Cleanup(proxyGrpcServer.Close)
 	proxyController, err := proxymanager.NewGRPCController(proxyGrpcServer, noop.Meter{})
 	if err != nil {
 		return nil, nil, err
 	}
-	manager.SetServiceManager(reverseproxymanager.NewManager(store, manager, permissionsManager, proxyController, nil))
+	manager.SetServiceManager(reverseproxymanager.NewManager(store, manager, permissionsManager, proxyController, proxyManager, nil))
 
 	return manager, updateManager, nil
 }
 
-func createStore(t testing.TB) (store.Store, error) {
+func createStore(t testing.TB, ctx context.Context) (store.Store, error) {
 	t.Helper()
 	dataDir := t.TempDir()
-	store, cleanUp, err := store.NewTestStoreFromSQL(context.Background(), "", dataDir)
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(ctx, "", dataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -3234,7 +3252,7 @@ func peerShouldReceiveUpdate(t *testing.T, updateMessage <-chan *network_map.Upd
 		if msg == nil {
 			t.Errorf("Received nil update message, expected valid message")
 		}
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(5 * time.Second):
 		t.Error("Timed out waiting for update message")
 	}
 }

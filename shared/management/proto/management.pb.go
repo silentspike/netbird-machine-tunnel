@@ -285,6 +285,7 @@ const (
 	ExposeProtocol_EXPOSE_HTTPS ExposeProtocol = 1
 	ExposeProtocol_EXPOSE_TCP   ExposeProtocol = 2
 	ExposeProtocol_EXPOSE_UDP   ExposeProtocol = 3
+	ExposeProtocol_EXPOSE_TLS   ExposeProtocol = 4
 )
 
 // Enum value maps for ExposeProtocol.
@@ -294,12 +295,14 @@ var (
 		1: "EXPOSE_HTTPS",
 		2: "EXPOSE_TCP",
 		3: "EXPOSE_UDP",
+		4: "EXPOSE_TLS",
 	}
 	ExposeProtocol_value = map[string]int32{
 		"EXPOSE_HTTP":  0,
 		"EXPOSE_HTTPS": 1,
 		"EXPOSE_TCP":   2,
 		"EXPOSE_UDP":   3,
+		"EXPOSE_TLS":   4,
 	}
 )
 
@@ -2243,8 +2246,8 @@ func (x *PeerConfig) GetAutoUpdate() *AutoUpdateSettings {
 type AutoUpdateSettings struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	Version string                 `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	// alwaysUpdate = true → Updates happen automatically in the background
-	// alwaysUpdate = false → Updates only happen when triggered by a peer connection
+	// alwaysUpdate = true → Updates are installed automatically in the background
+	// alwaysUpdate = false → Updates require user interaction from the UI
 	AlwaysUpdate  bool `protobuf:"varint,2,opt,name=alwaysUpdate,proto3" json:"alwaysUpdate,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2884,7 +2887,9 @@ type ProviderConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// An IDP application client id
 	ClientID string `protobuf:"bytes,1,opt,name=ClientID,proto3" json:"ClientID,omitempty"`
-	// An IDP application client secret
+	// Deprecated: use embedded IdP for providers that require a client secret (e.g. Google Workspace).
+	//
+	// Deprecated: Marked as deprecated in shared/management/proto/management.proto.
 	ClientSecret string `protobuf:"bytes,2,opt,name=ClientSecret,proto3" json:"ClientSecret,omitempty"`
 	// An IDP API domain
 	// Deprecated. Use a DeviceAuthEndpoint and TokenEndpoint
@@ -2948,6 +2953,7 @@ func (x *ProviderConfig) GetClientID() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in shared/management/proto/management.proto.
 func (x *ProviderConfig) GetClientSecret() string {
 	if x != nil {
 		return x.ClientSecret
@@ -4584,6 +4590,7 @@ type ExposeServiceRequest struct {
 	UserGroups    []string               `protobuf:"bytes,5,rep,name=user_groups,json=userGroups,proto3" json:"user_groups,omitempty"`
 	Domain        string                 `protobuf:"bytes,6,opt,name=domain,proto3" json:"domain,omitempty"`
 	NamePrefix    string                 `protobuf:"bytes,7,opt,name=name_prefix,json=namePrefix,proto3" json:"name_prefix,omitempty"`
+	ListenPort    uint32                 `protobuf:"varint,8,opt,name=listen_port,json=listenPort,proto3" json:"listen_port,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4667,13 +4674,21 @@ func (x *ExposeServiceRequest) GetNamePrefix() string {
 	return ""
 }
 
+func (x *ExposeServiceRequest) GetListenPort() uint32 {
+	if x != nil {
+		return x.ListenPort
+	}
+	return 0
+}
+
 type ExposeServiceResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	ServiceUrl    string                 `protobuf:"bytes,2,opt,name=service_url,json=serviceUrl,proto3" json:"service_url,omitempty"`
-	Domain        string                 `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ServiceName      string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
+	ServiceUrl       string                 `protobuf:"bytes,2,opt,name=service_url,json=serviceUrl,proto3" json:"service_url,omitempty"`
+	Domain           string                 `protobuf:"bytes,3,opt,name=domain,proto3" json:"domain,omitempty"`
+	PortAutoAssigned bool                   `protobuf:"varint,4,opt,name=port_auto_assigned,json=portAutoAssigned,proto3" json:"port_auto_assigned,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *ExposeServiceResponse) Reset() {
@@ -4725,6 +4740,13 @@ func (x *ExposeServiceResponse) GetDomain() string {
 		return x.Domain
 	}
 	return ""
+}
+
+func (x *ExposeServiceResponse) GetPortAutoAssigned() bool {
+	if x != nil {
+		return x.PortAutoAssigned
+	}
+	return false
 }
 
 type RenewExposeRequest struct {
@@ -5158,10 +5180,10 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x06HOSTED\x10\x00\"\x1e\n" +
 	"\x1cPKCEAuthorizationFlowRequest\"[\n" +
 	"\x15PKCEAuthorizationFlow\x12B\n" +
-	"\x0eProviderConfig\x18\x01 \x01(\v2\x1a.management.ProviderConfigR\x0eProviderConfig\"\xb8\x03\n" +
+	"\x0eProviderConfig\x18\x01 \x01(\v2\x1a.management.ProviderConfigR\x0eProviderConfig\"\xbc\x03\n" +
 	"\x0eProviderConfig\x12\x1a\n" +
-	"\bClientID\x18\x01 \x01(\tR\bClientID\x12\"\n" +
-	"\fClientSecret\x18\x02 \x01(\tR\fClientSecret\x12\x16\n" +
+	"\bClientID\x18\x01 \x01(\tR\bClientID\x12&\n" +
+	"\fClientSecret\x18\x02 \x01(\tB\x02\x18\x01R\fClientSecret\x12\x16\n" +
 	"\x06Domain\x18\x03 \x01(\tR\x06Domain\x12\x1a\n" +
 	"\bAudience\x18\x04 \x01(\tR\bAudience\x12.\n" +
 	"\x12DeviceAuthEndpoint\x18\x05 \x01(\tR\x12DeviceAuthEndpoint\x12$\n" +
@@ -5299,7 +5321,7 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x03ack\x18\x01 \x01(\bR\x03ack\x12;\n" +
 	"\vserver_time\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"serverTime\x12#\n" +
-	"\rconfig_serial\x18\x03 \x01(\x04R\fconfigSerial\"\xea\x01\n" +
+	"\rconfig_serial\x18\x03 \x01(\x04R\fconfigSerial\"\x8b\x02\n" +
 	"\x14ExposeServiceRequest\x12\x12\n" +
 	"\x04port\x18\x01 \x01(\rR\x04port\x126\n" +
 	"\bprotocol\x18\x02 \x01(\x0e2\x1a.management.ExposeProtocolR\bprotocol\x12\x10\n" +
@@ -5309,12 +5331,15 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"userGroups\x12\x16\n" +
 	"\x06domain\x18\x06 \x01(\tR\x06domain\x12\x1f\n" +
 	"\vname_prefix\x18\a \x01(\tR\n" +
-	"namePrefix\"s\n" +
+	"namePrefix\x12\x1f\n" +
+	"\vlisten_port\x18\b \x01(\rR\n" +
+	"listenPort\"\xa1\x01\n" +
 	"\x15ExposeServiceResponse\x12!\n" +
 	"\fservice_name\x18\x01 \x01(\tR\vserviceName\x12\x1f\n" +
 	"\vservice_url\x18\x02 \x01(\tR\n" +
 	"serviceUrl\x12\x16\n" +
-	"\x06domain\x18\x03 \x01(\tR\x06domain\",\n" +
+	"\x06domain\x18\x03 \x01(\tR\x06domain\x12,\n" +
+	"\x12port_auto_assigned\x18\x04 \x01(\bR\x10portAutoAssigned\",\n" +
 	"\x12RenewExposeRequest\x12\x16\n" +
 	"\x06domain\x18\x01 \x01(\tR\x06domain\"\x15\n" +
 	"\x13RenewExposeResponse\"+\n" +
@@ -5347,14 +5372,16 @@ const file_shared_management_proto_management_proto_rawDesc = "" +
 	"\x15MACHINE_UPDATE_ROUTES\x10\x01\x12\x16\n" +
 	"\x12MACHINE_UPDATE_DNS\x10\x02\x12\x18\n" +
 	"\x14MACHINE_UPDATE_PEERS\x10\x03\x12\x1b\n" +
-	"\x17MACHINE_UPDATE_FIREWALL\x10\x04*S\n" +
+	"\x17MACHINE_UPDATE_FIREWALL\x10\x04*c\n" +
 	"\x0eExposeProtocol\x12\x0f\n" +
 	"\vEXPOSE_HTTP\x10\x00\x12\x10\n" +
 	"\fEXPOSE_HTTPS\x10\x01\x12\x0e\n" +
 	"\n" +
 	"EXPOSE_TCP\x10\x02\x12\x0e\n" +
 	"\n" +
-	"EXPOSE_UDP\x10\x032\xf0\t\n" +
+	"EXPOSE_UDP\x10\x03\x12\x0e\n" +
+	"\n" +
+	"EXPOSE_TLS\x10\x042\xf0\t\n" +
 	"\x11ManagementService\x12E\n" +
 	"\x05Login\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x00\x12F\n" +
 	"\x04Sync\x12\x1c.management.EncryptedMessage\x1a\x1c.management.EncryptedMessage\"\x000\x01\x12B\n" +

@@ -69,9 +69,9 @@ Default interface mapping (adjust in `setup-hardening.sh`):
 
 | Interface | Network | Purpose |
 |-----------|---------|---------|
-| eth0 | 10.0.0.0/24 | Management (SSH) |
-| eth1 | 192.168.100.0/24 | DC network (vmbr1) |
-| eth2 | 192.168.101.0/24 | Client network (vmbr2) |
+| eth0 | 10.10.0.0/24 | Management (SSH) |
+| eth1 | 10.20.0.0/24 | DC network |
+| eth2 | 10.30.0.0/24 | Client network |
 | wt0 | 100.64.0.0/10 | WireGuard tunnel |
 
 To customize:
@@ -129,6 +129,6 @@ echo 524288 > /proc/sys/net/netfilter/nf_conntrack_max
 
 ## References
 
-- [Issue #25](https://github.com/obtFusi/netbird-fork/issues/25) - Task description
+- [Issue #25](https://github.com/silentspike/netbird-machine-tunnel/issues/25) - Task description
 - [iptables Tutorial](https://www.frozentux.net/iptables-tutorial/iptables-tutorial.html)
 - [Linux Kernel Networking Parameters](https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt)

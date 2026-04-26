@@ -28,12 +28,13 @@ import (
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
 	"github.com/netbirdio/netbird/management/server"
 	"github.com/netbirdio/netbird/management/server/activity"
+	nbcache "github.com/netbirdio/netbird/management/server/cache"
 	"github.com/netbirdio/netbird/management/server/groups"
 	"github.com/netbirdio/netbird/management/server/integrations/port_forwarding"
 	"github.com/netbirdio/netbird/management/server/job"
 	"github.com/netbirdio/netbird/management/server/permissions"
 	"github.com/netbirdio/netbird/management/server/settings"
-	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/telemetry"
 	"github.com/netbirdio/netbird/management/server/types"
 	mgmtProto "github.com/netbirdio/netbird/shared/management/proto"
@@ -176,7 +177,7 @@ func startServer(
 	}
 	s := grpc.NewServer()
 
-	str, _, err := store.NewTestStoreFromSQL(context.Background(), testFile, dataDir)
+	str, _, err := storetest.NewTestStoreFromSQL(context.Background(), testFile, dataDir)
 	if err != nil {
 		log.Fatalf("failed creating a store: %s: %v", config.Datadir, err)
 	}
@@ -207,6 +208,12 @@ func startServer(
 	jobManager := job.NewJobManager(nil, str, peersManager)
 
 	ctx := context.Background()
+
+	cacheStore, err := nbcache.NewStore(ctx, 100*time.Millisecond, 300*time.Millisecond, 100)
+	if err != nil {
+		t.Fatalf("failed creating cache store: %v", err)
+	}
+
 	updateManager := update_channel.NewPeersUpdateManager(metrics)
 	requestBuffer := server.NewAccountRequestBuffer(ctx, str)
 	networkMapController := controller.NewController(ctx, str, metrics, updateManager, requestBuffer, server.MockIntegratedValidator{}, settingsMockManager, "netbird.selfhosted", port_forwarding.NewControllerMock(), ephemeral_manager.NewEphemeralManager(str, peers.NewManager(str, permissionsManager)), config)
@@ -227,7 +234,8 @@ func startServer(
 		port_forwarding.NewControllerMock(),
 		settingsMockManager,
 		permissionsManager,
-		false)
+		false,
+		cacheStore)
 	if err != nil {
 		t.Fatalf("failed creating an account manager: %v", err)
 	}

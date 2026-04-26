@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   test:
-    name: "Client / Unit"
+    name: "Windows / Client / Unit"
     runs-on: windows-latest
     steps:
       - name: Enable long paths

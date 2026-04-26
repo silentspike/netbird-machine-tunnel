@@ -13,9 +13,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/proxy"
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/service"
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/sessionkey"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/proxy/auth"
 	"github.com/netbirdio/netbird/shared/management/proto"
@@ -31,18 +33,15 @@ func setupValidateSessionTest(t *testing.T) *validateSessionTestSetup {
 	t.Helper()
 
 	ctx := context.Background()
-	testStore, storeCleanup, err := store.NewTestStoreFromSQL(ctx, "../../../server/testdata/auth_callback.sql", t.TempDir())
+	testStore, storeCleanup, err := storetest.NewTestStoreFromSQL(ctx, "../../../server/testdata/auth_callback.sql", t.TempDir())
 	require.NoError(t, err)
 
 	serviceManager := &testValidateSessionServiceManager{store: testStore}
 	usersManager := &testValidateSessionUsersManager{store: testStore}
 	proxyManager := &testValidateSessionProxyManager{}
 
-	tokenStore, err := NewOneTimeTokenStore(ctx, time.Minute, 10*time.Minute, 100)
-	require.NoError(t, err)
-
-	pkceStore, err := NewPKCEVerifierStore(ctx, 10*time.Minute, 10*time.Minute, 100)
-	require.NoError(t, err)
+	tokenStore := NewOneTimeTokenStore(ctx, testCacheStore(t))
+	pkceStore := NewPKCEVerifierStore(ctx, testCacheStore(t))
 
 	proxyService := NewProxyServiceServer(nil, tokenStore, pkceStore, ProxyOIDCConfig{}, nil, usersManager, proxyManager)
 	proxyService.SetServiceManager(serviceManager)
@@ -320,9 +319,13 @@ func (m *testValidateSessionServiceManager) StopServiceFromPeer(_ context.Contex
 
 func (m *testValidateSessionServiceManager) StartExposeReaper(_ context.Context) {}
 
+func (m *testValidateSessionServiceManager) GetActiveClusters(_ context.Context, _, _ string) ([]proxy.Cluster, error) {
+	return nil, nil
+}
+
 type testValidateSessionProxyManager struct{}
 
-func (m *testValidateSessionProxyManager) Connect(_ context.Context, _, _, _ string) error {
+func (m *testValidateSessionProxyManager) Connect(_ context.Context, _, _, _ string, _ *proxy.Capabilities) error {
 	return nil
 }
 
@@ -330,7 +333,7 @@ func (m *testValidateSessionProxyManager) Disconnect(_ context.Context, _ string
 	return nil
 }
 
-func (m *testValidateSessionProxyManager) Heartbeat(_ context.Context, _ string) error {
+func (m *testValidateSessionProxyManager) Heartbeat(_ context.Context, _, _, _ string) error {
 	return nil
 }
 
@@ -338,7 +341,23 @@ func (m *testValidateSessionProxyManager) GetActiveClusterAddresses(_ context.Co
 	return nil, nil
 }
 
+func (m *testValidateSessionProxyManager) GetActiveClusters(_ context.Context) ([]proxy.Cluster, error) {
+	return nil, nil
+}
+
 func (m *testValidateSessionProxyManager) CleanupStale(_ context.Context, _ time.Duration) error {
+	return nil
+}
+
+func (m *testValidateSessionProxyManager) ClusterSupportsCustomPorts(_ context.Context, _ string) *bool {
+	return nil
+}
+
+func (m *testValidateSessionProxyManager) ClusterRequireSubdomain(_ context.Context, _ string) *bool {
+	return nil
+}
+
+func (m *testValidateSessionProxyManager) ClusterSupportsCrowdSec(_ context.Context, _ string) *bool {
 	return nil
 }
 

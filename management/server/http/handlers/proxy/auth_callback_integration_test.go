@@ -19,9 +19,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/accesslogs"
+	nbproxy "github.com/netbirdio/netbird/management/internals/modules/reverseproxy/proxy"
 	"github.com/netbirdio/netbird/management/internals/modules/reverseproxy/service"
 	nbgrpc "github.com/netbirdio/netbird/management/internals/shared/grpc"
+	nbcache "github.com/netbirdio/netbird/management/server/cache"
 	"github.com/netbirdio/netbird/management/server/store"
+	"github.com/netbirdio/netbird/management/server/store/storetest"
 	"github.com/netbirdio/netbird/management/server/types"
 	"github.com/netbirdio/netbird/management/server/users"
 	"github.com/netbirdio/netbird/shared/management/proto"
@@ -182,7 +185,7 @@ func setupAuthCallbackTest(t *testing.T) *testSetup {
 
 	ctx := context.Background()
 
-	testStore, cleanup, err := store.NewTestStoreFromSQL(ctx, "", t.TempDir())
+	testStore, cleanup, err := storetest.NewTestStoreFromSQL(ctx, "", t.TempDir())
 	require.NoError(t, err)
 
 	createTestAccountsAndUsers(t, ctx, testStore)
@@ -190,11 +193,11 @@ func setupAuthCallbackTest(t *testing.T) *testSetup {
 
 	oidcServer := newFakeOIDCServer()
 
-	tokenStore, err := nbgrpc.NewOneTimeTokenStore(ctx, time.Minute, 10*time.Minute, 100)
+	cacheStore, err := nbcache.NewStore(ctx, 30*time.Minute, 10*time.Minute, 100)
 	require.NoError(t, err)
 
-	pkceStore, err := nbgrpc.NewPKCEVerifierStore(ctx, 10*time.Minute, 10*time.Minute, 100)
-	require.NoError(t, err)
+	tokenStore := nbgrpc.NewOneTimeTokenStore(ctx, cacheStore)
+	pkceStore := nbgrpc.NewPKCEVerifierStore(ctx, cacheStore)
 
 	usersManager := users.NewManager(testStore)
 
@@ -432,6 +435,10 @@ func (m *testServiceManager) StopServiceFromPeer(_ context.Context, _, _, _ stri
 }
 
 func (m *testServiceManager) StartExposeReaper(_ context.Context) {}
+
+func (m *testServiceManager) GetActiveClusters(_ context.Context, _, _ string) ([]nbproxy.Cluster, error) {
+	return nil, nil
+}
 
 func createTestState(t *testing.T, ps *nbgrpc.ProxyServiceServer, redirectURL string) string {
 	t.Helper()

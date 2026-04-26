@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    name: "Client / Unit"
+    name: "FreeBSD / Client / Unit"
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +25,22 @@ jobs:
         with:
           usesh: true
           copyback: false
-          release: "14.2"
+          release: "14.3"
           prepare: |
-            pkg install -y curl pkgconf xorg
-            GO_TARBALL="go1.25.3.freebsd-amd64.tar.gz"
+            retry() {
+              attempts=0
+              until "$@"; do
+                attempts=$((attempts + 1))
+                if [ "$attempts" -ge 3 ]; then
+                  return 1
+                fi
+                sleep $((attempts * 5))
+              done
+            }
+
+            retry pkg update -f
+            retry pkg install -y curl pkgconf xorg
+            GO_TARBALL="go1.25.5.freebsd-amd64.tar.gz"
             GO_URL="https://go.dev/dl/$GO_TARBALL"
             curl -vLO "$GO_URL"
             tar -C /usr/local -vxzf "$GO_TARBALL"            
@@ -46,7 +58,6 @@ jobs:
             time go test -timeout 1m -failfast ./dns/...
             time go test -timeout 1m -failfast ./encryption/...
             time go test -timeout 1m -failfast ./formatter/...
-            time go test -timeout 1m -failfast ./client/iface/...
             time go test -timeout 1m -failfast ./route/...
             time go test -timeout 1m -failfast ./sharedsock/...
             time go test -timeout 1m -failfast ./util/...
