@@ -3100,13 +3100,16 @@ func TestAccount_UserGroupsRemoveFromPeers(t *testing.T) {
 func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersUpdateManager, error) {
 	t.Helper()
 
-	store, err := createStore(t)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	store, err := createStore(t, ctx)
 	if err != nil {
 		return nil, nil, err
 	}
+	t.Cleanup(cancel)
 	eventStore := &activity.InMemoryEventStore{}
 
-	metrics, err := telemetry.NewDefaultAppMetrics(context.Background())
+	metrics, err := telemetry.NewDefaultAppMetrics(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -3133,8 +3136,6 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 		Return(nil).
 		AnyTimes()
 
-	ctx := context.Background()
-
 	cacheStore, err := cache.NewStore(ctx, 100*time.Millisecond, 300*time.Millisecond, 100)
 	if err != nil {
 		return nil, nil, err
@@ -3149,6 +3150,7 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 	}
 
 	proxyGrpcServer := nbgrpc.NewProxyServiceServer(nil, nil, nil, nbgrpc.ProxyOIDCConfig{}, peersManager, nil, proxyManager)
+	t.Cleanup(proxyGrpcServer.Close)
 	proxyController, err := proxymanager.NewGRPCController(proxyGrpcServer, noop.Meter{})
 	if err != nil {
 		return nil, nil, err
@@ -3158,10 +3160,10 @@ func createManager(t testing.TB) (*DefaultAccountManager, *update_channel.PeersU
 	return manager, updateManager, nil
 }
 
-func createStore(t testing.TB) (store.Store, error) {
+func createStore(t testing.TB, ctx context.Context) (store.Store, error) {
 	t.Helper()
 	dataDir := t.TempDir()
-	store, cleanUp, err := storetest.NewTestStoreFromSQL(context.Background(), "", dataDir)
+	store, cleanUp, err := storetest.NewTestStoreFromSQL(ctx, "", dataDir)
 	if err != nil {
 		return nil, err
 	}

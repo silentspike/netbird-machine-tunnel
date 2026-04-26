@@ -2750,7 +2750,6 @@ func (s *SqlStore) GetPostureCheckByChecksDefinition(accountID string, checks *p
 func (s *SqlStore) Close(_ context.Context) error {
 	if s.pool != nil {
 		s.pool.Close()
-		s.pool = nil
 	}
 
 	sql, err := s.db.DB()
