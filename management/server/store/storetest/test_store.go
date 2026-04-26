@@ -138,29 +138,33 @@ func addAllGroupToAccount(ctx context.Context, store storepkg.Store) error {
 	return nil
 }
 
-func getSqlStoreEngine(ctx context.Context, store *storepkg.SqlStore, kind types.Engine) (storepkg.Store, func(), error) {
-	var cleanup func()
+func getSqlStoreEngine(ctx context.Context, seedStore *storepkg.SqlStore, kind types.Engine) (storepkg.Store, func(), error) {
+	sqlStore := seedStore
+	cleanupDB := func() {}
 	var err error
 	switch kind {
 	case types.PostgresStoreEngine:
-		store, cleanup, err = newReusedPostgresStore(ctx, store, kind)
+		sqlStore, cleanupDB, err = newReusedPostgresStore(ctx, seedStore, kind)
 	case types.MysqlStoreEngine:
-		store, cleanup, err = newReusedMysqlStore(ctx, store, kind)
-	default:
-		cleanup = func() {
-			// sqlite doesn't need to be cleaned up
-		}
+		sqlStore, cleanupDB, err = newReusedMysqlStore(ctx, seedStore, kind)
 	}
 	if err != nil {
-		return nil, cleanup, fmt.Errorf("failed to create test store: %v", err)
+		return nil, cleanupDB, fmt.Errorf("failed to create test store: %v", err)
 	}
 
 	closeConnection := func() {
-		cleanup()
-		store.Close(ctx)
+		if err := sqlStore.Close(ctx); err != nil {
+			log.Errorf("failed to close test store: %v", err)
+		}
+		if sqlStore != seedStore {
+			if err := seedStore.Close(ctx); err != nil {
+				log.Errorf("failed to close seed test store: %v", err)
+			}
+		}
+		cleanupDB()
 	}
 
-	return store, closeConnection, nil
+	return sqlStore, closeConnection, nil
 }
 
 func newReusedPostgresStore(ctx context.Context, store *storepkg.SqlStore, kind types.Engine) (*storepkg.SqlStore, func(), error) {
