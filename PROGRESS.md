@@ -30,7 +30,7 @@ atomic commit before the next task starts.
 | 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | DONE | task commit |
 | 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | DONE | task commit |
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | DONE | task commit |
-| 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | PENDING | |
+| 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | DONE | task commit |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | PENDING | |
 
 ## Task Details
@@ -213,6 +213,10 @@ Acceptance criteria:
 - #170 remains open after Task 2: the branch reduced High alerts, but
   `go/request-forgery`, two `go/zipslip` alerts, and one
   `go/weak-sensitive-data-hashing` alert remain.
+- Public visibility remains blocked after Task 9 by #170 CodeQL critical/high
+  disposition, #114 Signal trust-model review, missing final approval, no final
+  tagged public-launch release, and local readiness commits not yet merged to
+  `main`.
 
 ## Findings
 
@@ -243,6 +247,8 @@ Acceptance criteria:
   from run `24984503525`: fork-specific `netbird-machine` archive and SBOM are
   present, full checksums pass, and VM102 smoke passed after installing the
   downloaded artifact binary.
+- 2026-04-27: `docs/PUBLIC-RELEASE-READINESS.md` records an explicit NO-GO for
+  public visibility/release while allowing continued private preparation.
 
 ## Task Evidence
 
@@ -517,6 +523,51 @@ AC results:
 - Scope note: this validates the current `main` Actions snapshot artifact as an
   RC candidate. It is not yet a public GitHub Release/Pre-release asset.
 
+### Task 9: Prepare public Go/No-Go
+
+Status: DONE, committed in the Task 9 commit.
+
+Pre-task self-check:
+- Must gather current security, dependency, CI, artifact, lab, issue, and repo
+  visibility state from live sources.
+- Must produce an evidence-backed public release decision record.
+- Must not change repository visibility without explicit user approval recorded
+  after all gates are green or accepted risk.
+- Must distinguish `GO for continued preparation` from `GO for public
+  visibility/release`.
+- Expected tracked file changes: `PROGRESS.md` and a public-safe decision record
+  if needed.
+- Expected ignored file change: `docs/internal/public-readiness-living-checklist.md`.
+
+AC results:
+- AC1 PASS: live repo, issue, branch-protection, CI, dependency-alert,
+  code-scanning, artifact, and lab states were gathered. GitHub reports
+  `silentspike/netbird-machine-tunnel` as `PRIVATE`; `main` branch protection
+  has strict required checks with 46 contexts, admin enforcement, conversation
+  resolution, force-push protection, deletion protection, and CODEOWNERS
+  `errors=[]`.
+- AC1 PASS: main CI for commit
+  `bb2682231cb2ff3f191f51c691f95459e6f9921f` remains green for the core
+  post-merge workflow set. Release artifact run `24984503525` and VM102
+  downloaded-artifact smoke are recorded as PASS from Task 8.
+- AC1 PASS: live Dependabot API returned `0` open alerts and issue #167 was
+  updated with stale/closeable-after-approval evidence:
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/167#issuecomment-4328769698`.
+- AC1 PASS: live CodeQL/code-scanning remains a hard blocker. `main` open
+  alerts are still 1 critical, 19 high, 142 medium, and 2 warning. The
+  `security/codeql-high-baseline` branch reduces this to 1 critical, 3 high,
+  142 medium, and 2 warning, but #170 remains open until those findings are
+  fixed, dismissed with evidence, or explicitly accepted.
+- AC1 PASS: `docs/PUBLIC-RELEASE-READINESS.md` was created as the decision
+  record. It records **NO-GO for public visibility and public release** and
+  lists hard blockers: #170, #114/#109 trust-model disposition, unmerged local
+  readiness commits, missing final public approval, and missing final tagged
+  public-launch release.
+- AC2 PASS: no final public visibility/release approval was recorded in this
+  task after the current blockers were known.
+- AC3 PASS: `gh repo view` reports `visibility=PRIVATE`; no repository
+  visibility change was performed.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
@@ -527,3 +578,4 @@ AC results:
 - Task 6: `Task 6: Promote CRL limitation`
 - Task 7: `Task 7: Reassess #108 and #109`
 - Task 8: `Task 8: Continue RC gates`
+- Task 9: `Task 9: Prepare public Go/No-Go`
