@@ -79,11 +79,11 @@ func GeneratePassword(passwordLength, minSpecialChar, minNum, minUpperCase int) 
 	return string(inRune), nil
 }
 
-func secureRandomIndex(max int) (int, error) {
-	if max <= 0 {
-		return 0, fmt.Errorf("invalid random bound %d", max)
+func secureRandomIndex(bound int) (int, error) {
+	if bound <= 0 {
+		return 0, fmt.Errorf("invalid random bound %d", bound)
 	}
-	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(bound)))
 	if err != nil {
 		return 0, fmt.Errorf("secure random index: %w", err)
 	}
