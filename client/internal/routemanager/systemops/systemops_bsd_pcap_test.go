@@ -1,4 +1,4 @@
-//go:build cgo && (darwin || dragonfly || freebsd || netbsd || openbsd)
+//go:build cgo && (dragonfly || freebsd || netbsd || openbsd)
 
 package systemops
 
