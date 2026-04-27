@@ -34,7 +34,7 @@ atomic commit before the next task starts.
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
 | 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and rerun CodeQL. | DONE | task commit |
 | 12 | Patch dependency alerts | Use the reliable GraphQL Dependabot export, patch actionable Go/NPM dependency alerts, and document no-patch dispositions. | DONE | task commit |
-| 13 | Resolve Signal trust model | Verify #114 Signal TLS, endpoint source, and message encryption claims; replace the false pinning claim with public security documentation. | IN_PROGRESS | pending |
+| 13 | Resolve Signal trust model | Verify #114 Signal TLS, endpoint source, and message encryption claims; replace the false pinning claim with public security documentation. | DONE | task commit |
 
 ## Task Details
 
@@ -747,7 +747,7 @@ Remaining for #167:
 
 ### Task 13: Resolve Signal trust model
 
-Status: IN_PROGRESS. The code review shows the old "Server-Cert Pinning via
+Status: DONE. The code review shows the old "Server-Cert Pinning via
 Mgmt Config" claim is false for Signal. The corrected public disposition is
 standard TLS root CA validation for HTTPS Signal transport, plus NaCl box
 message-body encryption with WireGuard keys, with metadata and availability risk
@@ -778,10 +778,19 @@ Disposition:
   messages.
 
 Remaining for #114:
-- Run targeted tests for encryption/signal/client gRPC packages.
-- Push the documentation commit and post the evidence-backed issue update.
 - After maintainer acceptance, close #114 or explicitly split any follow-up from
   #109.
+
+Local verification:
+- PASS: `go test ./encryption ./shared/signal/client ./client/grpc`
+- PASS: `git diff --check`
+
+Remote/issue evidence:
+- PASS: pushed documentation commit
+  `ed0379b13e969b198dfdb50875f67500db51da98` to
+  `security/codeql-high-baseline`.
+- PASS: #114 received the evidence-backed disposition comment:
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/114#issuecomment-4329616606`.
 
 ## Commits
 
@@ -797,4 +806,4 @@ Remaining for #114:
 - Task 10: `Task 10: Plan-Verifikation`
 - Task 11: `Task 11: Fix fork-owned CodeQL findings`
 - Task 12: `Task 12: Patch dependency alerts`
-- Task 13: pending
+- Task 13: `Task 13: Document Signal trust model`
