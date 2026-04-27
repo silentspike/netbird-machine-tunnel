@@ -567,6 +567,9 @@ func (s *serviceClient) parseNumericSettings() (int64, int64, error) {
 		if mtu < iface.MinMTU || mtu > iface.MaxMTU {
 			return 0, 0, fmt.Errorf("MTU must be between %d and %d bytes", iface.MinMTU, iface.MaxMTU)
 		}
+		if mtu > 65535 {
+			return 0, 0, errors.New("invalid MTU value: out of range 0-65535")
+		}
 	}
 
 	return port, mtu, nil

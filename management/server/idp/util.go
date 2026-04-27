@@ -1,8 +1,10 @@
 package idp
 
 import (
+	"crypto/rand"
 	"encoding/json"
-	"math/rand"
+	"fmt"
+	"math/big"
 	"net/url"
 	"os"
 	"strings"
@@ -28,37 +30,64 @@ func (JsonParser) Unmarshal(data []byte, v interface{}) error {
 }
 
 // GeneratePassword generates user password
-func GeneratePassword(passwordLength, minSpecialChar, minNum, minUpperCase int) string {
+func GeneratePassword(passwordLength, minSpecialChar, minNum, minUpperCase int) (string, error) {
 	var password strings.Builder
 
 	//Set special character
 	for i := 0; i < minSpecialChar; i++ {
-		random := rand.Intn(len(specialCharSet))
+		random, err := secureRandomIndex(len(specialCharSet))
+		if err != nil {
+			return "", err
+		}
 		password.WriteString(string(specialCharSet[random]))
 	}
 
 	//Set numeric
 	for i := 0; i < minNum; i++ {
-		random := rand.Intn(len(numberSet))
+		random, err := secureRandomIndex(len(numberSet))
+		if err != nil {
+			return "", err
+		}
 		password.WriteString(string(numberSet[random]))
 	}
 
 	//Set uppercase
 	for i := 0; i < minUpperCase; i++ {
-		random := rand.Intn(len(upperCharSet))
+		random, err := secureRandomIndex(len(upperCharSet))
+		if err != nil {
+			return "", err
+		}
 		password.WriteString(string(upperCharSet[random]))
 	}
 
 	remainingLength := passwordLength - minSpecialChar - minNum - minUpperCase
 	for i := 0; i < remainingLength; i++ {
-		random := rand.Intn(len(allCharSet))
+		random, err := secureRandomIndex(len(allCharSet))
+		if err != nil {
+			return "", err
+		}
 		password.WriteString(string(allCharSet[random]))
 	}
 	inRune := []rune(password.String())
-	rand.Shuffle(len(inRune), func(i, j int) {
+	for i := len(inRune) - 1; i > 0; i-- {
+		j, err := secureRandomIndex(i + 1)
+		if err != nil {
+			return "", err
+		}
 		inRune[i], inRune[j] = inRune[j], inRune[i]
-	})
-	return string(inRune)
+	}
+	return string(inRune), nil
+}
+
+func secureRandomIndex(max int) (int, error) {
+	if max <= 0 {
+		return 0, fmt.Errorf("invalid random bound %d", max)
+	}
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
+		return 0, fmt.Errorf("secure random index: %w", err)
+	}
+	return int(n.Int64()), nil
 }
 
 // baseURL returns the base url  by concatenating
