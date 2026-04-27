@@ -457,11 +457,16 @@ go test ./client/internal/tunnel/...
 
 ## License
 
-Licensed under **GNU Affero General Public License v3.0 (AGPL-3.0)** — same as NetBird.
+This fork inherits NetBird's dual-license structure:
 
-- You can use, modify, and distribute this software
-- If you modify and deploy it, you must share your source code
-- Full text: [LICENSE](LICENSE)
+- `client/`, `shared/`, and repository-root code are licensed under
+  **BSD-3-Clause** as described in [LICENSE](LICENSE).
+- `management/`, `signal/`, `relay/`, and `combined/` are licensed under
+  **GNU Affero General Public License v3.0 (AGPL-3.0)**. See the respective
+  component license files: [management/LICENSE](management/LICENSE),
+  [signal/LICENSE](signal/LICENSE), [relay/LICENSE](relay/LICENSE), and
+  [combined/LICENSE](combined/LICENSE).
+- [NOTICE.md](NOTICE.md) contains the fork attribution and modification summary.
 
 ### Attribution
 
