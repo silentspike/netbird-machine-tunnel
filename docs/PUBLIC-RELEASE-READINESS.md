@@ -23,19 +23,19 @@ governance gates are resolved or explicitly accepted.
 | Downloaded-artifact lab smoke | PASS | VM102 ran the downloaded `netbird-machine.exe` with SHA256 `be656553c08aaf620f7dde652223ed0909d77320805ed66423c973ef7ff645c9`; service, tunnel interface, route, DC ports, and handshake evidence passed. |
 | Dependabot alerts | **NO-GO pending stable export** | Repeated live API checks were inconsistent: some returned `0` open alerts, while another returned `12` open alerts and showed at least one current `postcss` alert. #167 remains a public go-live blocker until a stable alert export is captured and dispositioned. |
 | Public documentation | PASS for current preparation | README license wording, ADR status, `FORK_DIFF.md`, and CRL limitation documentation have been updated in the readiness branch. |
-| CodeQL/security baseline | **NO-GO pending rerun/disposition** | #170 remains open. The previous remote baseline branch reduced `main` from 1 critical / 19 high to 1 critical / 3 high. A local follow-up now classifies the remaining critical/high findings by ownership: `dnslabel.go` is fork-added and locally fixed, `geolocation/utils.go` is fork-modified and locally hardened further, and `identity_provider.go` is unchanged from upstream v0.69.0 and must be dispositioned as inherited upstream risk instead of blindly patched. These local changes still need push, CodeQL rerun, and issue update before #170 can close. |
+| CodeQL/security baseline | **NO-GO pending inherited-risk disposition** | #170 remains open. CodeQL run `25009382196` on `security/codeql-high-baseline` completed successfully and reduced the branch to `145` open alerts: 1 critical, 0 high, 142 medium, 2 warning. The fork-added `dnslabel.go` and fork-modified `geolocation/utils.go` high findings are cleared. The only remaining critical/high finding is `go/request-forgery` in `management/server/identity_provider.go`, which is unchanged from upstream v0.69.0 and must be dispositioned as inherited upstream risk instead of blindly patched. Evidence posted to #170: https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329118258 |
 | Signal trust model | **NO-GO** | #114 remains open; #109 remains a public go-live blocker until #114 is resolved or explicitly split out. |
 | Public approval | **NO-GO** | No final public visibility/release approval has been recorded after the current blocker list. |
-| Mainline inclusion | **NO-GO** | The current public-readiness commits are local on `security/codeql-high-baseline` and are not yet pushed, reviewed, and merged to `main`. |
+| Mainline inclusion | **NO-GO** | The current public-readiness commits are on `security/codeql-high-baseline` and are not yet reviewed, merged to protected `main`, and rerun through the required mainline checks. |
 | Public GitHub Release | NO-GO for final release | Current artifact validation used an Actions snapshot artifact. The visible GitHub Release `v0.1.0` is old and is not the current public-launch RC. |
 
 ## Hard Blockers
 
-1. Push the local #170 follow-up, rerun CodeQL, and resolve or formally accept
-   remaining critical/high findings by ownership:
-   fork-added/fork-modified findings must be fixed or proved false-positive;
-   unchanged upstream findings must be documented as inherited risk, accepted
-   explicitly, and preferably tracked upstream.
+1. Resolve #170 by formally dispositioning the remaining inherited upstream
+   `go/request-forgery` OIDC SSRF finding. Fork-added/fork-modified
+   critical/high findings are cleared on the CodeQL branch; the remaining
+   critical finding must be accepted explicitly for public launch or tracked
+   upstream.
 2. Resolve #167 Dependabot alert disposition from a stable final export.
 3. Resolve #114 Signal Server trust-model review, then close or split #109.
 4. Push the public-readiness branch, open/review/merge it through protected
