@@ -28,7 +28,7 @@ atomic commit before the next task starts.
 | 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | DONE | task commit |
 | 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | DONE | task commit |
 | 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | DONE | task commit |
-| 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | PENDING | |
+| 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | DONE | task commit |
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | PENDING | |
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | PENDING | |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | PENDING | |
@@ -206,8 +206,10 @@ Acceptance criteria:
 
 - Public visibility flip is blocked until #168 RC gates and #170 CodeQL/security
   disposition are complete or explicitly accepted in the go-live decision.
-- #108/#109 cannot be treated as non-showstoppers until current code/lab
-  evidence supports that decision.
+- #108 original peer-configuration claim is stale/closeable after maintainer
+  approval; #109 functional Signal/Relay connectivity is implemented and
+  lab-validated, but remains a public go-live blocker until #114 Signal Server
+  trust-model review is resolved or explicitly split out.
 - #170 remains open after Task 2: the branch reduced High alerts, but
   `go/request-forgery`, two `go/zipslip` alerts, and one
   `go/weak-sensitive-data-hashing` alert remain.
@@ -234,6 +236,9 @@ Acceptance criteria:
 - 2026-04-27: CRL/OCSP revocation checking is now a prominent public security
   limitation in `SECURITY.md`, with README pointing readers to the detailed
   scope and mitigations.
+- 2026-04-27: #108/#109 were reassessed with current code, tests, and live lab
+  evidence. #108 is stale/closeable after maintainer approval; #109 remains
+  open because #114 trust-model review is still open.
 
 ## Task Evidence
 
@@ -407,6 +412,53 @@ AC results:
   only `PROGRESS.md`, `README.md`, and `SECURITY.md` as tracked changes for the
   task. The internal checklist update remains ignored under `docs/internal/`.
 
+### Task 7: Reassess #108 and #109
+
+Status: DONE, committed in the Task 7 commit.
+
+Pre-task self-check:
+- Must read live GitHub issue state and latest discussion for #108 and #109.
+- Must inspect current code paths for the behavior each issue claims, rather
+  than relying on old plan text.
+- Must use targeted tests or lab/runtime evidence where the issue cannot be
+  dispositioned from code and existing evidence alone.
+- Must record each issue as blocker, known limitation, or stale/closeable with
+  evidence.
+- Expected tracked file change before commit: `PROGRESS.md` only, unless code or
+  public documentation must change based on fresh evidence.
+- Expected ignored file change: `docs/internal/public-readiness-living-checklist.md`.
+
+AC results:
+- AC1 PASS: live issue state was captured with `gh issue view` for #108, #109,
+  #113, and #114. #108 remains `OPEN` and says it is blocked by #109. #109
+  remains `OPEN`; its latest prior status says E2E tests passed except #114.
+  #110, #111, #112, and #113 are `CLOSED`; #114 remains `OPEN`.
+- AC2 PASS: current implementation state was checked from code, tests, and lab:
+  `machine.go` builds Signal/Relay config, starts `PeerEngine`, and calls
+  `connectToRemotePeers`; `peerengine.go` reuses `peer.Conn` with Signal,
+  Relay, `SRWatcher`, and status dependencies. `GOOS=windows GOARCH=amd64 go
+  test -c -o /tmp/netbird-tunnel-task7.test.exe ./client/internal/tunnel`
+  produced a 38M Windows test binary, and `go test ./client/internal/tunnel -run
+  'TestHealth|TestReconnect|TestBootstrap|TestMTLS|TestTrust' -count=1`
+  returned `ok`.
+- AC2 PASS: live lab was reachable after starting VM102. Proxmox reported
+  VM100/101/103 running and VM102 started successfully with QEMU Guest Agent
+  ready. Management, Signal, Relay, and Zitadel DB containers on VM103 were up.
+  Windows VM102 reported `NetBirdMachine` Running, `wg-nb-machine` Up,
+  `100.95.231.226/16`, route `192.168.100.0/24` via `wg-nb-machine`, DC ports
+  `53/88/389/445/636` with `TcpTestSucceeded: True`, and recent log evidence
+  including `Received handshake response`.
+- AC3 PASS: issue reassessment comments were posted:
+  #108 `https://github.com/silentspike/netbird-machine-tunnel/issues/108#issuecomment-4328594963`
+  and #109
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/109#issuecomment-4328595119`.
+  Latest-comment checks confirmed both comments by `obtFusi` with expected body
+  matches.
+- Disposition PASS: #108 is `stale/closeable after maintainer approval` for the
+  original peer-configuration claim. #109 is `functional Signal/Relay
+  connectivity implemented and lab-validated`, but remains a public go-live
+  blocker until #114 is resolved or explicitly split out.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
@@ -415,3 +467,4 @@ AC results:
 - Task 4: `Task 4: Update ADR statuses`
 - Task 5: `Task 5: Create fork contribution summary`
 - Task 6: `Task 6: Promote CRL limitation`
+- Task 7: `Task 7: Reassess #108 and #109`
