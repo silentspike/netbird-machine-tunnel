@@ -33,6 +33,7 @@ atomic commit before the next task starts.
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | DONE | task commit |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
 | 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and rerun CodeQL. | DONE | task commit |
+| 12 | Patch dependency alerts | Use the reliable GraphQL Dependabot export, patch actionable Go/NPM dependency alerts, and document no-patch dispositions. | IN PROGRESS | pending |
 
 ## Task Details
 
@@ -221,6 +222,10 @@ Acceptance criteria:
   critical/high disposition, #167 unstable Dependabot alert export, #114 Signal
   trust-model review, missing final approval, no final tagged public-launch
   release, and local readiness commits not yet merged to `main`.
+- #167 remains open after Task 12 local remediation because Dependabot alerts
+  are default-branch based. The branch patches actionable alerts locally, but
+  the final close decision needs a protected-main merge, default-branch rescan,
+  and explicit disposition for no-patch/transitive alerts.
 
 ## Findings
 
@@ -263,12 +268,17 @@ Acceptance criteria:
   geolocation archive extraction writes only expected filenames and skips
   traversal entries, and the branch-local gRPC sync-limit parser now uses
   `strconv.ParseInt(..., 32)` to satisfy targeted lint/security checks.
-- 2026-04-27: CodeQL run `25009382196` on
+- 2026-04-27: CodeQL run `25009836010` on
   `security/codeql-high-baseline` passed for Go and JavaScript/TypeScript.
   Code-scanning API for the branch now reports `145` open alerts:
   `1 critical`, `0 high`, `142 medium`, `2 warning`. #170 was updated with the
   rerun evidence:
-  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329118258`.
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329195301`.
+- 2026-04-27: Dependabot REST returned `0` open alerts, but GraphQL
+  `vulnerabilityAlerts(states: OPEN)` returned the authoritative default-branch
+  set of 12 alerts: 1 high, 10 moderate, 1 low. Local branch remediation
+  updates patched Go modules and `proxy/web/package-lock.json`; remaining
+  no-patch/transitive alerts need final disposition after main rescan.
 
 ## Task Evidence
 
@@ -670,19 +680,56 @@ Remote verification:
 - PASS: pushed `security/codeql-high-baseline` at
   `926cb5b0a698f7de1b0086c45c04979ae05ea571`.
 - PASS: CodeQL run
-  `https://github.com/silentspike/netbird-machine-tunnel/actions/runs/25009382196`
+  `https://github.com/silentspike/netbird-machine-tunnel/actions/runs/25009836010`
   completed successfully for `CodeQL (javascript-typescript)` and
   `CodeQL (go)`.
 - PASS: code-scanning API for
   `refs/heads/security/codeql-high-baseline` now reports 145 open alerts:
   1 critical, 0 high, 142 medium, 2 warning.
 - PASS: issue #170 received the update:
-  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329118258`.
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329195301`.
 
 Remaining for #170:
 - Formally disposition the remaining inherited upstream OIDC SSRF finding in
   `management/server/identity_provider.go`.
 - Decide whether to accept it for public launch and/or track/report upstream.
+
+### Task 12: Patch dependency alerts
+
+Status: IN PROGRESS. Local dependency remediation is implemented and locally
+verified; commit, push, and issue #167 update are pending.
+
+Reliable export:
+- REST endpoint
+  `repos/silentspike/netbird-machine-tunnel/dependabot/alerts?state=open`
+  returned `0` repeatedly despite Git push warnings.
+- GraphQL `repository.vulnerabilityAlerts(states: OPEN)` returned 12
+  default-branch alerts: 1 high, 10 moderate, 1 low.
+
+Local remediation:
+- Updated `github.com/okta/okta-sdk-golang/v2` to `v2.20.0`; `go mod why -m
+  gopkg.in/square/go-jose.v2` now reports that the main module does not need
+  `gopkg.in/square/go-jose.v2`.
+- Updated patched Go dependencies including `github.com/quic-go/quic-go`,
+  `github.com/pion/dtls/v3`, `golang.org/x/image`,
+  `github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream`,
+  `github.com/aws/aws-sdk-go-v2/service/s3`, `github.com/jackc/pgx/v5`, and
+  `github.com/Azure/go-ntlmssp`.
+- Updated `proxy/web/package-lock.json`; `postcss` is now `8.5.12`.
+- Updated `github.com/pion/dtls/v2` to latest v2 `v2.2.12`; advisory still has
+  no patched v2 version.
+
+Local verification:
+- PASS: `go test ./management/server/idp ./relay/server/listener/quic ./client/internal/relay ./client/iface/bind ./upload-server/server ./management/server/store ./idp/dex`
+- PASS: `npm --prefix proxy/web audit --audit-level=low`
+- PASS: `git diff --check`
+
+Remaining for #167:
+- Commit and push the dependency remediation.
+- Let protected-main/default-branch dependency scanning refresh after merge.
+- Dismiss or explicitly accept no-patch/transitive alerts with evidence,
+  especially `github.com/docker/docker` via `management/server/testutil` and
+  `github.com/pion/dtls/v2` via `client/internal/relay`.
 
 ## Commits
 
@@ -697,3 +744,4 @@ Remaining for #170:
 - Task 9: `Task 9: Prepare public Go/No-Go`
 - Task 10: `Task 10: Plan-Verifikation`
 - Task 11: `Task 11: Fix fork-owned CodeQL findings`
+- Task 12: pending
