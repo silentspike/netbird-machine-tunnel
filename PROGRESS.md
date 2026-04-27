@@ -29,7 +29,7 @@ atomic commit before the next task starts.
 | 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | DONE | task commit |
 | 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | DONE | task commit |
 | 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | DONE | task commit |
-| 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | PENDING | |
+| 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | DONE | task commit |
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | PENDING | |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | PENDING | |
 
@@ -239,6 +239,10 @@ Acceptance criteria:
 - 2026-04-27: #108/#109 were reassessed with current code, tests, and live lab
   evidence. #108 is stale/closeable after maintainer approval; #109 remains
   open because #114 trust-model review is still open.
+- 2026-04-27: RC artifact gate passed for the `main` Actions snapshot artifact
+  from run `24984503525`: fork-specific `netbird-machine` archive and SBOM are
+  present, full checksums pass, and VM102 smoke passed after installing the
+  downloaded artifact binary.
 
 ## Task Evidence
 
@@ -459,6 +463,60 @@ AC results:
   connectivity implemented and lab-validated`, but remains a public go-live
   blocker until #114 is resolved or explicitly split out.
 
+### Task 8: Continue RC gates
+
+Status: DONE, committed in the Task 8 commit.
+
+Pre-task self-check:
+- Must inspect current GitHub release/RC state before assuming an artifact
+  exists.
+- Must verify whether a downloadable release artifact includes
+  `netbird-machine.exe`.
+- Must verify checksums and SBOMs if release assets exist; if they do not exist,
+  record a hard BLOCKED state instead of substituting local builds.
+- Must use downloaded release artifacts for any lab smoke. Local workstation
+  builds are not acceptable release evidence.
+- Expected tracked file change before commit: `PROGRESS.md` only, unless a
+  release workflow/docs bug must be fixed based on fresh evidence.
+- Expected ignored file change: `docs/internal/public-readiness-living-checklist.md`.
+
+AC results:
+- AC1 PASS: `gh release list` showed the only visible GitHub Release is old
+  `v0.1.0` from 2026-02-06, so the current RC validation used the successful
+  `main` Actions snapshot run `24984503525` at commit
+  `bb2682231cb2ff3f191f51c691f95459e6f9921f`. GitHub Actions artifact API
+  showed non-expired artifacts including `release`, `linux-packages`,
+  `windows-packages`, `macos-packages`, `release-ui`, and `release-ui-darwin`.
+- AC1 PASS: downloaded the full `release` artifact from run `24984503525`.
+  Artifact inventory contained
+  `netbird-machine_0.1.0-SNAPSHOT-bb268223_windows_amd64.tar.gz`,
+  `netbird-machine_0.1.0-SNAPSHOT-bb268223_windows_amd64.tar.gz.sbom.spdx.json`,
+  and extracted `netbird-machine_windows_amd64_v1/netbird-machine.exe`.
+- AC2 PASS: `sha256sum -c netbird_0.1.0-SNAPSHOT-bb268223_checksums.txt`
+  passed for the complete downloaded artifact set, including `netbird-machine`
+  and SBOM entries. Direct SHA256 for the downloaded binary was
+  `be656553c08aaf620f7dde652223ed0909d77320805ed66423c973ef7ff645c9`.
+  `file` identified it as `PE32+ executable for MS Windows`, and the
+  `netbird-machine` archive contained `netbird-machine.exe` plus expected
+  project files.
+- AC3 PASS: VM102 lab smoke used the downloaded artifact binary, not a local
+  build. Direct SCP to `admin@10.0.0.160` was used after the Proxmox HTTP hop
+  timed out from the Windows guest. The service binary
+  `C:\temp\netbird-machine.exe` was replaced with the downloaded artifact,
+  service restarted, and its SHA256 matched
+  `be656553c08aaf620f7dde652223ed0909d77320805ed66423c973ef7ff645c9`.
+- AC3 PASS: post-restart lab smoke returned `NetBirdMachine` Running,
+  `wg-nb-machine` Up, `100.95.231.226/16`, route `192.168.100.0/24` via
+  `wg-nb-machine`, DC ports `53`, `88`, `389`, `445`, and `636` all
+  `TcpTestSucceeded: True` via `wg-nb-machine`, and recent log evidence
+  `Received handshake response`.
+- AC3 PASS: issue #168 received the RC artifact update comment
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/168#issuecomment-4328746572`;
+  latest-comment recheck confirmed author `obtFusi`, timestamp
+  `2026-04-27T16:37:49Z`, and expected body match.
+- Scope note: this validates the current `main` Actions snapshot artifact as an
+  RC candidate. It is not yet a public GitHub Release/Pre-release asset.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
@@ -468,3 +526,4 @@ AC results:
 - Task 5: `Task 5: Create fork contribution summary`
 - Task 6: `Task 6: Promote CRL limitation`
 - Task 7: `Task 7: Reassess #108 and #109`
+- Task 8: `Task 8: Continue RC gates`
