@@ -1,8 +1,12 @@
 # ADR-002: Windows CNG crypto.Signer Interface
 
-**Status:** Pending (requires Windows environment)
+**Status:** Implemented
 **Date:** 2026-01-20
 **Issue:** T-1.1 (Windows CNG crypto.Signer Spike)
+
+> 2026-04-27 update: the Windows certificate-store signer and certificate
+> discovery path are implemented. See `client/internal/auth/wincert_signer.go`,
+> `client/internal/auth/cert_discovery_windows.go`, and the non-Windows stubs.
 
 ## Context
 
@@ -23,7 +27,11 @@ Implement a `CNG crypto.Signer` wrapper that:
 2. Gets the private key handle via `ncrypt.dll`
 3. Implements `crypto.Signer.Sign()` by calling `NCryptSignHash()`
 
-### Interface Definition
+### Original Interface Sketch
+
+The original sketch below is retained for context. The shipped implementation
+uses `WinCertSigner` in `client/internal/auth/wincert_signer.go`, with Windows
+certificate discovery in `client/internal/auth/cert_discovery_windows.go`.
 
 ```go
 // cng_signer_windows.go
@@ -111,18 +119,29 @@ func NewCNGSignerFromThumbprint(thumbprint string) (*CNGSigner, *x509.Certificat
 
 ## Status
 
-**BLOCKED:** Implementation requires Windows development environment.
+**Implemented:** Windows certificate-store discovery and CNG signing are present
+in the client auth package.
 
-### Prerequisites
-1. Windows 10/11 or Server 2019+ VM
-2. Machine certificate enrolled via AD CS
-3. Go 1.21+ with CGO enabled (for syscall)
+### Implementation Evidence
 
-### Next Steps (on Windows VM)
-1. Create `client/internal/auth/cng_signer_windows.go`
-2. Implement Windows API calls via `golang.org/x/sys/windows`
-3. Test with real AD CS certificate
-4. Add unit tests with mock certificate store
+- [x] `client/internal/auth/wincert_signer.go` implements `WinCertSigner`,
+  `crypto.Signer.Public`, `crypto.Signer.Sign`, RSA/ECDSA signing through
+  `NCryptSignHash`, and `Close` cleanup via `NCryptFreeObject`.
+- [x] `client/internal/auth/cert_discovery_windows.go` opens
+  `LocalMachine\My`, enumerates certificates, supports thumbprint lookup,
+  calls `CryptAcquireCertificatePrivateKey`, and returns a `WinCertSigner`.
+- [x] `client/internal/auth/wincert_signer_other.go` and
+  `client/internal/auth/cert_discovery_other.go` provide non-Windows stubs.
+- [x] `client/internal/auth/wincert_pss.go` and
+  `client/internal/auth/wincert_pss_test.go` cover RSA-PSS salt handling used
+  by NCrypt TLS signing.
+
+### Remaining Validation Notes
+
+1. Full certificate-store behavior still requires a Windows VM with an AD CS
+   enrolled machine certificate in `LocalMachine\My`.
+2. Cross-platform compile checks should include non-Windows stubs so Linux/macOS
+   builds do not import Windows-only APIs.
 
 ## References
 

@@ -25,7 +25,7 @@ atomic commit before the next task starts.
 | 1 | Update #168 with main CI evidence | Post the verified PR #183 `main` push green result to issue #168 and record the evidence. | DONE | task commit |
 | 2 | Continue #170 CodeQL baseline | Push `security/codeql-high-baseline`, run CodeQL on that ref, inspect result, and prepare the OIDC SSRF policy decision. | DONE | task commit |
 | 3 | Fix README license wording | Align public README License section with `LICENSE` and `NOTICE.md` dual-license structure. | DONE | task commit |
-| 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | PENDING | |
+| 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | DONE | task commit |
 | 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | PENDING | |
 | 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | PENDING | |
 | 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | PENDING | |
@@ -226,6 +226,9 @@ Acceptance criteria:
 - 2026-04-27: README License section now matches the repository dual-license
   structure from `LICENSE` and `NOTICE.md`; local internal and external license
   dependency checks passed.
+- 2026-04-27: ADR-001 is now explicitly superseded by the dedicated mTLS port
+  implementation; ADR-002 is now implemented with current auth implementation
+  evidence.
 
 ## Task Evidence
 
@@ -321,8 +324,36 @@ AC results:
   `goauthentik.io/api/v3`, confirmed both are only used by internal AGPL
   packages, and returned `PASS external GPL/AGPL license dependency check`.
 
+### Task 4: Update ADR statuses
+
+Status: DONE, committed in the Task 4 commit.
+
+Pre-task self-check:
+- Must update only ADR-001, ADR-002, and progress tracking.
+- Must preserve historical context while making the current implementation state
+  clear.
+- Must prove ADR-001 no longer presents single-port routing as the active final
+  state without caveat.
+- Must prove ADR-002 no longer presents CNG signer work as blocked/pending.
+- Must prove referenced implementation paths exist and compile/test at package
+  level where feasible.
+
+AC results:
+- AC1 PASS: `rg -n "Status:|Superseded|Historical Implementation Sketch|Current Implementation Evidence|management_grpc.pb.go|RegisterMachinePeer" docs/ADR-001-mTLS-Port-Strategy.md`
+  shows ADR-001 status `Superseded by dedicated mTLS port implementation`, the
+  historical single-port sketch is labeled, and current evidence references the
+  dedicated mTLS server and generated Machine Tunnel RPC code.
+- AC2 PASS: `rg -n "Status.*Implemented|Original Interface Sketch|shipped implementation|Implementation Evidence|WinCertSigner|CryptAcquireCertificatePrivateKey|Remaining Validation" docs/ADR-002-CNG-Signer-Interface.md`
+  shows ADR-002 status `Implemented`, labels the old snippet as original sketch,
+  and references the shipped Windows signer/certificate discovery implementation.
+- AC3 PASS: `test -e` confirmed every referenced implementation path exists.
+  `go test ./client/internal/auth ./management/internals/server` returned:
+  `ok github.com/netbirdio/netbird/client/internal/auth` and
+  `ok github.com/netbirdio/netbird/management/internals/server`.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
 - Task 2: `Task 2: Continue #170 CodeQL baseline`
 - Task 3: `Task 3: Fix README license wording`
+- Task 4: `Task 4: Update ADR statuses`
