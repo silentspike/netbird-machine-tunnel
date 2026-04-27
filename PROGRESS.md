@@ -23,7 +23,7 @@ atomic commit before the next task starts.
 | # | Task | Scope | Status | Commit |
 |---|------|-------|--------|--------|
 | 1 | Update #168 with main CI evidence | Post the verified PR #183 `main` push green result to issue #168 and record the evidence. | DONE | task commit |
-| 2 | Continue #170 CodeQL baseline | Push `security/codeql-high-baseline`, run CodeQL on that ref, inspect result, and prepare the OIDC SSRF policy decision. | PENDING | |
+| 2 | Continue #170 CodeQL baseline | Push `security/codeql-high-baseline`, run CodeQL on that ref, inspect result, and prepare the OIDC SSRF policy decision. | DONE | task commit |
 | 3 | Fix README license wording | Align public README License section with `LICENSE` and `NOTICE.md` dual-license structure. | PENDING | |
 | 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | PENDING | |
 | 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | PENDING | |
@@ -70,6 +70,16 @@ Acceptance criteria:
   - Evidence: Code scanning API summary.
 - AC4: OIDC SSRF policy is documented as decision-needed or implemented with tests.
   - Evidence: issue comment or code/test evidence depending on outcome.
+
+Pre-task self-check:
+- Must push the current `security/codeql-high-baseline` branch to origin.
+- Must trigger CodeQL explicitly on that ref.
+- Must wait for CodeQL to reach a terminal state before claiming AC2.
+- Must inspect code scanning state after the run.
+- Must not blindly change OIDC issuer SSRF behavior; private/internal issuers can
+  be legitimate in self-hosted deployments.
+- Expected changed files before commit: `PROGRESS.md` only, unless a CodeQL
+  follow-up fix is required by fresh evidence.
 
 ### Task 3: Fix README license wording
 
@@ -198,6 +208,9 @@ Acceptance criteria:
   disposition are complete or explicitly accepted in the go-live decision.
 - #108/#109 cannot be treated as non-showstoppers until current code/lab
   evidence supports that decision.
+- #170 remains open after Task 2: the branch reduced High alerts, but
+  `go/request-forgery`, two `go/zipslip` alerts, and one
+  `go/weak-sensitive-data-hashing` alert remain.
 
 ## Findings
 
@@ -207,6 +220,9 @@ Acceptance criteria:
   presenting the whole repo as AGPL-only.
 - 2026-04-27: fork marker coverage is partial; `FORK_DIFF.md` must not rely only
   on `MACHINE-TUNNEL-FORK` comments.
+- 2026-04-27: CodeQL branch `security/codeql-high-baseline` reduced open branch
+  alerts from `main` 164 total / 19 high to branch 148 total / 3 high; the
+  critical `go/request-forgery` remains and needs an OIDC issuer SSRF policy.
 
 ## Task Evidence
 
@@ -238,6 +254,44 @@ AC results:
   task is `PROGRESS.md`; `.claude/settings.json` and `docs/internal/` are
   ignored local execution/handoff files.
 
+### Task 2: Continue #170 CodeQL baseline
+
+Status: DONE, committed in the Task 2 commit. #170 remains a public go-live blocker.
+
+Pre-task self-check:
+- Must push the current `security/codeql-high-baseline` branch to origin.
+- Must trigger CodeQL explicitly on that ref.
+- Must wait for CodeQL to reach a terminal state before claiming AC2.
+- Must inspect code scanning state after the run.
+- Must not blindly change OIDC issuer SSRF behavior; private/internal issuers can
+  be legitimate in self-hosted deployments.
+- Expected changed files before commit: `PROGRESS.md` only, unless a CodeQL
+  follow-up fix is required by fresh evidence.
+
+AC results:
+- AC1 PASS: `git ls-remote --heads origin security/codeql-high-baseline` and
+  `git rev-parse HEAD` both returned
+  `a579940b5024b2e805bd17a07e712ef1381b1057`.
+- AC2 PASS: manual CodeQL run
+  `https://github.com/silentspike/netbird-machine-tunnel/actions/runs/25004182847`
+  completed with conclusion `success`; `CodeQL (go)` and
+  `CodeQL (javascript-typescript)` both completed successfully.
+- AC3 PASS: code-scanning API was queried for `refs/heads/main` and
+  `refs/heads/security/codeql-high-baseline`. Open alerts changed from
+  `main`: 164 total, 1 critical, 19 high, 142 medium, 2 warning to branch:
+  148 total, 1 critical, 3 high, 142 medium, 2 warning. Remaining
+  high/critical branch alerts are:
+  `go/request-forgery` at `management/server/identity_provider.go:45`,
+  `go/zipslip` at `management/server/geolocation/utils.go:37`,
+  `go/zipslip` at `management/server/geolocation/utils.go:75`, and
+  `go/weak-sensitive-data-hashing` at
+  `management/internals/shared/mtls/dnslabel.go:47`.
+- AC4 PASS: issue #170 received comment
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4328369339`.
+  The latest-comment recheck confirmed the branch name, `148 total` delta, and
+  "OIDC SSRF policy decision needed" wording.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
+- Task 2: `Task 2: Continue #170 CodeQL baseline`
