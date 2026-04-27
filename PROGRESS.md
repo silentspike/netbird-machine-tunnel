@@ -33,7 +33,7 @@ atomic commit before the next task starts.
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | DONE | task commit |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
 | 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and rerun CodeQL. | DONE | task commit |
-| 12 | Patch dependency alerts | Use the reliable GraphQL Dependabot export, patch actionable Go/NPM dependency alerts, and document no-patch dispositions. | IN PROGRESS | pending |
+| 12 | Patch dependency alerts | Use the reliable GraphQL Dependabot export, patch actionable Go/NPM dependency alerts, and document no-patch dispositions. | DONE | task commit |
 
 ## Task Details
 
@@ -696,8 +696,9 @@ Remaining for #170:
 
 ### Task 12: Patch dependency alerts
 
-Status: IN PROGRESS. Local dependency remediation is implemented and locally
-verified; commit, push, and issue #167 update are pending.
+Status: DONE. #167 remains open until protected `main` receives the dependency
+remediation, GitHub refreshes default-branch alerts, and no-patch/transitive
+alerts receive final dispositions.
 
 Reliable export:
 - REST endpoint
@@ -724,8 +725,20 @@ Local verification:
 - PASS: `npm --prefix proxy/web audit --audit-level=low`
 - PASS: `git diff --check`
 
+Remote verification:
+- PASS: pushed `security/codeql-high-baseline` at
+  `3e6e791eea352472705ba72c6e614d87e4fc58f7`.
+- PASS: CodeQL run
+  `https://github.com/silentspike/netbird-machine-tunnel/actions/runs/25010818374`
+  completed successfully for `CodeQL (go)` and
+  `CodeQL (javascript-typescript)`.
+- PASS: code-scanning API for
+  `refs/heads/security/codeql-high-baseline` remains 145 open alerts:
+  1 critical, 0 high, 142 medium, 2 warning.
+- PASS: issue #167 received the dependency remediation update:
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/167#issuecomment-4329357241`.
+
 Remaining for #167:
-- Commit and push the dependency remediation.
 - Let protected-main/default-branch dependency scanning refresh after merge.
 - Dismiss or explicitly accept no-patch/transitive alerts with evidence,
   especially `github.com/docker/docker` via `management/server/testutil` and
@@ -744,4 +757,4 @@ Remaining for #167:
 - Task 9: `Task 9: Prepare public Go/No-Go`
 - Task 10: `Task 10: Plan-Verifikation`
 - Task 11: `Task 11: Fix fork-owned CodeQL findings`
-- Task 12: pending
+- Task 12: `Task 12: Patch dependency alerts`

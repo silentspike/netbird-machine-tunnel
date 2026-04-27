@@ -21,7 +21,7 @@ governance gates are resolved or explicitly accepted.
 | Fork-specific binary | PASS | Downloaded artifact contains `netbird-machine_0.1.0-SNAPSHOT-bb268223_windows_amd64.tar.gz` and extracted `netbird-machine.exe`. |
 | Checksums and SBOM | PASS | `sha256sum -c netbird_0.1.0-SNAPSHOT-bb268223_checksums.txt` passed; `netbird-machine` archive and SBOM are checksum-covered. |
 | Downloaded-artifact lab smoke | PASS | VM102 ran the downloaded `netbird-machine.exe` with SHA256 `be656553c08aaf620f7dde652223ed0909d77320805ed66423c973ef7ff645c9`; service, tunnel interface, route, DC ports, and handshake evidence passed. |
-| Dependabot alerts | **NO-GO pending default-branch rescan/disposition** | GraphQL is the reliable export path: it reports 12 open default-branch alerts, while the REST endpoint currently returns `0`. The readiness branch patches the actionable Go/NPM alerts and verifies `npm audit` clean; remaining no-patch/transitive alerts (`docker/docker`, `pion/dtls/v2`) still need final disposition after merge/default-branch rescan. #167 remains open. |
+| Dependabot alerts | **NO-GO pending default-branch rescan/disposition** | GraphQL is the reliable export path: it reports 12 open default-branch alerts, while the REST endpoint currently returns `0`. Branch `security/codeql-high-baseline` head `3e6e791e` patches the actionable Go/NPM alerts, verifies `npm audit` clean, and keeps CodeQL green in run `25010818374`; remaining no-patch/transitive alerts (`docker/docker`, `pion/dtls/v2`) still need final disposition after merge/default-branch rescan. Evidence posted to #167: https://github.com/silentspike/netbird-machine-tunnel/issues/167#issuecomment-4329357241 |
 | Public documentation | PASS for current preparation | README license wording, ADR status, `FORK_DIFF.md`, and CRL limitation documentation have been updated in the readiness branch. |
 | CodeQL/security baseline | **NO-GO pending inherited-risk disposition** | #170 remains open. CodeQL run `25009836010` on `security/codeql-high-baseline` completed successfully and reduced the branch to `145` open alerts: 1 critical, 0 high, 142 medium, 2 warning. The fork-added `dnslabel.go` and fork-modified `geolocation/utils.go` high findings are cleared. The only remaining critical/high finding is `go/request-forgery` in `management/server/identity_provider.go`, which is unchanged from upstream v0.69.0 and must be dispositioned as inherited upstream risk instead of blindly patched. Evidence posted to #170: https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329195301 |
 | Signal trust model | **NO-GO** | #114 remains open; #109 remains a public go-live blocker until #114 is resolved or explicitly split out. |
@@ -52,7 +52,7 @@ were not closed automatically:
 
 | Issue | Proposed disposition |
 |-------|----------------------|
-| #167 | Keep open; final verification saw unstable Dependabot API results (`0` and `12` open alerts). |
+| #167 | Keep open until default-branch rescan and no-patch/transitive dispositions are recorded. Branch remediation is pushed at `3e6e791e`; GraphQL remains the reliable export path. |
 | #108 | Close after maintainer approval; the original peer-configuration issue is stale after current code and lab verification. |
 | #168 | Keep open until public release approval is recorded, even though post-merge CI and RC artifact/lab gates now passed. |
 | #166 | Keep open until the final decision record is accepted; current branch protection is materially hardened for solo development. |
