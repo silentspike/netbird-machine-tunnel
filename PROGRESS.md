@@ -32,7 +32,7 @@ atomic commit before the next task starts.
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | DONE | task commit |
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | DONE | task commit |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
-| 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and prepare a rerun. | IN PROGRESS | pending |
+| 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and rerun CodeQL. | DONE | task commit |
 
 ## Task Details
 
@@ -211,9 +211,9 @@ Acceptance criteria:
   approval; #109 functional Signal/Relay connectivity is implemented and
   lab-validated, but remains a public go-live blocker until #114 Signal Server
   trust-model review is resolved or explicitly split out.
-- #170 remains open after Task 11 local fixes: fork-added/fork-modified
-  critical/high findings were patched locally, but the branch still needs push
-  and CodeQL rerun before the alert delta can be claimed. The remaining
+- #170 remains open after Task 11 remote CodeQL: fork-added/fork-modified
+  high findings are cleared on `security/codeql-high-baseline`. The branch now
+  has 145 open alerts: 1 critical, 0 high, 142 medium, 2 warning. The remaining
   `go/request-forgery` finding in `management/server/identity_provider.go` is
   unchanged from upstream `v0.69.0` and must be dispositioned as inherited
   upstream risk instead of blindly patched in the fork.
@@ -258,11 +258,17 @@ Acceptance criteria:
   `management/server/geolocation/utils.go` is fork-modified, and
   `management/server/identity_provider.go` has no fork delta against upstream
   `v0.69.0`.
-- 2026-04-27: local #170 follow-up fixes are in progress: DNSLabel suffix
+- 2026-04-27: local #170 follow-up fixes are complete: DNSLabel suffix
   generation now uses deterministic HMAC-SHA256 with a 64-bit suffix,
   geolocation archive extraction writes only expected filenames and skips
   traversal entries, and the branch-local gRPC sync-limit parser now uses
   `strconv.ParseInt(..., 32)` to satisfy targeted lint/security checks.
+- 2026-04-27: CodeQL run `25009382196` on
+  `security/codeql-high-baseline` passed for Go and JavaScript/TypeScript.
+  Code-scanning API for the branch now reports `145` open alerts:
+  `1 critical`, `0 high`, `142 medium`, `2 warning`. #170 was updated with the
+  rerun evidence:
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329118258`.
 
 ## Task Evidence
 
@@ -629,8 +635,8 @@ AC results:
 
 ### Task 11: Fix fork-owned CodeQL follow-up
 
-Status: IN PROGRESS. Local fixes are implemented and locally verified; remote
-push, CodeQL rerun, #170 update, and task commit are still pending.
+Status: DONE. Public go-live still remains blocked by #170 final inherited-risk
+disposition, #167, #114/#109, final mainline CI/release, and explicit approval.
 
 Scope correction:
 - The remaining critical/high CodeQL findings are not all fork-owned.
@@ -660,11 +666,23 @@ Local verification:
 - PASS: `golangci-lint run ./management/server/geolocation ./management/internals/shared/mtls ./management/internals/shared/grpc`
 - PASS: `git diff --check`
 
-Remaining for Task 11:
-- Push `security/codeql-high-baseline`.
-- Trigger and wait for CodeQL on the branch.
-- Query code-scanning results and update #170 with the new delta.
-- Commit this local follow-up if verification remains green.
+Remote verification:
+- PASS: pushed `security/codeql-high-baseline` at
+  `926cb5b0a698f7de1b0086c45c04979ae05ea571`.
+- PASS: CodeQL run
+  `https://github.com/silentspike/netbird-machine-tunnel/actions/runs/25009382196`
+  completed successfully for `CodeQL (javascript-typescript)` and
+  `CodeQL (go)`.
+- PASS: code-scanning API for
+  `refs/heads/security/codeql-high-baseline` now reports 145 open alerts:
+  1 critical, 0 high, 142 medium, 2 warning.
+- PASS: issue #170 received the update:
+  `https://github.com/silentspike/netbird-machine-tunnel/issues/170#issuecomment-4329118258`.
+
+Remaining for #170:
+- Formally disposition the remaining inherited upstream OIDC SSRF finding in
+  `management/server/identity_provider.go`.
+- Decide whether to accept it for public launch and/or track/report upstream.
 
 ## Commits
 
@@ -678,4 +696,4 @@ Remaining for Task 11:
 - Task 8: `Task 8: Continue RC gates`
 - Task 9: `Task 9: Prepare public Go/No-Go`
 - Task 10: `Task 10: Plan-Verifikation`
-- Task 11: pending
+- Task 11: `Task 11: Fix fork-owned CodeQL findings`
