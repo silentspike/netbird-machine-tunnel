@@ -1,6 +1,6 @@
 # Public Readiness Execution Progress
 
-Status: IN_PROGRESS
+Status: BLOCKED_PUBLIC_GO_LIVE
 Started: 2026-04-27
 Repo: `silentspike/netbird-machine-tunnel`
 Branch at start: `security/codeql-high-baseline`
@@ -31,7 +31,7 @@ atomic commit before the next task starts.
 | 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | DONE | task commit |
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | DONE | task commit |
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | DONE | task commit |
-| 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | PENDING | |
+| 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
 
 ## Task Details
 
@@ -213,10 +213,10 @@ Acceptance criteria:
 - #170 remains open after Task 2: the branch reduced High alerts, but
   `go/request-forgery`, two `go/zipslip` alerts, and one
   `go/weak-sensitive-data-hashing` alert remain.
-- Public visibility remains blocked after Task 9 by #170 CodeQL critical/high
-  disposition, #114 Signal trust-model review, missing final approval, no final
-  tagged public-launch release, and local readiness commits not yet merged to
-  `main`.
+- Public visibility remains blocked after Task 9/10 by #170 CodeQL
+  critical/high disposition, #167 unstable Dependabot alert export, #114 Signal
+  trust-model review, missing final approval, no final tagged public-launch
+  release, and local readiness commits not yet merged to `main`.
 
 ## Findings
 
@@ -550,8 +550,10 @@ AC results:
   `bb2682231cb2ff3f191f51c691f95459e6f9921f` remains green for the core
   post-merge workflow set. Release artifact run `24984503525` and VM102
   downloaded-artifact smoke are recorded as PASS from Task 8.
-- AC1 PASS: live Dependabot API returned `0` open alerts and issue #167 was
-  updated with stale/closeable-after-approval evidence:
+- AC1 CORRECTED: an initial Dependabot API call returned `0` open alerts, but
+  final verification repeated the call and observed inconsistent results (`0`
+  and `12` open alerts, including at least one `postcss` alert). Issue #167 was
+  updated with the correction and remains a public go-live blocker:
   `https://github.com/silentspike/netbird-machine-tunnel/issues/167#issuecomment-4328769698`.
 - AC1 PASS: live CodeQL/code-scanning remains a hard blocker. `main` open
   alerts are still 1 critical, 19 high, 142 medium, and 2 warning. The
@@ -560,13 +562,56 @@ AC results:
   fixed, dismissed with evidence, or explicitly accepted.
 - AC1 PASS: `docs/PUBLIC-RELEASE-READINESS.md` was created as the decision
   record. It records **NO-GO for public visibility and public release** and
-  lists hard blockers: #170, #114/#109 trust-model disposition, unmerged local
-  readiness commits, missing final public approval, and missing final tagged
-  public-launch release.
+  lists hard blockers: #170, #167, #114/#109 trust-model disposition, unmerged
+  local readiness commits, missing final public approval, and missing final
+  tagged public-launch release.
 - AC2 PASS: no final public visibility/release approval was recorded in this
   task after the current blockers were known.
 - AC3 PASS: `gh repo view` reports `visibility=PRIVATE`; no repository
   visibility change was performed.
+
+### Task 10: Plan-Verifikation
+
+Status: DONE, committed in the Task 10 commit. Overall public go-live remains
+BLOCKED.
+
+Pre-task self-check:
+- Must reread `docs/internal/public-readiness-living-checklist.md` and compare
+  remaining unchecked items against completed tasks.
+- Must verify current tracked/ignored worktree state and repo visibility.
+- Must verify whether any public-release blocker remains.
+- Must update `PROGRESS.md` to the honest final execution state: complete for
+  executed tasks, blocked for public go-live if blockers remain.
+- Expected tracked file change before commit: `PROGRESS.md`.
+- Expected ignored file change: `docs/internal/public-readiness-living-checklist.md`
+  only if final checklist notes need updating.
+
+AC results:
+- AC1 PASS: `docs/internal/public-readiness-living-checklist.md` was reread and
+  scanned for unchecked items. Completed execution items from Tasks 1-9 are
+  recorded. Remaining unchecked items are deliberate NO-GO/deferred work, not
+  skipped execution: license metadata recheck, #166 close decision, #167 stable
+  dependency-alert disposition, #170 OIDC/CodeQL disposition, CRL release-note
+  link, public first-screen polish, visibility flip, post-public checks, and
+  final tagged public release artifacts.
+- AC2 PASS: final live checks were run: repo visibility remains `PRIVATE`; open
+  issues still include #170, #168, #167, #166, #114, #109, and #108; CODEOWNERS
+  API returns `errors=[]`; branch protection has 46 strict required checks and
+  admin enforcement; `security/codeql-high-baseline` code-scanning state remains
+  1 critical, 3 high, 142 medium, 2 warning.
+- AC2 PASS: final verification also caught and corrected the Dependabot alert
+  disposition. A previous Task 9 comment claiming `0` open alerts was updated
+  because repeated API checks produced inconsistent `0` and `12` results.
+  #167 remains a public go-live blocker.
+- AC3 PASS: remaining blockers are explicit in this file and
+  `docs/PUBLIC-RELEASE-READINESS.md`: #170 CodeQL critical/high disposition,
+  #167 stable dependency-alert disposition, #114/#109 Signal trust-model
+  disposition, local readiness commits not merged to `main`, missing final
+  public approval, and missing final tagged public-launch release.
+- Hygiene PASS: worktree review before commit showed only tracked
+  `PROGRESS.md` and `docs/PUBLIC-RELEASE-READINESS.md` plus ignored
+  `docs/internal/` updates; the large downloaded artifact directory is outside
+  the repository under `/work/vpn/.artifacts/task8-release-24984503525`.
 
 ## Commits
 
@@ -579,3 +624,4 @@ AC results:
 - Task 7: `Task 7: Reassess #108 and #109`
 - Task 8: `Task 8: Continue RC gates`
 - Task 9: `Task 9: Prepare public Go/No-Go`
+- Task 10: `Task 10: Plan-Verifikation`
