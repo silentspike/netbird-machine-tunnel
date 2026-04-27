@@ -27,7 +27,7 @@ atomic commit before the next task starts.
 | 3 | Fix README license wording | Align public README License section with `LICENSE` and `NOTICE.md` dual-license structure. | DONE | task commit |
 | 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | DONE | task commit |
 | 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | DONE | task commit |
-| 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | PENDING | |
+| 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | DONE | task commit |
 | 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | PENDING | |
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | PENDING | |
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | PENDING | |
@@ -231,6 +231,9 @@ Acceptance criteria:
   evidence.
 - 2026-04-27: `FORK_DIFF.md` now gives reviewers a verified, narrow summary of
   fork-specific Machine Tunnel additions and is linked from README.
+- 2026-04-27: CRL/OCSP revocation checking is now a prominent public security
+  limitation in `SECURITY.md`, with README pointing readers to the detailed
+  scope and mitigations.
 
 ## Task Evidence
 
@@ -376,6 +379,34 @@ AC results:
   `git diff --name-status v0.69.0...HEAD -- ...` confirmed the representative
   Machine Tunnel paths used by the document.
 
+### Task 6: Promote CRL limitation
+
+Status: DONE, committed in the Task 6 commit.
+
+Pre-task self-check:
+- Must add a dedicated public CRL/revocation limitation section to the security
+  surface, preferably `SECURITY.md`.
+- Must keep README known limitations consistent and link readers to the
+  detailed security posture.
+- Must explicitly cover scope and mitigations: certificate lifetime/rotation,
+  issuer fingerprint constraints, and per-account AllowedDomains/account-domain
+  constraints.
+- Expected tracked file changes: `SECURITY.md`, `README.md`, `PROGRESS.md`.
+- Expected ignored file change: `docs/internal/public-readiness-living-checklist.md`.
+
+AC results:
+- AC1 PASS: `rg -n "Known Security Limitations|Certificate Revocation Checking|CRL|OCSP|dedicated mTLS endpoint|upstream NetBird authentication" SECURITY.md`
+  found the dedicated public limitation section and scope text in `SECURITY.md`.
+- AC2 PASS: `rg -n "short machine-certificate lifetimes|routine certificate rotation|per-account AllowedDomains|issuer fingerprint constraints|account/domain mapping|accepted issuer fingerprint" SECURITY.md README.md FORK_DIFF.md`
+  found certificate lifetime/rotation, issuer fingerprint constraints, and
+  account/domain or per-account AllowedDomains mitigations in the public docs.
+- AC3 PASS: `rg -n "No CRL checking|Certificate Revocation Checking|SECURITY.md#certificate-revocation-checking|CRL|OCSP|short certificate lifetimes|per-account AllowedDomains" README.md`
+  found the README known-limitation row with a link to the detailed
+  `SECURITY.md` section.
+- Hygiene PASS: `git diff --check` returned clean; `git status --short` showed
+  only `PROGRESS.md`, `README.md`, and `SECURITY.md` as tracked changes for the
+  task. The internal checklist update remains ignored under `docs/internal/`.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
@@ -383,3 +414,4 @@ AC results:
 - Task 3: `Task 3: Fix README license wording`
 - Task 4: `Task 4: Update ADR statuses`
 - Task 5: `Task 5: Create fork contribution summary`
+- Task 6: `Task 6: Promote CRL limitation`

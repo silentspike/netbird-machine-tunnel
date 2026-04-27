@@ -79,6 +79,24 @@ For details on the security design of the Machine Tunnel feature, see:
 - **NRPT rules** scoped with hash-based registry keys for safe rollback
 - **Multi-tenant isolation** through per-account AllowedDomains scoping
 
+## Known Security Limitations
+
+### Certificate Revocation Checking
+
+Machine Tunnel mTLS currently validates the presented machine certificate chain,
+SAN DNSName, issuer fingerprint, and per-account AllowedDomains mapping, but it
+does not perform CRL or OCSP revocation checks. This limitation applies to the
+Machine Tunnel certificate authentication path on the dedicated mTLS endpoint;
+it does not change upstream NetBird authentication behavior.
+
+Until revocation checking is implemented, an already-issued machine certificate
+can continue to authenticate until the certificate expires unless operators
+remove the matching account/domain mapping, change the accepted issuer
+fingerprint, or rotate the machine certificate population. Production
+deployments should use short machine-certificate lifetimes, routine certificate
+rotation, tightly scoped AD CS issuance permissions, per-account AllowedDomains,
+and issuer fingerprint constraints.
+
 ## Upstream Security
 
 This fork inherits the security properties of [NetBird](https://github.com/netbirdio/netbird). For vulnerabilities in upstream NetBird components, please report to `security@netbird.io` and notify us so we can track the fix.
