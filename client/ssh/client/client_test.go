@@ -334,7 +334,7 @@ func TestSSHClient_PortForwarding(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 
-		err := client.RemotePortForward(ctx, "127.0.0.1:0", "127.0.0.1:8080")
+		err := client.RemotePortForward(ctx, "127.0.0.1:18080", "127.0.0.1:8080")
 		assert.Error(t, err)
 		assert.True(t,
 			strings.Contains(err.Error(), "denied") ||
@@ -351,6 +351,10 @@ func TestSSHClient_PortForwarding(t *testing.T) {
 
 		err = client.LocalPortForward(ctx, "127.0.0.1:0", "invalid:address")
 		assert.Error(t, err)
+
+		err = client.RemotePortForward(ctx, "127.0.0.1:0", "127.0.0.1:8080")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "out of range")
 	})
 }
 
