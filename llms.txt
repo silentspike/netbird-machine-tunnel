@@ -34,9 +34,12 @@ This fork adds a **Machine Tunnel** feature: a Windows SYSTEM service (`NetBirdM
 - [management/internals/server/mtls_auth.go](management/internals/server/mtls_auth.go): mTLS authentication, identity extraction, CA trust
 - [management/internals/shared/grpc/machine_tunnel.go](management/internals/shared/grpc/machine_tunnel.go): RegisterMachinePeer, SyncMachinePeer RPCs
 - [management/internals/shared/grpc/machine_tunnel_test.go](management/internals/shared/grpc/machine_tunnel_test.go): Server-side tests
+- [management/internals/shared/grpc/server.go](management/internals/shared/grpc/server.go): Shared gRPC server setup, stream limit parsing
 - [management/internals/shared/mtls/](management/internals/shared/mtls/): Identity extraction, issuer validation
+- [management/internals/shared/mtls/dnslabel.go](management/internals/shared/mtls/dnslabel.go): Deterministic Machine Tunnel DNS label generation
 - [management/server/peer.go](management/server/peer.go): Peer registration with mTLS support (MACHINE-TUNNEL-FORK markers)
 - [management/server/activity/codes.go](management/server/activity/codes.go): PeerAddedWithMTLS activity (ID 150)
+- [management/server/geolocation/utils.go](management/server/geolocation/utils.go): Geolocation archive extraction and checksum helpers
 
 ## Protocol (fork-specific additions)
 

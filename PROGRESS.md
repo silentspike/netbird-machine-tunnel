@@ -32,6 +32,7 @@ atomic commit before the next task starts.
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | DONE | task commit |
 | 9 | Prepare public Go/No-Go | Produce final evidence-backed public release decision and remaining blockers. | DONE | task commit |
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
+| 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and prepare a rerun. | IN PROGRESS | pending |
 
 ## Task Details
 
@@ -210,9 +211,12 @@ Acceptance criteria:
   approval; #109 functional Signal/Relay connectivity is implemented and
   lab-validated, but remains a public go-live blocker until #114 Signal Server
   trust-model review is resolved or explicitly split out.
-- #170 remains open after Task 2: the branch reduced High alerts, but
-  `go/request-forgery`, two `go/zipslip` alerts, and one
-  `go/weak-sensitive-data-hashing` alert remain.
+- #170 remains open after Task 11 local fixes: fork-added/fork-modified
+  critical/high findings were patched locally, but the branch still needs push
+  and CodeQL rerun before the alert delta can be claimed. The remaining
+  `go/request-forgery` finding in `management/server/identity_provider.go` is
+  unchanged from upstream `v0.69.0` and must be dispositioned as inherited
+  upstream risk instead of blindly patched in the fork.
 - Public visibility remains blocked after Task 9/10 by #170 CodeQL
   critical/high disposition, #167 unstable Dependabot alert export, #114 Signal
   trust-model review, missing final approval, no final tagged public-launch
@@ -249,6 +253,16 @@ Acceptance criteria:
   downloaded artifact binary.
 - 2026-04-27: `docs/PUBLIC-RELEASE-READINESS.md` records an explicit NO-GO for
   public visibility/release while allowing continued private preparation.
+- 2026-04-27: remaining #170 critical/high findings were classified by fork
+  ownership. `management/internals/shared/mtls/dnslabel.go` is fork-added,
+  `management/server/geolocation/utils.go` is fork-modified, and
+  `management/server/identity_provider.go` has no fork delta against upstream
+  `v0.69.0`.
+- 2026-04-27: local #170 follow-up fixes are in progress: DNSLabel suffix
+  generation now uses deterministic HMAC-SHA256 with a 64-bit suffix,
+  geolocation archive extraction writes only expected filenames and skips
+  traversal entries, and the branch-local gRPC sync-limit parser now uses
+  `strconv.ParseInt(..., 32)` to satisfy targeted lint/security checks.
 
 ## Task Evidence
 
@@ -613,6 +627,45 @@ AC results:
   `docs/internal/` updates; the large downloaded artifact directory is outside
   the repository under `/work/vpn/.artifacts/task8-release-24984503525`.
 
+### Task 11: Fix fork-owned CodeQL follow-up
+
+Status: IN PROGRESS. Local fixes are implemented and locally verified; remote
+push, CodeQL rerun, #170 update, and task commit are still pending.
+
+Scope correction:
+- The remaining critical/high CodeQL findings are not all fork-owned.
+- `git diff --name-status v0.69.0...HEAD -- management/server/identity_provider.go management/server/geolocation/utils.go management/internals/shared/mtls/dnslabel.go`
+  returned `A management/internals/shared/mtls/dnslabel.go` and
+  `M management/server/geolocation/utils.go`; it returned no fork delta for
+  `management/server/identity_provider.go`.
+- Therefore `dnslabel.go` is fork-added, `geolocation/utils.go` is
+  fork-modified, and `identity_provider.go` is inherited upstream NetBird
+  surface. The OIDC SSRF finding should be dispositioned as inherited risk or
+  tracked upstream, not blindly patched in the fork.
+
+Local changes:
+- `management/internals/shared/mtls/dnslabel.go`: replaced the raw SHA-256
+  suffix slice with deterministic HMAC-SHA256 fingerprinting and increased the
+  suffix to 64 bits / 16 hex chars.
+- `management/server/geolocation/{database.go,utils.go}`: changed archive
+  extraction to write only expected filenames
+  (`GeoLite2-City.mmdb`, `GeoLite2-City-Locations-en.csv`) and skip traversal
+  archive entries.
+- `management/internals/shared/grpc/server.go`: fixed a branch-local
+  `strconv.Atoi` narrowing/lint issue with `strconv.ParseInt(..., 32)`.
+
+Local verification:
+- PASS: `go test ./management/internals/shared/...`
+- PASS: `go test ./management/server/geolocation`
+- PASS: `golangci-lint run ./management/server/geolocation ./management/internals/shared/mtls ./management/internals/shared/grpc`
+- PASS: `git diff --check`
+
+Remaining for Task 11:
+- Push `security/codeql-high-baseline`.
+- Trigger and wait for CodeQL on the branch.
+- Query code-scanning results and update #170 with the new delta.
+- Commit this local follow-up if verification remains green.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
@@ -625,3 +678,4 @@ AC results:
 - Task 8: `Task 8: Continue RC gates`
 - Task 9: `Task 9: Prepare public Go/No-Go`
 - Task 10: `Task 10: Plan-Verifikation`
+- Task 11: pending
