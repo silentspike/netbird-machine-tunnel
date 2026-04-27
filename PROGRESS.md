@@ -26,7 +26,7 @@ atomic commit before the next task starts.
 | 2 | Continue #170 CodeQL baseline | Push `security/codeql-high-baseline`, run CodeQL on that ref, inspect result, and prepare the OIDC SSRF policy decision. | DONE | task commit |
 | 3 | Fix README license wording | Align public README License section with `LICENSE` and `NOTICE.md` dual-license structure. | DONE | task commit |
 | 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | DONE | task commit |
-| 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | PENDING | |
+| 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | DONE | task commit |
 | 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | PENDING | |
 | 7 | Reassess #108 and #109 | Verify current code/lab behavior and decide blocker vs known limitation vs stale closeable issue. | PENDING | |
 | 8 | Continue RC gates | Validate RC artifacts, checksums, SBOMs, `netbird-machine.exe`, and downloaded-artifact lab smoke. | PENDING | |
@@ -229,6 +229,8 @@ Acceptance criteria:
 - 2026-04-27: ADR-001 is now explicitly superseded by the dedicated mTLS port
   implementation; ADR-002 is now implemented with current auth implementation
   evidence.
+- 2026-04-27: `FORK_DIFF.md` now gives reviewers a verified, narrow summary of
+  fork-specific Machine Tunnel additions and is linked from README.
 
 ## Task Evidence
 
@@ -351,9 +353,33 @@ AC results:
   `ok github.com/netbirdio/netbird/client/internal/auth` and
   `ok github.com/netbirdio/netbird/management/internals/server`.
 
+### Task 5: Create `FORK_DIFF.md`
+
+Status: DONE, committed in the Task 5 commit.
+
+Pre-task self-check:
+- Must create a public root `FORK_DIFF.md`.
+- Must use verified path inventory and `git diff --name-status v0.69.0...HEAD`
+  evidence, not only marker comments.
+- Must not claim that all fork additions are marked with `MACHINE-TUNNEL-FORK`.
+- Must link the file from README.
+
+AC results:
+- AC1 PASS: `test -f FORK_DIFF.md` and targeted `rg` found the document title,
+  upstream baseline `v0.69.0`, client/service/auth/server/proto/test sections,
+  and the known security limitation section.
+- AC2 PASS: `rg` check for false marker completeness claims returned
+  `PASS no false marker completeness claim`; the file states that
+  `MACHINE-TUNNEL-FORK` markers are not a complete index.
+- AC3 PASS: `rg -n "FORK_DIFF.md|Fork Contribution Summary" README.md`
+  returned the intro link, table-of-contents link, and documentation-table link.
+  `git diff --name-status v0.69.0...HEAD -- ...` confirmed the representative
+  Machine Tunnel paths used by the document.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
 - Task 2: `Task 2: Continue #170 CodeQL baseline`
 - Task 3: `Task 3: Fix README license wording`
 - Task 4: `Task 4: Update ADR statuses`
+- Task 5: `Task 5: Create fork contribution summary`
