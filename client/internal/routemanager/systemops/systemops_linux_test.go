@@ -18,20 +18,11 @@ import (
 	"github.com/netbirdio/netbird/client/internal/routemanager/vars"
 )
 
-var expectedVPNint = "wgtest0"
-var expectedExternalInt = "dummyext0"
-var expectedInternalInt = "dummyint0"
-
-func init() {
-	testCases = append(testCases, []testCase{
-		{
-			name:              "To more specific route without custom dialer via physical interface",
-			expectedInterface: expectedInternalInt,
-			dialer:            &net.Dialer{},
-			expectedPacket:    createPacketExpectation("192.168.1.1", 12345, "10.10.0.2", 53),
-		},
-	}...)
-}
+var (
+	expectedVPNint      = "wgtest0"   //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
+	expectedExternalInt = "dummyext0" //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
+	expectedInternalInt = "dummyint0" //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
+)
 
 func TestEntryExists(t *testing.T) {
 	tempDir := t.TempDir()
@@ -89,7 +80,7 @@ func TestEntryExists(t *testing.T) {
 	}
 }
 
-func createAndSetupDummyInterface(t *testing.T, interfaceName, ipAddressCIDR string) string {
+func createAndSetupDummyInterface(t *testing.T, interfaceName, ipAddressCIDR string) string { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	dummy := &netlink.Dummy{LinkAttrs: netlink.LinkAttrs{Name: interfaceName}}
@@ -119,7 +110,7 @@ func createAndSetupDummyInterface(t *testing.T, interfaceName, ipAddressCIDR str
 	return dummy.Name
 }
 
-func addDummyRoute(t *testing.T, dstCIDR string, gw net.IP, intf string) {
+func addDummyRoute(t *testing.T, dstCIDR string, gw net.IP, intf string) { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	_, dstIPNet, err := net.ParseCIDR(dstCIDR)
@@ -175,7 +166,7 @@ func addDummyRoute(t *testing.T, dstCIDR string, gw net.IP, intf string) {
 	}
 }
 
-func fetchOriginalGateway(family int) (net.IP, int, error) {
+func fetchOriginalGateway(family int) (net.IP, int, error) { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	routes, err := netlink.RouteList(nil, family)
 	if err != nil {
 		return nil, 0, err
@@ -194,7 +185,7 @@ func fetchOriginalGateway(family int) (net.IP, int, error) {
 	return nil, 0, vars.ErrRouteNotFound
 }
 
-func setupDummyInterfacesAndRoutes(t *testing.T) {
+func setupDummyInterfacesAndRoutes(t *testing.T) { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	defaultDummy := createAndSetupDummyInterface(t, "dummyext0", "192.168.0.1/24")
