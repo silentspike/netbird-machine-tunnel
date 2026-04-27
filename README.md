@@ -10,6 +10,9 @@ This is a fork of [NetBird](https://github.com/netbirdio/netbird) — an outstan
 
 **This fork is a complete, standalone NetBird deployment** — it includes all standard NetBird functionality (mesh networking, peer-to-peer connections, relay fallback, access controls, etc.) **plus** an additional feature called **Machine Tunnel** for Windows enterprise environments.
 
+For a reviewer-focused summary of what this fork adds over upstream NetBird,
+see [FORK_DIFF.md](FORK_DIFF.md).
+
 ### What You Get
 
 | Feature | Included |
@@ -43,6 +46,7 @@ This is a fork of [NetBird](https://github.com/netbirdio/netbird) — an outstan
   - [Verification](#verification)
   - [Troubleshooting Preview](#troubleshooting-preview)
 - [What This Fork Adds to NetBird](#what-this-fork-adds-to-netbird)
+- [Fork Contribution Summary](FORK_DIFF.md)
 - [Migration from Upstream NetBird](#migration-from-upstream-netbird)
 - [Testing & Compatibility](#testing--compatibility)
 - [Documentation](#documentation)
@@ -426,6 +430,7 @@ The following components are inherited from NetBird and verified through their C
 | [SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md) | DPAPI, file permissions, mTLS setup, production checklist |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Health checks, diagnostics, common problems with solutions |
 | [CHANGELOG.md](CHANGELOG.md) | All changes from upstream with file listings |
+| [FORK_DIFF.md](FORK_DIFF.md) | Reviewer-focused summary of fork-specific Machine Tunnel additions |
 | [NOTICE.md](NOTICE.md) | License attribution and modification summary |
 
 ---
