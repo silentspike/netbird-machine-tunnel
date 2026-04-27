@@ -260,8 +260,7 @@ func ApplyOIDCConfig(ctx context.Context, cfg *nbconfig.Config) error {
 		oidcConfig.Issuer, cfg.HttpConfig.AuthIssuer)
 	cfg.HttpConfig.AuthIssuer = oidcConfig.Issuer
 
-	log.WithContext(ctx).Infof("overriding HttpConfig.AuthKeysLocation (JWT certs) with a new value %s, previously configured value: %s",
-		oidcConfig.JwksURI, cfg.HttpConfig.AuthKeysLocation)
+	log.WithContext(ctx).Info("overriding HttpConfig.AuthKeysLocation (JWT certs) from the provided OIDC configuration")
 	cfg.HttpConfig.AuthKeysLocation = oidcConfig.JwksURI
 
 	if err := ApplyDeviceAuthFlowConfig(ctx, cfg, &oidcConfig, oidcEndpoint); err != nil {

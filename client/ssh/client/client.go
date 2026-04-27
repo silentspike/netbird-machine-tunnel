@@ -607,6 +607,9 @@ func (c *Client) parseRemoteAddress(remoteAddr string) (string, uint32, error) {
 	if err != nil {
 		return "", 0, fmt.Errorf("parse remote port %s: %w", portStr, err)
 	}
+	if port < 1 || port > 65535 {
+		return "", 0, fmt.Errorf("parse remote port %s: out of range 1-65535", portStr)
+	}
 
 	return host, uint32(port), nil
 }

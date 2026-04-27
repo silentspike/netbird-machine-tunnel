@@ -125,9 +125,9 @@ func setGRPCLibLogger(logger *log.Logger) {
 
 func getLogMaxSize() int {
 	if sizeVar, ok := os.LookupEnv("NB_LOG_MAX_SIZE_MB"); ok {
-		size, err := strconv.ParseInt(sizeVar, 10, 64)
-		if err != nil {
-			log.Errorf("Failed parsing log-size %s: %s. Should be just an integer", sizeVar, err)
+		size, err := strconv.Atoi(sizeVar)
+		if err != nil || size <= 0 {
+			log.Errorf("Failed parsing log-size %s: %v. Should be a positive integer", sizeVar, err)
 			return defaultLogSize
 		}
 

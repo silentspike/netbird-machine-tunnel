@@ -612,7 +612,7 @@ func (s *Server) passwordHandler(ctx ssh.Context, password string) bool {
 
 	token, err := s.validateJWTToken(password)
 	if err != nil {
-		logger.Warnf("JWT authentication failed: %v", err)
+		logger.Warn("JWT authentication failed")
 		return false
 	}
 

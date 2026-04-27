@@ -15,6 +15,7 @@ func TestGetAttemptThresholdFromEnv(t *testing.T) {
 		{"Default attempt threshold when env is not set", "", defaultAttemptThreshold},
 		{"Custom attempt threshold when env is set to a valid integer", "3", 3},
 		{"Default attempt threshold when env is set to an invalid value", "invalid", defaultAttemptThreshold},
+		{"Default attempt threshold when env is non-positive", "0", defaultAttemptThreshold},
 	}
 
 	for _, tt := range tests {

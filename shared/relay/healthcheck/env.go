@@ -13,12 +13,12 @@ const (
 
 func getAttemptThresholdFromEnv() int {
 	if attemptThreshold := os.Getenv(defaultAttemptThresholdEnv); attemptThreshold != "" {
-		threshold, err := strconv.ParseInt(attemptThreshold, 10, 64)
-		if err != nil {
-			log.Errorf("Failed to parse attempt threshold from environment variable \"%s\" should be an integer. Using default value", attemptThreshold)
+		threshold, err := strconv.Atoi(attemptThreshold)
+		if err != nil || threshold <= 0 {
+			log.Errorf("Failed to parse attempt threshold from environment variable \"%s\" should be a positive integer. Using default value", attemptThreshold)
 			return defaultAttemptThreshold
 		}
-		return int(threshold)
+		return threshold
 	}
 	return defaultAttemptThreshold
 }

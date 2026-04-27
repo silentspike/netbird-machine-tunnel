@@ -5315,19 +5315,24 @@ func (s *SqlStore) GetAccountAccessLogs(ctx context.Context, lockStrength Lockin
 	query = s.applyAccessLogFilters(query, filter)
 
 	sortColumns := filter.GetSortColumn()
-	sortOrder := strings.ToUpper(filter.GetSortOrder())
+	sortDesc := filter.GetSortOrder() == "desc"
 
-	var orderClauses []string
+	var orderColumns []clause.OrderByColumn
 	for _, col := range strings.Split(sortColumns, ",") {
 		col = strings.TrimSpace(col)
 		if col != "" {
-			orderClauses = append(orderClauses, col+" "+sortOrder)
+			orderColumns = append(orderColumns, clause.OrderByColumn{
+				Column: clause.Column{Name: col},
+				Desc:   sortDesc,
+			})
 		}
 	}
-	orderClause := strings.Join(orderClauses, ", ")
+
+	if len(orderColumns) > 0 {
+		query = query.Order(clause.OrderBy{Columns: orderColumns})
+	}
 
 	query = query.
-		Order(orderClause).
 		Limit(filter.GetLimit()).
 		Offset(filter.GetOffset())
 

@@ -13,7 +13,7 @@ import (
 	"mime"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -43,7 +43,11 @@ func decompressTarGzFile(filepath, destDir string) error {
 		}
 
 		if header.Typeflag == tar.TypeReg {
-			outFile, err := os.Create(path.Join(destDir, path.Base(header.Name)))
+			outPath, err := archiveOutputPath(destDir, header.Name)
+			if err != nil {
+				return err
+			}
+			outFile, err := os.Create(outPath)
 			if err != nil {
 				return err
 			}
@@ -73,7 +77,11 @@ func decompressZipFile(filepath, destDir string) error {
 			continue
 		}
 
-		outFile, err := os.Create(path.Join(destDir, path.Base(f.Name)))
+		outPath, err := archiveOutputPath(destDir, f.Name)
+		if err != nil {
+			return err
+		}
+		outFile, err := os.Create(outPath)
 		if err != nil {
 			return err
 		}
@@ -93,6 +101,17 @@ func decompressZipFile(filepath, destDir string) error {
 	}
 
 	return nil
+}
+
+func archiveOutputPath(destDir, archiveName string) (string, error) {
+	baseName := filepath.Base(filepath.Clean(archiveName))
+	if baseName == "." || baseName == string(filepath.Separator) || baseName == "" {
+		return "", fmt.Errorf("invalid archive entry name %q", archiveName)
+	}
+	if strings.ContainsAny(baseName, `/\`) {
+		return "", fmt.Errorf("invalid archive entry basename %q", archiveName)
+	}
+	return filepath.Join(destDir, baseName), nil
 }
 
 // calculateFileSHA256 calculates the SHA256 checksum of a file.

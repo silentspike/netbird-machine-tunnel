@@ -13,6 +13,8 @@ import (
 const (
 	tagRootPrivate = "ROOT PRIVATE KEY"
 	tagRootPublic  = "ROOT PUBLIC KEY"
+
+	signatureTimestampSize = 8
 )
 
 // RootKey is a root Key used to sign signing keys
@@ -102,9 +104,10 @@ func SignArtifactKey(rootKey RootKey, data []byte) ([]byte, error) {
 	timestamp := time.Now().UTC()
 
 	// This ensures the timestamp is cryptographically bound to the signature
-	msg := make([]byte, 0, len(data)+8)
-	msg = append(msg, data...)
-	msg = binary.LittleEndian.AppendUint64(msg, uint64(timestamp.Unix()))
+	msg, err := signatureMessage(data, timestamp)
+	if err != nil {
+		return nil, err
+	}
 
 	sig := ed25519.Sign(rootKey.Key, msg)
 	// Create signature bundle with timestamp and Metadata
@@ -117,4 +120,16 @@ func SignArtifactKey(rootKey RootKey, data []byte) ([]byte, error) {
 	}
 
 	return json.Marshal(bundle)
+}
+
+func signatureMessage(data []byte, timestamp time.Time) ([]byte, error) {
+	maxInt := int(^uint(0) >> 1)
+	if len(data) > maxInt-signatureTimestampSize {
+		return nil, fmt.Errorf("signature payload too large")
+	}
+
+	msg := make([]byte, 0, len(data)+signatureTimestampSize)
+	msg = append(msg, data...)
+	msg = binary.LittleEndian.AppendUint64(msg, uint64(timestamp.Unix()))
+	return msg, nil
 }

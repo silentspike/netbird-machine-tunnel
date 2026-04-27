@@ -118,8 +118,9 @@ func NewServer(
 		syncLimParsed, err := strconv.Atoi(syncLimStr)
 		if err != nil {
 			log.Errorf("invalid value for %s: %v using %d", envConcurrentSyncs, err, defaultSyncLim)
+		} else if syncLimParsed < -2147483648 || syncLimParsed > 2147483647 {
+			log.Errorf("invalid value for %s: %d outside int32 range, using %d", envConcurrentSyncs, syncLimParsed, defaultSyncLim)
 		} else {
-			//nolint:gosec
 			syncLim = int32(syncLimParsed)
 			if syncLim < 0 {
 				syncLimEnabled = false

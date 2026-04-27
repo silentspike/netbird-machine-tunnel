@@ -240,6 +240,9 @@ func (d *DefaultManager) protoRuleToFirewallRule(
 		if err != nil {
 			return "", nil, fmt.Errorf("invalid port: %w", err)
 		}
+		if value < 1 || value > 65535 {
+			return "", nil, fmt.Errorf("invalid port: out of range 1-65535")
+		}
 		port = &firewall.Port{
 			Values: []uint16{uint16(value)},
 		}
