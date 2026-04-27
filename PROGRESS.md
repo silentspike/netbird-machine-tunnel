@@ -24,7 +24,7 @@ atomic commit before the next task starts.
 |---|------|-------|--------|--------|
 | 1 | Update #168 with main CI evidence | Post the verified PR #183 `main` push green result to issue #168 and record the evidence. | DONE | task commit |
 | 2 | Continue #170 CodeQL baseline | Push `security/codeql-high-baseline`, run CodeQL on that ref, inspect result, and prepare the OIDC SSRF policy decision. | DONE | task commit |
-| 3 | Fix README license wording | Align public README License section with `LICENSE` and `NOTICE.md` dual-license structure. | PENDING | |
+| 3 | Fix README license wording | Align public README License section with `LICENSE` and `NOTICE.md` dual-license structure. | DONE | task commit |
 | 4 | Update ADR statuses | Mark ADR-001 superseded/amended and ADR-002 implemented with implementation evidence. | PENDING | |
 | 5 | Create `FORK_DIFF.md` | Document fork-specific contribution from verified paths and upstream diff, then link it from README. | PENDING | |
 | 6 | Promote CRL limitation | Move "No CRL checking" into the public security surface with scope and mitigations. | PENDING | |
@@ -223,6 +223,9 @@ Acceptance criteria:
 - 2026-04-27: CodeQL branch `security/codeql-high-baseline` reduced open branch
   alerts from `main` 164 total / 19 high to branch 148 total / 3 high; the
   critical `go/request-forgery` remains and needs an OIDC issuer SSRF policy.
+- 2026-04-27: README License section now matches the repository dual-license
+  structure from `LICENSE` and `NOTICE.md`; local internal and external license
+  dependency checks passed.
 
 ## Task Evidence
 
@@ -291,7 +294,35 @@ AC results:
   The latest-comment recheck confirmed the branch name, `148 total` delta, and
   "OIDC SSRF policy decision needed" wording.
 
+### Task 3: Fix README license wording
+
+Status: DONE, committed in the Task 3 commit.
+
+Pre-task self-check:
+- Must change only the public-facing README License section and progress
+  tracking unless verification finds a related license-file issue.
+- Must align README wording with `LICENSE`, `NOTICE.md`, and
+  `LICENSES/REUSE.toml`.
+- Must prove the old AGPL-only wording is gone.
+- Must prove README links to license and attribution files.
+- Must run available local license checks.
+
+AC results:
+- AC1 PASS: `rg -n "AGPL-only|Licensed under \\*\\*GNU Affero|dual-license|BSD-3-Clause|management/LICENSE|signal/LICENSE|relay/LICENSE|combined/LICENSE|NOTICE.md" README.md`
+  showed the new dual-license wording and did not show the previous
+  "Licensed under **GNU Affero..." AGPL-only sentence.
+- AC2 PASS: README now links to `[LICENSE](LICENSE)`, `[NOTICE.md](NOTICE.md)`,
+  `[management/LICENSE](management/LICENSE)`, `[signal/LICENSE](signal/LICENSE)`,
+  `[relay/LICENSE](relay/LICENSE)`, and `[combined/LICENSE](combined/LICENSE)`.
+- AC3 PASS: local internal workflow check returned
+  `PASS internal AGPL dependency check`. Local external workflow-equivalent
+  `go-licenses` check reported GPL dependencies
+  `github.com/netbirdio/management-integrations/integrations` and
+  `goauthentik.io/api/v3`, confirmed both are only used by internal AGPL
+  packages, and returned `PASS external GPL/AGPL license dependency check`.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
 - Task 2: `Task 2: Continue #170 CodeQL baseline`
+- Task 3: `Task 3: Fix README license wording`
