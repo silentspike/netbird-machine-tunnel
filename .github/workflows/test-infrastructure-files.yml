@@ -7,7 +7,7 @@ on:
   pull_request:
     paths:
       - 'infrastructure_files/**'
-      - '.github/workflows/test-infrastructure-files.yml'
+      - '.github/workflows/**'
       - 'management/cmd/**'
       - 'signal/cmd/**'
 
