@@ -5,6 +5,7 @@ on:
     paths:
       - 'shared/management/proto/*.proto'
       - 'Makefile'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
