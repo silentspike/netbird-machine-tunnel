@@ -78,6 +78,7 @@ For details on the security design of the Machine Tunnel feature, see:
 - **Port-level ACLs** enforced via Windows Firewall (interface-specific), not WireGuard AllowedIPs
 - **NRPT rules** scoped with hash-based registry keys for safe rollback
 - **Multi-tenant isolation** through per-account AllowedDomains scoping
+- **Signal message bodies** encrypted and authenticated with WireGuard keys; Signal transport uses standard TLS root CA validation when configured for HTTPS, not certificate pinning
 
 ## Known Security Limitations
 
@@ -96,6 +97,29 @@ fingerprint, or rotate the machine certificate population. Production
 deployments should use short machine-certificate lifetimes, routine certificate
 rotation, tightly scoped AD CS issuance permissions, per-account AllowedDomains,
 and issuer fingerprint constraints.
+
+### Signal Server Trust Model
+
+Machine Tunnel reuses the upstream NetBird Signal client for peer connection
+negotiation. The Signal address and protocol come from the Management-provided
+`NetbirdConfig.signal` value returned during bootstrap or login, so the
+Management service is the trust anchor for selecting the Signal endpoint.
+
+When Signal is configured with HTTPS, the client uses standard Go/gRPC TLS
+validation against the system certificate pool, with embedded roots as fallback
+when the system pool is unavailable. The fork does not implement
+server-certificate pinning for Signal, and no Management-distributed Signal
+certificate pin is enforced. When Signal is configured with HTTP, the transport
+is intentionally not TLS protected.
+
+Signal message bodies are still end-to-end encrypted and authenticated before
+they are sent through Signal. The code uses `golang.org/x/crypto/nacl/box` with
+the local WireGuard private key and the remote peer WireGuard public key. A
+Signal server can observe sender and recipient WireGuard public keys, timing,
+and routing metadata, and can drop, delay, replay, or withhold encrypted
+messages. It must not be treated as a confidentiality boundary for metadata.
+Without the peer WireGuard private keys it cannot decrypt or forge valid Signal
+message bodies such as ICE offers, answers, and candidates.
 
 ## Upstream Security
 

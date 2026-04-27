@@ -34,6 +34,7 @@ atomic commit before the next task starts.
 | 10 | Plan-Verifikation | Reread the plan line by line, compare implementation, run final required checks, and update this file. | DONE | task commit |
 | 11 | Fix fork-owned CodeQL follow-up | Classify remaining critical/high CodeQL findings by fork ownership, fix fork-added/fork-modified findings locally, and rerun CodeQL. | DONE | task commit |
 | 12 | Patch dependency alerts | Use the reliable GraphQL Dependabot export, patch actionable Go/NPM dependency alerts, and document no-patch dispositions. | DONE | task commit |
+| 13 | Resolve Signal trust model | Verify #114 Signal TLS, endpoint source, and message encryption claims; replace the false pinning claim with public security documentation. | IN_PROGRESS | pending |
 
 ## Task Details
 
@@ -218,10 +219,10 @@ Acceptance criteria:
   `go/request-forgery` finding in `management/server/identity_provider.go` is
   unchanged from upstream `v0.69.0` and must be dispositioned as inherited
   upstream risk instead of blindly patched in the fork.
-- Public visibility remains blocked after Task 9/10 by #170 CodeQL
-  critical/high disposition, #167 unstable Dependabot alert export, #114 Signal
-  trust-model review, missing final approval, no final tagged public-launch
-  release, and local readiness commits not yet merged to `main`.
+- Public visibility remains blocked after Task 13 by #170 CodeQL
+  critical/high disposition, #167 default-branch Dependabot disposition, #114/#109
+  maintainer acceptance/issue disposition, missing final approval, no final tagged
+  public-launch release, and local readiness commits not yet merged to `main`.
 - #167 remains open after Task 12 local remediation because Dependabot alerts
   are default-branch based. The branch patches actionable alerts locally, but
   the final close decision needs a protected-main merge, default-branch rescan,
@@ -744,6 +745,44 @@ Remaining for #167:
   especially `github.com/docker/docker` via `management/server/testutil` and
   `github.com/pion/dtls/v2` via `client/internal/relay`.
 
+### Task 13: Resolve Signal trust model
+
+Status: IN_PROGRESS. The code review shows the old "Server-Cert Pinning via
+Mgmt Config" claim is false for Signal. The corrected public disposition is
+standard TLS root CA validation for HTTPS Signal transport, plus NaCl box
+message-body encryption with WireGuard keys, with metadata and availability risk
+accepted for the inherited upstream Signal control plane.
+
+Code evidence:
+- `shared/signal/client/grpc.go` calls `nbgrpc.CreateConnection(ctx, addr,
+  tlsEnabled, wsproxy.SignalComponent)` in `NewClient`.
+- `client/grpc/dialer.go` uses `x509.SystemCertPool()` with
+  `embeddedroots.Get()` fallback and `credentials.NewTLS(&tls.Config{RootCAs:
+  certPool})` when `tlsEnabled` is true on non-JS runtimes. There is no Signal
+  pinning or `ServerName` override in this path.
+- `client/internal/tunnel/machine.go` derives `PeerEngineConfig.SignalAddr` and
+  `PeerEngineConfig.SignalTLS` from `BootstrapResult.NetbirdConfig.GetSignal()`.
+- `client/internal/tunnel/bootstrap.go` populates `BootstrapResult.NetbirdConfig`
+  from Management login/register/mTLS registration responses.
+- `encryption/encryption.go` uses `golang.org/x/crypto/nacl/box` with the local
+  WireGuard private key and the remote WireGuard public key.
+- `shared/signal/proto/signalexchange.proto` keeps `key` and `remoteKey` as
+  visible routing metadata and encrypts only the `body` field.
+
+Disposition:
+- No fork code change is required for #114.
+- Public docs now state that Signal is not certificate-pinned.
+- Public docs now state that Signal cannot decrypt or forge valid message bodies
+  without peer WireGuard private keys, but it can observe metadata and affect
+  availability by dropping, delaying, replaying, or withholding encrypted
+  messages.
+
+Remaining for #114:
+- Run targeted tests for encryption/signal/client gRPC packages.
+- Push the documentation commit and post the evidence-backed issue update.
+- After maintainer acceptance, close #114 or explicitly split any follow-up from
+  #109.
+
 ## Commits
 
 - Task 1: `Task 1: Update #168 with main CI evidence`
@@ -758,3 +797,4 @@ Remaining for #167:
 - Task 10: `Task 10: Plan-Verifikation`
 - Task 11: `Task 11: Fix fork-owned CodeQL findings`
 - Task 12: `Task 12: Patch dependency alerts`
+- Task 13: pending
