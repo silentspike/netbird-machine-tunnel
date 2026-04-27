@@ -15,6 +15,7 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 - Kept Machine Tunnel peer connections deterministic by explicitly leaving upstream `PortForwardManager` and `MetricsRecorder` disabled for the pre-login PeerEngine path.
 - Updated release workflow and GoReleaser configs to generate SPDX JSON SBOMs for release archives and Linux packages through Syft.
 - Fixed the upstream-sync workflow to merge the selected upstream release tag instead of `upstream/main`.
+- Documented the Signal server trust model: Signal uses standard TLS root CA validation when configured for HTTPS and NaCl box message-body encryption with WireGuard keys, but this fork does not implement Signal certificate pinning.
 
 ### Fixed
 

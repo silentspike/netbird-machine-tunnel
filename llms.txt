@@ -11,6 +11,7 @@ This fork adds a **Machine Tunnel** feature: a Windows SYSTEM service (`NetBirdM
 - [README.md](README.md): Project overview, installation, configuration
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): System design, bootstrap sequence, network topology
 - [docs/SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md): Security model, certificate validation, threat mitigations
+- [SECURITY.md](SECURITY.md): Public vulnerability reporting policy and known security limitations
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md): Common issues, debug procedures, log analysis
 - [CHANGELOG.md](CHANGELOG.md): Detailed version history with file-level changes
 
