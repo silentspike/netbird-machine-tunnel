@@ -418,7 +418,7 @@ The following components are inherited from NetBird and verified through their C
 |------------|---------|
 | Windows only | Machine Tunnel client supports Windows 10/11 only |
 | AD CS required | Machine certificates must come from Active Directory Certificate Services |
-| No CRL checking | Certificate revocation checking is not yet implemented |
+| No CRL checking | Machine Tunnel mTLS does not yet perform CRL or OCSP revocation checks. Use short certificate lifetimes, rotation, issuer fingerprint constraints, and per-account AllowedDomains. See [SECURITY.md](SECURITY.md#certificate-revocation-checking). |
 
 ---
 
