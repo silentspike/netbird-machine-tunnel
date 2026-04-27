@@ -16,6 +16,10 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 - Updated release workflow and GoReleaser configs to generate SPDX JSON SBOMs for release archives and Linux packages through Syft.
 - Fixed the upstream-sync workflow to merge the selected upstream release tag instead of `upstream/main`.
 
+### Fixed
+
+- Hardened fork-owned CodeQL follow-up findings before public release: Machine Tunnel DNS labels now use a deterministic HMAC-SHA256 64-bit suffix, geolocation archive extraction writes only expected files and skips traversal entries, and the branch-local gRPC sync-limit parser now uses bounded `strconv.ParseInt(..., 32)` parsing.
+
 ### Added
 
 - Upstream `v0.69.0` client and proxy features, including port-forwarding, client connection metrics, reverse-proxy L4/CrowdSec-related code, IDP migration helpers, and expanded management API tests.

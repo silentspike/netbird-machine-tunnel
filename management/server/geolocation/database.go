@@ -36,7 +36,7 @@ func loadGeolocationDatabases(ctx context.Context, dataDir string, mmdbFile stri
 		switch file {
 		case mmdbFile:
 			extractFunc := func(src string, dst string) error {
-				if err := decompressTarGzFile(src, dst); err != nil {
+				if err := decompressTarGzFile(src, dst, geoLiteCityMMDB); err != nil {
 					return err
 				}
 				return copyFile(path.Join(dst, geoLiteCityMMDB), path.Join(dataDir, mmdbFile))
@@ -51,7 +51,7 @@ func loadGeolocationDatabases(ctx context.Context, dataDir string, mmdbFile stri
 
 		case geonamesdbFile:
 			extractFunc := func(src string, dst string) error {
-				if err := decompressZipFile(src, dst); err != nil {
+				if err := decompressZipFile(src, dst, geoLiteCityCSV); err != nil {
 					return err
 				}
 				extractedCsvFile := path.Join(dst, geoLiteCityCSV)

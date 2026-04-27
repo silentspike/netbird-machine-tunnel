@@ -23,7 +23,7 @@ governance gates are resolved or explicitly accepted.
 | Downloaded-artifact lab smoke | PASS | VM102 ran the downloaded `netbird-machine.exe` with SHA256 `be656553c08aaf620f7dde652223ed0909d77320805ed66423c973ef7ff645c9`; service, tunnel interface, route, DC ports, and handshake evidence passed. |
 | Dependabot alerts | **NO-GO pending stable export** | Repeated live API checks were inconsistent: some returned `0` open alerts, while another returned `12` open alerts and showed at least one current `postcss` alert. #167 remains a public go-live blocker until a stable alert export is captured and dispositioned. |
 | Public documentation | PASS for current preparation | README license wording, ADR status, `FORK_DIFF.md`, and CRL limitation documentation have been updated in the readiness branch. |
-| CodeQL/security baseline | **NO-GO** | #170 remains open. `main` still has 1 critical and 19 high CodeQL alerts. Baseline branch reduces this to 1 critical and 3 high, but those findings are not resolved or accepted yet. |
+| CodeQL/security baseline | **NO-GO pending rerun/disposition** | #170 remains open. The previous remote baseline branch reduced `main` from 1 critical / 19 high to 1 critical / 3 high. A local follow-up now classifies the remaining critical/high findings by ownership: `dnslabel.go` is fork-added and locally fixed, `geolocation/utils.go` is fork-modified and locally hardened further, and `identity_provider.go` is unchanged from upstream v0.69.0 and must be dispositioned as inherited upstream risk instead of blindly patched. These local changes still need push, CodeQL rerun, and issue update before #170 can close. |
 | Signal trust model | **NO-GO** | #114 remains open; #109 remains a public go-live blocker until #114 is resolved or explicitly split out. |
 | Public approval | **NO-GO** | No final public visibility/release approval has been recorded after the current blocker list. |
 | Mainline inclusion | **NO-GO** | The current public-readiness commits are local on `security/codeql-high-baseline` and are not yet pushed, reviewed, and merged to `main`. |
@@ -31,7 +31,11 @@ governance gates are resolved or explicitly accepted.
 
 ## Hard Blockers
 
-1. Resolve or formally accept #170 CodeQL critical/high findings.
+1. Push the local #170 follow-up, rerun CodeQL, and resolve or formally accept
+   remaining critical/high findings by ownership:
+   fork-added/fork-modified findings must be fixed or proved false-positive;
+   unchanged upstream findings must be documented as inherited risk, accepted
+   explicitly, and preferably tracked upstream.
 2. Resolve #167 Dependabot alert disposition from a stable final export.
 3. Resolve #114 Signal Server trust-model review, then close or split #109.
 4. Push the public-readiness branch, open/review/merge it through protected
