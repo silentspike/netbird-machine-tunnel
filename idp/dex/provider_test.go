@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/dexidp/dex/storage"
-	sqllib "github.com/dexidp/dex/storage/sql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -204,7 +203,7 @@ enablePasswordDB: true
 func openTestStorage(t *testing.T, tmpDir string) storage.Storage {
 	t.Helper()
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	stor, err := (&sqllib.SQLite3{File: filepath.Join(tmpDir, "dex.db")}).Open(logger)
+	stor, err := openSQLiteStorage(logger, filepath.Join(tmpDir, "dex.db"))
 	require.NoError(t, err)
 	return stor
 }
