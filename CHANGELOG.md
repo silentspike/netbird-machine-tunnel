@@ -21,6 +21,7 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 
 - Hardened fork-owned CodeQL follow-up findings before public release: Machine Tunnel DNS labels now use a deterministic HMAC-SHA256 64-bit suffix, geolocation archive extraction writes only expected files and skips traversal entries, and the branch-local gRPC sync-limit parser now uses bounded `strconv.ParseInt(..., 32)` parsing.
 - Patched branch-level dependency alerts before public release by updating Okta/go-jose usage, QUIC, Pion DTLS v3, AWS S3/eventstream, pgx, Azure NTLMSSP, x/image, and the proxy web PostCSS lockfile entry; no-patch transitive alerts remain documented for final disposition.
+- Fixed Darwin lint/typecheck coverage when CGO is disabled by enabling the sleep detector fallback for `darwin,!cgo` builds.
 
 ### Added
 
