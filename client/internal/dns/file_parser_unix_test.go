@@ -126,7 +126,7 @@ func compareLists(search []string, search2 []string) bool {
 }
 
 func Test_emptyFile(t *testing.T) {
-	cfg, err := parseResolvConfFile("/tmp/nothing")
+	cfg, err := parseResolvConfFile(filepath.Join(t.TempDir(), "missing-resolv.conf"))
 	if err == nil {
 		t.Errorf("expected error, got nil")
 	}
