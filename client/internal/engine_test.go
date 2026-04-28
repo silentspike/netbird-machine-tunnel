@@ -42,6 +42,7 @@ import (
 	"github.com/netbirdio/netbird/client/iface"
 	"github.com/netbirdio/netbird/client/iface/configurer"
 	"github.com/netbirdio/netbird/client/iface/device"
+	nbnetstack "github.com/netbirdio/netbird/client/iface/netstack"
 	"github.com/netbirdio/netbird/client/iface/udpmux"
 	"github.com/netbirdio/netbird/client/iface/wgaddr"
 	"github.com/netbirdio/netbird/client/iface/wgproxy"
@@ -1106,6 +1107,9 @@ func TestEngine_UpdateNetworkMapWithDNSUpdate(t *testing.T) {
 
 func TestEngine_MultiplePeers(t *testing.T) {
 	// log.SetLevel(log.DebugLevel)
+	if runtime.GOOS == "freebsd" {
+		t.Setenv(nbnetstack.EnvUseNetstackMode, "true")
+	}
 
 	ctx, cancel := context.WithCancel(CtxInitState(context.Background()))
 	defer cancel()
@@ -1127,6 +1131,19 @@ func TestEngine_MultiplePeers(t *testing.T) {
 
 	mu := sync.Mutex{}
 	engines := []*Engine{}
+	t.Cleanup(func() {
+		for n, peerEngine := range engines {
+			t.Logf("stopping peer with interface %s from multipeer test, loopIndex %d", peerEngine.wgInterface.Name(), n)
+			errStop := peerEngine.mgmClient.Close()
+			if errStop != nil {
+				log.Infoln("got error trying to close management clients from engine: ", errStop)
+			}
+			errStop = peerEngine.Stop()
+			if errStop != nil {
+				log.Infoln("got error trying to close testing peers engine: ", errStop)
+			}
+		}
+	})
 	numPeers := 10
 	wg := sync.WaitGroup{}
 	wg.Add(numPeers)
@@ -1186,18 +1203,6 @@ loop:
 				break loop
 			}
 			log.Infof("total connected=%d", totalConnected)
-		}
-	}
-	// cleanup test
-	for n, peerEngine := range engines {
-		t.Logf("stopping peer with interface %s from multipeer test, loopIndex %d", peerEngine.wgInterface.Name(), n)
-		errStop := peerEngine.mgmClient.Close()
-		if errStop != nil {
-			log.Infoln("got error trying to close management clients from engine: ", errStop)
-		}
-		errStop = peerEngine.Stop()
-		if errStop != nil {
-			log.Infoln("got error trying to close testing peers engine: ", errStop)
 		}
 	}
 }
