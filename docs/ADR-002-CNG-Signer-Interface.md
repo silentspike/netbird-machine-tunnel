@@ -32,6 +32,7 @@ Implement a `CNG crypto.Signer` wrapper that:
 The original sketch below is retained for context. The shipped implementation
 uses `WinCertSigner` in `client/internal/auth/wincert_signer.go`, with Windows
 certificate discovery in `client/internal/auth/cert_discovery_windows.go`.
+Implementation notes in the sketch are historical and are not open TODOs.
 
 ```go
 // cng_signer_windows.go
@@ -58,7 +59,7 @@ func (s *CNGSigner) Public() crypto.PublicKey {
 
 // Sign signs digest with the private key via NCryptSignHash.
 func (s *CNGSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-    // TODO: Implement via NCryptSignHash
+    // Historical sketch: production code now implements this via NCryptSignHash.
     // - Determine padding based on opts (PKCS1v15 vs PSS)
     // - Call NCryptSignHash with appropriate flags
     // - Return signature bytes
@@ -66,7 +67,7 @@ func (s *CNGSigner) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) 
 
 // NewCNGSignerFromThumbprint loads a certificate by thumbprint and returns a signer.
 func NewCNGSignerFromThumbprint(thumbprint string) (*CNGSigner, *x509.Certificate, error) {
-    // TODO: Implement
+    // Historical sketch: production code now implements certificate discovery.
     // 1. CertOpenStore(CERT_STORE_PROV_SYSTEM, "MY", CERT_SYSTEM_STORE_LOCAL_MACHINE)
     // 2. CertFindCertificateInStore(thumbprint)
     // 3. CryptAcquireCertificatePrivateKey()

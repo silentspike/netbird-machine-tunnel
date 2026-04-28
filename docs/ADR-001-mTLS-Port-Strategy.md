@@ -39,7 +39,7 @@ started alongside the standard management server. The method map in
 that require mTLS identity, but transport separation is now enforced by the
 dedicated server.
 
-## Rationale
+## Historical Rationale
 
 1. **Simpler Deployment:** Only one port to configure in firewalls and load balancers
 2. **Graceful Fallback:** Machines without certificates can still use Setup-Key auth for bootstrap
@@ -47,6 +47,24 @@ dedicated server.
 4. **TLS Flexibility:** `VerifyClientCertIfGiven` allows:
    - Clients WITH certs: Verified against CA pool, mTLS identity extracted
    - Clients WITHOUT certs: TLS handshake succeeds, fall back to token auth
+
+The rationale above explains why Option A was selected originally. It is not
+the current enforcement model.
+
+## Current Rationale
+
+The shipped implementation uses Option B because Machine Tunnel RPCs are easier
+to reason about when they are exposed on a dedicated mTLS-only listener:
+
+1. **Strict transport boundary:** Port `33074` uses
+   `tls.RequireAndVerifyClientCert`, so Machine Tunnel clients cannot reach the
+   service without a verified client certificate.
+2. **Standard management compatibility:** The regular management listener keeps
+   the normal NetBird token-auth flow.
+3. **Clear operations model:** Firewalls and load balancers can route machine
+   certificate traffic separately from regular management traffic.
+4. **Explicit bootstrap split:** Setup-key bootstrap remains separate from the
+   certificate-backed Machine Tunnel RPC path.
 
 ## Historical Implementation Sketch
 
@@ -93,31 +111,45 @@ Request arrives
 ## Consequences
 
 ### Positive
-- Bootstrap flow works: Machine can use Setup-Key initially, then mTLS after cert enrollment
-- No network reconfiguration needed for existing deployments
-- Single source of truth for mTLS-required methods
+- Dedicated mTLS listener uses `RequireAndVerifyClientCert`.
+- Standard management traffic and machine-certificate traffic are separated.
+- Existing NetBird token-auth flows remain on the normal management listener.
+- `mTLSRequiredMethods` remains useful as a method-level guard and interceptor
+  source of truth, even though transport separation is now the first boundary.
 
 ### Negative
-- Slightly more complex interceptor logic
-- All methods receive TLS handshake overhead (minimal)
+- Deployments need to expose and protect an additional management-side port.
+- Operators must configure mTLS CA material and domain/account mappings before
+  enabling the Machine Tunnel listener.
 
 ### Risks
 - **Misconfiguration:** If `mTLSRequiredMethods` is not kept in sync with proto definitions
   - Mitigation: Code review, integration tests
 - **CA Pool exhaustion:** Large multi-tenant deployments with many CAs
   - Mitigation: MTLSCADir supports multiple CA files, can scale
+- **Port exposure:** If `33074` is exposed without the intended CA and
+  account-domain configuration, machine authentication will fail closed but
+  operators may see unavailable Machine Tunnel RPCs
+  - Mitigation: pre-flight config checks and lab smoke before go-live
 
 ## Related Decisions
 
 - ADR-002 (implemented): Windows CNG crypto.Signer Interface
-- ADR-003 (pending): Multi-Tenant CA Isolation
+- Potential future ADR: Multi-Tenant CA Isolation, if the implementation needs
+  a separate architectural decision beyond the current per-account issuer and
+  domain controls.
 
 ## Implementation Status
 
-### Completed
+### Historical Implementation Artifacts
+
+These entries belong to the original single-port design and are retained for
+history. They are not the authoritative current transport boundary.
+
 - [x] `management/internals/server/mtls_auth.go` - gRPC interceptors
 - [x] `management/internals/server/config/config.go` - mTLS config fields
-- [x] `management/internals/server/boot.go` - TLS config + interceptor chain
+- [x] `management/internals/server/boot.go` - legacy mTLS config and
+  interceptor chain for the standard management server
 - [x] `shared/management/proto/management.proto` - Machine RPC definitions
 
 ### Current Implementation Evidence
@@ -139,4 +171,6 @@ Request arrives
 
 - [Go TLS ClientAuthType](https://pkg.go.dev/crypto/tls#ClientAuthType)
 - [gRPC Interceptors](https://grpc.io/docs/guides/interceptors/)
-- [NetBird gRPC Server](management/internals/server/boot.go)
+- [Dedicated mTLS server](../management/internals/server/mtls_server.go)
+- [Management server lifecycle](../management/internals/server/server.go)
+- [Legacy NetBird gRPC server setup](../management/internals/server/boot.go)
