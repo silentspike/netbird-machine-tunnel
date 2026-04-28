@@ -3,28 +3,44 @@ name: Check License Dependencies
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'go.mod'
-      - 'go.sum'
-      - '.github/workflows/**'
   pull_request:
-    paths:
-      - 'go.mod'
-      - 'go.sum'
-      - '.github/workflows/**'
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ github.event_name != 'pull_request' || steps.filter.outputs.license == 'true' }}
+    steps:
+      - name: Detect license-impacting changes
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            license:
+              - 'go.mod'
+              - 'go.sum'
+              - '.github/workflows/**'
+
   check-internal-dependencies:
     name: Check Internal AGPL Dependencies
     runs-on: ubuntu-latest
+    needs: detect-changes
 
     steps:
+      - name: Skip when license inputs are unchanged
+        if: needs.detect-changes.outputs.should_run != 'true'
+        run: echo "No license-impacting files changed; publishing required context."
+
       - uses: actions/checkout@v4
+        if: needs.detect-changes.outputs.should_run == 'true'
 
       - name: Check for problematic license dependencies
+        if: needs.detect-changes.outputs.should_run == 'true'
         run: |
           echo "Checking for dependencies on management/, signal/, relay/, and proxy/ packages..."
           echo ""
@@ -57,20 +73,29 @@ jobs:
   check-external-licenses:
     name: Check External GPL/AGPL Licenses
     runs-on: ubuntu-latest
+    needs: detect-changes
 
     steps:
+    - name: Skip when license inputs are unchanged
+      if: needs.detect-changes.outputs.should_run != 'true'
+      run: echo "No license-impacting files changed; publishing required context."
+
     - uses: actions/checkout@v4
+      if: needs.detect-changes.outputs.should_run == 'true'
 
     - name: Set up Go
+      if: needs.detect-changes.outputs.should_run == 'true'
       uses: actions/setup-go@v5
       with:
         go-version-file: 'go.mod'
         cache: true
 
     - name: Install go-licenses
+      if: needs.detect-changes.outputs.should_run == 'true'
       run: go install github.com/google/go-licenses@v1.6.0
 
     - name: Check for GPL/AGPL licensed dependencies
+      if: needs.detect-changes.outputs.should_run == 'true'
       run: |
         echo "Checking for GPL/AGPL/LGPL licensed dependencies..."
         echo ""

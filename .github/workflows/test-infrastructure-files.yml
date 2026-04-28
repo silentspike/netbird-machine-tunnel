@@ -5,22 +5,38 @@ on:
     branches:
       - main
   pull_request:
-    paths:
-      - 'infrastructure_files/**'
-      - '.github/workflows/**'
-      - 'management/cmd/**'
-      - 'signal/cmd/**'
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || github.actor_id }}
   cancel-in-progress: true
 
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ github.event_name != 'pull_request' || steps.filter.outputs.infrastructure == 'true' }}
+    steps:
+      - name: Detect infrastructure-impacting changes
+        id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            infrastructure:
+              - 'infrastructure_files/**'
+              - '.github/workflows/**'
+              - 'management/cmd/**'
+              - 'signal/cmd/**'
+
   test-docker-compose:
     runs-on: ubuntu-latest
+    needs: detect-changes
+    env:
+      RUN_INFRASTRUCTURE_TESTS: ${{ needs.detect-changes.outputs.should_run }}
     strategy:
       matrix:
         store: [ 'sqlite', 'postgres', 'mysql' ]
@@ -51,7 +67,12 @@ jobs:
         ports:
           - 3306:3306
     steps:
+      - name: Skip when infrastructure inputs are unchanged
+        if: env.RUN_INFRASTRUCTURE_TESTS != 'true'
+        run: echo "No infrastructure-impacting files changed; publishing required context."
+
       - name: Set Database Connection String
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: |
           if [ "${{ matrix.store }}" == "postgres" ]; then
             echo "NETBIRD_STORE_ENGINE_POSTGRES_DSN=host=$(hostname -I | awk '{print $1}') user=netbird password=postgres dbname=netbird port=5432" >> $GITHUB_ENV
@@ -65,20 +86,25 @@ jobs:
           fi
 
       - name: Install jq
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: sudo apt-get install -y jq
 
       - name: Install curl
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: sudo apt-get install -y curl
 
       - name: Checkout code
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         uses: actions/checkout@v4
 
       - name: Install Go
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
 
       - name: Cache Go modules
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
@@ -87,7 +113,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Setup MySQL privileges
-        if: matrix.store == 'mysql'
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true' && matrix.store == 'mysql'
         run: |
           sleep 10
           mysql -h 127.0.0.1 -u root -pmysqlroot -e "
@@ -96,9 +122,11 @@ jobs:
           "
 
       - name: cp setup.env
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: cp infrastructure_files/tests/setup.env infrastructure_files/
 
       - name: run configure
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: infrastructure_files
         run: bash -x configure.sh
         env:
@@ -118,6 +146,7 @@ jobs:
           CI_NETBIRD_MGMT_IDP_SIGNKEY_REFRESH: false
 
       - name: check values
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: infrastructure_files/artifacts
         env:
           CI_NETBIRD_DOMAIN: localhost
@@ -196,39 +225,48 @@ jobs:
           grep DisableDefaultPolicy management.json | grep "$CI_NETBIRD_MGMT_DISABLE_DEFAULT_POLICY"
 
       - name: Install modules
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: go mod tidy
 
       - name: check git status
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: git --no-pager diff --exit-code
 
       - name: Build management binary
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: management
         run: CGO_ENABLED=1 go build -o netbird-mgmt main.go
 
       - name: Build management docker image
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: management
         run: |
           docker build -t netbirdio/management:latest .
 
       - name: Build signal binary
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: signal
         run: CGO_ENABLED=0 go build -o netbird-signal main.go
 
       - name: Build signal docker image
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: signal
         run: |
           docker build -t netbirdio/signal:latest .
 
       - name: Build relay binary
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: relay
         run: CGO_ENABLED=0 go build -o netbird-relay main.go
 
       - name: Build relay docker image
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: relay
         run: |
           docker build -t netbirdio/relay:latest .
 
       - name: run docker compose up
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: infrastructure_files/artifacts
         run: |
           docker compose up -d
@@ -237,12 +275,14 @@ jobs:
           docker compose logs --tail=20
 
       - name: test running containers
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: |
           count=$(docker compose ps --format json | jq '. | select(.Name | contains("artifacts")) | .State' | grep -c running)
           test $count -eq 5 || docker compose logs
         working-directory: infrastructure_files/artifacts
 
       - name: test geolocation databases
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         working-directory: infrastructure_files/artifacts
         run: |
           sleep 30
@@ -252,74 +292,101 @@ jobs:
 
   test-getting-started-script:
     runs-on: ubuntu-latest
+    needs: detect-changes
+    env:
+      RUN_INFRASTRUCTURE_TESTS: ${{ needs.detect-changes.outputs.should_run }}
     steps:
+      - name: Skip when infrastructure inputs are unchanged
+        if: env.RUN_INFRASTRUCTURE_TESTS != 'true'
+        run: echo "No infrastructure-impacting files changed; publishing required context."
+
       - name: Install jq
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: sudo apt-get install -y jq
 
       - name: Checkout code
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         uses: actions/checkout@v4
 
       - name: run script with Zitadel PostgreSQL
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: NETBIRD_DOMAIN=use-ip bash -x infrastructure_files/getting-started-with-zitadel.sh
 
       - name: test Caddy file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f Caddyfile
 
       - name: test docker-compose file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f docker-compose.yml
 
       - name: test management.json file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f management.json
 
       - name: test turnserver.conf file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: |
           set -x
           test -f turnserver.conf
           grep external-ip turnserver.conf
 
       - name: test zitadel.env file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f zitadel.env
 
       - name: test dashboard.env file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f dashboard.env
 
       - name: test relay.env file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f relay.env
 
       - name: test zdb.env file gen postgres
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f zdb.env
 
       - name: Postgres run cleanup
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: |
           docker compose down --volumes --rmi all
           rm -rf docker-compose.yml Caddyfile zitadel.env dashboard.env machinekey/zitadel-admin-sa.token turnserver.conf management.json zdb.env
 
       - name: run script with Zitadel CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: bash -x infrastructure_files/getting-started-with-zitadel.sh
         env:
           NETBIRD_DOMAIN: use-ip
           ZITADEL_DATABASE: cockroach
 
       - name: test Caddy file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f Caddyfile
 
       - name: test docker-compose file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f docker-compose.yml
 
       - name: test management.json file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f management.json
 
       - name: test turnserver.conf file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: |
           set -x
           test -f turnserver.conf
           grep external-ip turnserver.conf
 
       - name: test zitadel.env file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f zitadel.env
 
       - name: test dashboard.env file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f dashboard.env
 
       - name: test relay.env file gen CockroachDB
+        if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
         run: test -f relay.env
