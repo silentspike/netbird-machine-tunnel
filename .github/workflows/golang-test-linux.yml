@@ -452,7 +452,8 @@ jobs:
   benchmark:
     name: "Management / Benchmark"
     needs: [ build-cache ]
-    if: ${{ needs.build-cache.outputs.management == 'true' || github.event_name != 'pull_request' }}
+    env:
+      RUN_MANAGEMENT_HEAVY: ${{ needs.build-cache.outputs.management == 'true' || github.event_name != 'pull_request' }}
     strategy:
       fail-fast: false
       matrix:
@@ -460,13 +461,20 @@ jobs:
         store: [ 'sqlite', 'postgres' ]
     runs-on: ubuntu-22.04
     steps:
+      - name: Skip when management files are unchanged
+        if: env.RUN_MANAGEMENT_HEAVY != 'true'
+        run: echo "Skipping management benchmark; management files were not changed in this pull request."
+
       - name: Create Docker network
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: docker network create promnet
 
       - name: Start Prometheus Pushgateway
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: docker run -d --name pushgateway --network promnet -p 9091:9091 prom/pushgateway
 
       - name: Start Prometheus (for Pushgateway forwarding)
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           echo '
           global:
@@ -488,20 +496,24 @@ jobs:
             prom/prometheus
 
       - name: Checkout code
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/checkout@v4
 
       - name: Install Go
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
           cache: false
 
       - name: Get Go environment
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV     
 
       - name: Cache Go modules
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -512,26 +524,29 @@ jobs:
             ${{ runner.os }}-gotest-cache-
 
       - name: Install modules
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: go mod tidy
 
       - name: check git status
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: git --no-pager diff --exit-code
 
       - name: Login to Docker hub
-        if: matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
+        if: env.RUN_MANAGEMENT_HEAVY == 'true' && matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: docker login for root user
-        if: matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
+        if: env.RUN_MANAGEMENT_HEAVY == 'true' && matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
         run: echo "$DOCKER_TOKEN" | sudo docker login --username "$DOCKER_USER" --password-stdin
 
       - name: Test
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           BENCHTIME_FLAGS="-benchtime=1x"
           if [ "$FULL_BENCHMARKS" = "true" ]; then
@@ -549,7 +564,8 @@ jobs:
   api_benchmark:
     name: "Management / Benchmark (API)"
     needs: [ build-cache ]
-    if: ${{ needs.build-cache.outputs.management == 'true' || github.event_name != 'pull_request' }}
+    env:
+      RUN_MANAGEMENT_HEAVY: ${{ needs.build-cache.outputs.management == 'true' || github.event_name != 'pull_request' }}
     strategy:
       fail-fast: false
       matrix:
@@ -557,13 +573,20 @@ jobs:
         store: [ 'sqlite', 'postgres' ]
     runs-on: ubuntu-22.04
     steps:
+      - name: Skip when management files are unchanged
+        if: env.RUN_MANAGEMENT_HEAVY != 'true'
+        run: echo "Skipping management API benchmark; management files were not changed in this pull request."
+
       - name: Create Docker network
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: docker network create promnet
 
       - name: Start Prometheus Pushgateway
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: docker run -d --name pushgateway --network promnet -p 9091:9091 prom/pushgateway
 
       - name: Start Prometheus (for Pushgateway forwarding)
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           echo '
           global:
@@ -585,20 +608,24 @@ jobs:
             prom/prometheus
 
       - name: Checkout code
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/checkout@v4
 
       - name: Install Go
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
           cache: false
 
       - name: Get Go environment
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV     
 
       - name: Cache Go modules
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -609,26 +636,29 @@ jobs:
             ${{ runner.os }}-gotest-cache-
 
       - name: Install modules
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: go mod tidy
 
       - name: check git status
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: git --no-pager diff --exit-code
 
       - name: Login to Docker hub
-        if: matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
+        if: env.RUN_MANAGEMENT_HEAVY == 'true' && matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: docker login for root user
-        if: matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
+        if: env.RUN_MANAGEMENT_HEAVY == 'true' && matrix.store == 'mysql' && env.HAS_DOCKER_CREDS == 'true'
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
         run: echo "$DOCKER_TOKEN" | sudo docker login --username "$DOCKER_USER" --password-stdin
 
       - name: Test
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           BENCHTIME_FLAGS="-benchtime=1x"
           if [ "$FULL_BENCHMARKS" = "true" ]; then
@@ -648,7 +678,8 @@ jobs:
   api_integration_test:
     name: "Management / Integration"
     needs: [ build-cache ]
-    if: ${{ needs.build-cache.outputs.management == 'true' || github.event_name != 'pull_request' }}
+    env:
+      RUN_MANAGEMENT_HEAVY: ${{ needs.build-cache.outputs.management == 'true' || github.event_name != 'pull_request' }}
     strategy:
       fail-fast: false
       matrix:
@@ -656,21 +687,29 @@ jobs:
         store: [ 'sqlite', 'postgres']
     runs-on: ubuntu-22.04
     steps:
+      - name: Skip when management files are unchanged
+        if: env.RUN_MANAGEMENT_HEAVY != 'true'
+        run: echo "Skipping management integration tests; management files were not changed in this pull request."
+
       - name: Checkout code
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/checkout@v4
 
       - name: Install Go
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
           cache: false
 
       - name: Get Go environment
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           echo "cache=$(go env GOCACHE)" >> $GITHUB_ENV
           echo "modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV     
 
       - name: Cache Go modules
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -681,12 +720,15 @@ jobs:
             ${{ runner.os }}-gotest-cache-
 
       - name: Install modules
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: go mod tidy
 
       - name: check git status
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: git --no-pager diff --exit-code
 
       - name: Test
+        if: env.RUN_MANAGEMENT_HEAVY == 'true'
         run: |
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
           NETBIRD_STORE_ENGINE=${{ matrix.store }} \
