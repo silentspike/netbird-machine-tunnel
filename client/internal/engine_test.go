@@ -1131,7 +1131,7 @@ func TestEngine_MultiplePeers(t *testing.T) {
 
 	mu := sync.Mutex{}
 	engines := []*Engine{}
-	t.Cleanup(func() {
+	defer func() {
 		for n, peerEngine := range engines {
 			t.Logf("stopping peer with interface %s from multipeer test, loopIndex %d", peerEngine.wgInterface.Name(), n)
 			errStop := peerEngine.mgmClient.Close()
@@ -1143,7 +1143,7 @@ func TestEngine_MultiplePeers(t *testing.T) {
 				log.Infoln("got error trying to close testing peers engine: ", errStop)
 			}
 		}
-	})
+	}()
 	numPeers := 10
 	wg := sync.WaitGroup{}
 	wg.Add(numPeers)
