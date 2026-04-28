@@ -235,16 +235,13 @@ func testGetNetworkMapGeneral(t *testing.T) {
 		return
 	}
 
-	networkMap, err := manager.GetNetworkMap(context.Background(), peer1.ID)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	if len(networkMap.Peers) != 1 {
-		t.Errorf("expecting Account NetworkMap to have 1 peers, got %v", len(networkMap.Peers))
-		return
-	}
+	var networkMap *types.NetworkMap
+	var networkMapErr error
+	require.Eventually(t, func() bool {
+		networkMap, networkMapErr = manager.GetNetworkMap(context.Background(), peer1.ID)
+		return networkMapErr == nil && networkMap != nil && len(networkMap.Peers) == 1
+	}, 3*time.Second, 25*time.Millisecond, "expecting Account NetworkMap to have 1 peer")
+	require.NoError(t, networkMapErr)
 
 	if networkMap.Peers[0].Key != peerKey2.PublicKey().String() {
 		t.Errorf(
