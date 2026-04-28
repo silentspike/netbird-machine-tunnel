@@ -1,0 +1,57 @@
+# Use case:
+#   Run a Linux NetBird peer as a router-peer that forwards Machine Tunnel
+#   traffic between the WireGuard mesh and a Domain Controller subnet.
+#
+# Preconditions:
+#   - NetBird client binary is installed at /usr/bin/netbird.
+#   - /etc/netbird/router-peer.json exists and is owned by root.
+#   - The peer is assigned the required NetBird route for the DC subnet.
+#   - The DC subnet has a return route back to the NetBird/WireGuard client
+#     address range through this router-peer. Do not use NAT for this path.
+#   - IPv4 forwarding is enabled separately, for example:
+#       /etc/sysctl.d/99-netbird-router-peer.conf:
+#       net.ipv4.ip_forward = 1
+#
+# Minimal steps:
+#   1. Copy this file to /etc/systemd/system/netbird-router-peer.service.
+#   2. Adjust ExecStart if your binary or config path differs.
+#   3. Run:
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable --now netbird-router-peer.service
+#
+# Expected verification:
+#   - systemctl is-active netbird-router-peer.service
+#   - sysctl net.ipv4.ip_forward
+#   - netbird status
+#   - From a Machine Tunnel client, test required DC ports through the tunnel.
+#
+# Security caveats:
+#   - Keep /etc/netbird/router-peer.json readable only by root.
+#   - Prefer firewall rules that allow only required AD/DC ports.
+#   - Do not masquerade/NAT Machine Tunnel traffic; preserve source addresses
+#     for clean auditing and troubleshooting.
+
+[Unit]
+Description=NetBird Router-Peer for Machine Tunnel DC Routing
+Documentation=https://github.com/silentspike/netbird-machine-tunnel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=NB_LOG_LEVEL=info
+ExecStartPre=/usr/bin/install -d -m 0750 -o root -g root /var/log/netbird
+ExecStart=/usr/bin/netbird service run --config /etc/netbird/router-peer.json --log-level info --log-file /var/log/netbird/router-peer.log
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/etc/netbird /var/lib/netbird /var/log/netbird
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+
+[Install]
+WantedBy=multi-user.target

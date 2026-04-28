@@ -94,5 +94,6 @@ docs/INVESTIGATION-*.md
 # Internal maintenance documentation - not for public repo
 MAINTAINING.md
 docs/MAINTAINING.md
+PROGRESS.md
 docs/internal/
 docs/upgrade.md
