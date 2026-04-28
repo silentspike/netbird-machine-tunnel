@@ -13,8 +13,8 @@ them.
 
 | Area | Position |
 |------|----------|
-| Upstream baseline | NetBird `v0.69.0` |
-| Next upstream sync | NetBird `v0.70.0`, tracked in #189 after this public-readiness pass |
+| Upstream baseline | NetBird `v0.70.0` |
+| Next upstream sync | Next tagged NetBird release after `v0.70.0` |
 | Maintainer model | Solo-maintained fork |
 | Repository visibility | Public-readiness approved only after final maintainer approval and green protected-branch checks |
 | Public binary release | Separate HOLD decision until a tag, notes, artifacts, checksums, SBOM, and downloaded-artifact lab smoke are approved |
@@ -30,8 +30,8 @@ This fork tracks upstream NetBird by release tags, not by blindly merging
 - Open or update an `upstream-sync` issue for each planned upstream tag.
 - Keep the sync branch private or draft until local CI, generated code checks,
   and Machine Tunnel compatibility checks pass.
-- Do not fold the deferred `v0.70.0` sync into the current public-readiness
-  sprint; it is a follow-up tracked in #189.
+- Merge upstream by tagged release only. Do not merge untagged `upstream/main`
+  commits into a public-release branch without an explicit decision.
 
 Each upstream sync must record:
 
@@ -139,8 +139,7 @@ must be zero or explicitly documented as non-blocking.
 
 | Date | Decision |
 |------|----------|
-| 2026-04-28 | Public-readiness sprint keeps upstream baseline at `v0.69.0`. |
-| 2026-04-28 | NetBird `v0.70.0` sync deferred to #189 after public-readiness work. |
+| 2026-04-28 | NetBird `v0.70.0` synced through #189 before public visibility. |
 | 2026-04-28 | Repository visibility and tagged binary release treated as separate gates. |
 
 ## Operator Checklist

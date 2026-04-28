@@ -457,6 +457,7 @@ func TestReceive_ProtocolErrorStreamReconnect(t *testing.T) {
 
 	client, err := flow.NewClient("http://"+server.addr, "test-payload", "test-signature", 1*time.Second)
 	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		_ = client.Close()
 	})
