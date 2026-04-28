@@ -124,7 +124,7 @@ func (s *BaseServer) IdpManager() idp.Manager {
 		if embeddedEnabled {
 			idpManager, err = idp.NewEmbeddedIdPManager(context.Background(), s.Config.EmbeddedIdP, s.Metrics())
 			if err != nil {
-				log.Fatalf("failed to create embedded IDP service: %v", err)
+				log.Fatal("failed to create embedded IDP service")
 			}
 			return idpManager
 		}

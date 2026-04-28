@@ -2,9 +2,6 @@ name: Proto Version Check
 
 on:
   pull_request:
-    paths:
-      - "**/*.pb.go"
-      - '.github/workflows/**'
 
 permissions:
   contents: read

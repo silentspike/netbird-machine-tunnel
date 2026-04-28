@@ -15,6 +15,15 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 - Kept Machine Tunnel peer connections deterministic by explicitly leaving upstream `PortForwardManager` and `MetricsRecorder` disabled for the pre-login PeerEngine path.
 - Updated release workflow and GoReleaser configs to generate SPDX JSON SBOMs for release archives and Linux packages through Syft.
 - Fixed the upstream-sync workflow to merge the selected upstream release tag instead of `upstream/main`.
+- Documented the Signal server trust model: Signal uses standard TLS root CA validation when configured for HTTPS and NaCl box message-body encryption with WireGuard keys, but this fork does not implement Signal certificate pinning.
+
+### Fixed
+
+- Hardened fork-owned CodeQL follow-up findings before public release: Machine Tunnel DNS labels now use a deterministic HMAC-SHA256 64-bit suffix, geolocation archive extraction writes only expected files and skips traversal entries, and the branch-local gRPC sync-limit parser now uses bounded `strconv.ParseInt(..., 32)` parsing.
+- Patched branch-level dependency alerts before public release by updating Okta/go-jose usage, QUIC, Pion DTLS v3, AWS S3/eventstream, pgx, Azure NTLMSSP, x/image, and the proxy web PostCSS lockfile entry; no-patch transitive alerts remain documented for final disposition.
+- Fixed Darwin lint/typecheck coverage when CGO is disabled by enabling the sleep detector fallback for `darwin,!cgo` builds.
+- Fixed CGO-disabled CI coverage for system route tests by keeping packet-capture cases behind `cgo` build tags while retaining normal OS tests.
+- Fixed Dex SQLite storage typechecking for `!cgo` builds by routing SQLite opens through CGO-aware helpers that fail explicitly when SQLite is unavailable.
 
 ### Added
 

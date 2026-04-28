@@ -480,6 +480,10 @@ func (am *Auth0Manager) UpdateUserAppMetadata(ctx context.Context, userID string
 
 func buildCreateUserRequestPayload(email, name, accountID, invitedByEmail string) (string, error) {
 	invite := true
+	password, err := GeneratePassword(8, 1, 1, 1)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate user password: %w", err)
+	}
 	req := &createUserRequest{
 		Email: email,
 		Name:  name,
@@ -489,7 +493,7 @@ func buildCreateUserRequestPayload(email, name, accountID, invitedByEmail string
 			WTInvitedBy:     invitedByEmail,
 		},
 		Connection:  "Username-Password-Authentication",
-		Password:    GeneratePassword(8, 1, 1, 1),
+		Password:    password,
 		VerifyEmail: true,
 	}
 

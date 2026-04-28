@@ -115,11 +115,11 @@ func NewServer(
 	syncLim := int32(defaultSyncLim)
 	syncLimEnabled := true
 	if syncLimStr := os.Getenv(envConcurrentSyncs); syncLimStr != "" {
-		syncLimParsed, err := strconv.Atoi(syncLimStr)
-		if err != nil {
+		syncLimParsed, err := strconv.ParseInt(syncLimStr, 10, 32)
+		switch {
+		case err != nil:
 			log.Errorf("invalid value for %s: %v using %d", envConcurrentSyncs, err, defaultSyncLim)
-		} else {
-			//nolint:gosec
+		default:
 			syncLim = int32(syncLimParsed)
 			if syncLim < 0 {
 				syncLimEnabled = false
