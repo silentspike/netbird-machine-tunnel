@@ -1,8 +1,11 @@
 package mtls
 
 import (
+	"regexp"
 	"testing"
 )
+
+var hexSuffixRegex = regexp.MustCompile(`^[a-f0-9]{16}$`)
 
 func TestGenerateUniqueDNSLabel(t *testing.T) {
 	tests := []struct {
@@ -15,13 +18,13 @@ func TestGenerateUniqueDNSLabel(t *testing.T) {
 			name:     "simple hostname and domain",
 			hostname: "win10-pc",
 			domain:   "corp.local",
-			wantLen:  17, // "win10-pc" + "-" + 8 hex chars
+			wantLen:  25, // "win10-pc" + "-" + 16 hex chars
 		},
 		{
 			name:     "uppercase hostname normalized",
 			hostname: "WIN10-PC",
 			domain:   "CORP.LOCAL",
-			wantLen:  17,
+			wantLen:  25,
 		},
 		{
 			name:     "very long hostname truncated",
@@ -33,13 +36,13 @@ func TestGenerateUniqueDNSLabel(t *testing.T) {
 			name:     "hostname with underscores",
 			hostname: "win_10_pc",
 			domain:   "corp.local",
-			wantLen:  18, // "win-10-pc" + "-" + 8 hex chars
+			wantLen:  26, // "win-10-pc" + "-" + 16 hex chars
 		},
 		{
 			name:     "hostname with spaces",
 			hostname: "win 10 pc",
 			domain:   "corp.local",
-			wantLen:  18,
+			wantLen:  26,
 		},
 	}
 
@@ -52,10 +55,17 @@ func TestGenerateUniqueDNSLabel(t *testing.T) {
 				t.Errorf("GenerateUniqueDNSLabel() returned label longer than %d chars: %s (len=%d)",
 					MaxDNSLabelLength, got, len(got))
 			}
+			if len(got) != tt.wantLen {
+				t.Errorf("GenerateUniqueDNSLabel() length = %d, want %d: %s", len(got), tt.wantLen, got)
+			}
 
 			// Check RFC 1123 compliance
 			if err := ValidateDNSLabel(got); err != nil {
 				t.Errorf("GenerateUniqueDNSLabel() returned invalid label: %s, error: %v", got, err)
+			}
+			suffix := got[len(got)-HashSuffixLength:]
+			if !hexSuffixRegex.MatchString(suffix) {
+				t.Errorf("GenerateUniqueDNSLabel() suffix = %q, want %d lowercase hex chars", suffix, HashSuffixLength)
 			}
 		})
 	}

@@ -18,20 +18,11 @@ import (
 	"golang.org/x/net/route"
 )
 
-var expectedVPNint = "utun100"
-var expectedExternalInt = "lo0"
-var expectedInternalInt = "lo0"
-
-func init() {
-	testCases = append(testCases, []testCase{
-		{
-			name:              "To more specific route without custom dialer via vpn",
-			expectedInterface: expectedVPNint,
-			dialer:            &net.Dialer{},
-			expectedPacket:    createPacketExpectation("100.64.0.1", 12345, "10.10.0.2", 53),
-		},
-	}...)
-}
+var (
+	expectedVPNint      = "utun100" //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
+	expectedExternalInt = "lo0"     //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
+	expectedInternalInt = "lo0"     //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
+)
 
 func TestConcurrentRoutes(t *testing.T) {
 	baseIP := netip.MustParseAddr("192.0.2.0")
@@ -123,7 +114,7 @@ func TestBits(t *testing.T) {
 	}
 }
 
-func createAndSetupDummyInterface(t *testing.T, intf string, ipAddressCIDR string) string {
+func createAndSetupDummyInterface(t *testing.T, intf string, ipAddressCIDR string) string { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	if runtime.GOOS == "darwin" {
@@ -158,7 +149,7 @@ func createAndSetupDummyInterface(t *testing.T, intf string, ipAddressCIDR strin
 	return intf
 }
 
-func addDummyRoute(t *testing.T, dstCIDR string, gw netip.Addr, _ string) {
+func addDummyRoute(t *testing.T, dstCIDR string, gw netip.Addr, _ string) { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	var originalNexthop net.IP
@@ -190,7 +181,7 @@ func addDummyRoute(t *testing.T, dstCIDR string, gw netip.Addr, _ string) {
 	})
 }
 
-func fetchOriginalGateway() (net.IP, error) {
+func fetchOriginalGateway() (net.IP, error) { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	output, err := exec.Command("route", "-n", "get", "default").CombinedOutput()
 	if err != nil {
 		return nil, err
@@ -232,7 +223,7 @@ func setupDummyInterface(t *testing.T) (netip.Addr, *net.Interface) {
 	return netip.AddrFrom4([4]byte{192, 168, 1, 2}), intf
 }
 
-func setupDummyInterfacesAndRoutes(t *testing.T) {
+func setupDummyInterfacesAndRoutes(t *testing.T) { //nolint:unused // Used by cgo packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	defaultDummy := createAndSetupDummyInterface(t, expectedExternalInt, "192.168.0.1/24")

@@ -13,12 +13,12 @@ import (
 	"mime"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
-// decompressTarGzFile decompresses a .tar.gz file.
-func decompressTarGzFile(filepath, destDir string) error {
+// decompressTarGzFile decompresses the expected file from a .tar.gz archive.
+func decompressTarGzFile(filepath, destDir, expectedName string) error {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -32,6 +32,7 @@ func decompressTarGzFile(filepath, destDir string) error {
 	defer gzipReader.Close()
 
 	tarReader := tar.NewReader(gzipReader)
+	extracted := false
 
 	for {
 		header, err := tarReader.Next()
@@ -42,8 +43,12 @@ func decompressTarGzFile(filepath, destDir string) error {
 			return err
 		}
 
-		if header.Typeflag == tar.TypeReg {
-			outFile, err := os.Create(path.Join(destDir, path.Base(header.Name)))
+		if header.Typeflag == tar.TypeReg && archiveEntryMatchesExpected(header.Name, expectedName) {
+			outPath, err := archiveOutputPath(destDir, expectedName)
+			if err != nil {
+				return err
+			}
+			outFile, err := os.Create(outPath)
 			if err != nil {
 				return err
 			}
@@ -53,27 +58,37 @@ func decompressTarGzFile(filepath, destDir string) error {
 			if err != nil {
 				return err
 			}
+			extracted = true
 		}
 
+	}
+
+	if !extracted {
+		return fmt.Errorf("archive does not contain expected file %q", expectedName)
 	}
 
 	return nil
 }
 
-// decompressZipFile decompresses a .zip file.
-func decompressZipFile(filepath, destDir string) error {
+// decompressZipFile decompresses the expected file from a .zip archive.
+func decompressZipFile(filepath, destDir, expectedName string) error {
 	r, err := zip.OpenReader(filepath)
 	if err != nil {
 		return err
 	}
 	defer r.Close()
+	extracted := false
 
 	for _, f := range r.File {
-		if f.FileInfo().IsDir() {
+		if f.FileInfo().IsDir() || !archiveEntryMatchesExpected(f.Name, expectedName) {
 			continue
 		}
 
-		outFile, err := os.Create(path.Join(destDir, path.Base(f.Name)))
+		outPath, err := archiveOutputPath(destDir, expectedName)
+		if err != nil {
+			return err
+		}
+		outFile, err := os.Create(outPath)
 		if err != nil {
 			return err
 		}
@@ -90,9 +105,54 @@ func decompressZipFile(filepath, destDir string) error {
 		if err != nil {
 			return err
 		}
+		extracted = true
+	}
+
+	if !extracted {
+		return fmt.Errorf("archive does not contain expected file %q", expectedName)
 	}
 
 	return nil
+}
+
+func archiveOutputPath(destDir, expectedName string) (string, error) {
+	if expectedName == "" || expectedName == "." || expectedName != filepath.Base(expectedName) {
+		return "", fmt.Errorf("invalid expected archive filename %q", expectedName)
+	}
+	if strings.ContainsAny(expectedName, `/\`) {
+		return "", fmt.Errorf("invalid expected archive filename %q", expectedName)
+	}
+
+	destAbs, err := filepath.Abs(destDir)
+	if err != nil {
+		return "", err
+	}
+	outAbs, err := filepath.Abs(filepath.Join(destAbs, expectedName))
+	if err != nil {
+		return "", err
+	}
+	rel, err := filepath.Rel(destAbs, outAbs)
+	if err != nil {
+		return "", err
+	}
+	if rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) || filepath.IsAbs(rel) {
+		return "", fmt.Errorf("archive output path escapes destination: %q", outAbs)
+	}
+	return outAbs, nil
+}
+
+func archiveEntryMatchesExpected(archiveName, expectedName string) bool {
+	if archiveName == "" {
+		return false
+	}
+	if strings.Contains(archiveName, `\`) {
+		return false
+	}
+	cleanName := filepath.Clean(archiveName)
+	if cleanName == "." || cleanName == ".." || filepath.IsAbs(cleanName) || strings.HasPrefix(cleanName, "../") {
+		return false
+	}
+	return filepath.Base(cleanName) == expectedName
 }
 
 // calculateFileSHA256 calculates the SHA256 checksum of a file.

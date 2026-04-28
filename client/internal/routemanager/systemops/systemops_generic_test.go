@@ -25,7 +25,7 @@ import (
 	nbnet "github.com/netbirdio/netbird/client/net"
 )
 
-type dialer interface {
+type dialer interface { //nolint:unused // Used by OS-specific packet-capture routing tests when their build tags match.
 	Dial(network, address string) (net.Conn, error)
 	DialContext(ctx context.Context, network, address string) (net.Conn, error)
 }
@@ -460,7 +460,7 @@ func createWGInterface(t *testing.T, interfaceName, ipAddressCIDR string, listen
 	return wgInterface
 }
 
-func setupRouteAndCleanup(t *testing.T, r *SysOps, prefix netip.Prefix, intf *net.Interface) {
+func setupRouteAndCleanup(t *testing.T, r *SysOps, prefix netip.Prefix, intf *net.Interface) { //nolint:unused // Used by OS-specific packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	if err := r.AddVPNRoute(prefix, intf); err != nil {
@@ -476,7 +476,7 @@ func setupRouteAndCleanup(t *testing.T, r *SysOps, prefix netip.Prefix, intf *ne
 	})
 }
 
-func setupTestEnv(t *testing.T) {
+func setupTestEnv(t *testing.T) { //nolint:unused // Used by OS-specific packet-capture routing tests when their build tags match.
 	t.Helper()
 
 	setupDummyInterfacesAndRoutes(t)

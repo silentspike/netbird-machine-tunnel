@@ -211,9 +211,10 @@ func signRevocationList(privateRootKey RootKey, rl RevocationList) (*Signature, 
 
 	timestamp := time.Now().UTC()
 
-	msg := make([]byte, 0, len(data)+8)
-	msg = append(msg, data...)
-	msg = binary.LittleEndian.AppendUint64(msg, uint64(timestamp.Unix()))
+	msg, err := signatureMessage(data, timestamp)
+	if err != nil {
+		return nil, err
+	}
 
 	sig := ed25519.Sign(privateRootKey.Key, msg)
 

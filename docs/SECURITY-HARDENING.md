@@ -13,7 +13,8 @@ All information in this guide has been verified against the actual codebase and 
 3. [Server Security (Management)](#server-security-management)
 4. [Certificate Requirements](#certificate-requirements)
 5. [Multi-Tenant Isolation](#multi-tenant-isolation)
-6. [Security Checklist](#security-checklist)
+6. [Signal and Relay Trust Model](#signal-and-relay-trust-model)
+7. [Security Checklist](#security-checklist)
 
 ---
 
@@ -211,6 +212,67 @@ You should see:
 INFO server/mtls_server.go: loaded CA certificate: your-ca.crt
 INFO server/mtls_server.go: mTLS CA pool loaded: 1 certificates
 ```
+
+---
+
+## Signal and Relay Trust Model
+
+Machine Tunnel uses the same Signal and Relay components as upstream NetBird for
+peer connectivity and NAT traversal. The fork does not add a separate Signal
+trust layer; it reuses the upstream client path directly from
+`client/internal/tunnel/peerengine.go`.
+
+### Signal Endpoint Source
+
+The Signal endpoint is not a local free-form Machine Tunnel setting. It is
+derived from `NetbirdConfig.signal`, which the Management service returns in the
+bootstrap and login responses. The Machine Tunnel code copies that value into
+`PeerEngineConfig.SignalAddr` and sets `PeerEngineConfig.SignalTLS` when the
+Management-provided protocol is `HTTPS`.
+
+Operationally, this means the Management service is the trust anchor for Signal
+endpoint selection. A compromised or malicious Management service can redirect
+clients to another Signal endpoint, so Management compromise remains out of
+scope for Signal-only mitigations.
+
+### TLS Validation
+
+`signal.NewClient()` delegates connection setup to the shared gRPC dialer. When
+the Management-provided Signal protocol is HTTPS and the runtime is not WASM/JS,
+the dialer uses Go/gRPC TLS credentials with the system certificate pool. If the
+system pool is unavailable, it falls back to the embedded root bundle.
+
+There is no Signal server-certificate pinning in this path. The previous
+unverified threat-model wording "Server-Cert Pinning via Mgmt Config" is not
+accurate for this codebase and must not be used as a security claim.
+
+If Signal is configured with HTTP, Signal transport TLS is disabled by
+configuration and only the message-body encryption described below protects the
+Signal payload.
+
+### Message Confidentiality And Integrity
+
+Signal message bodies are encrypted and authenticated before they are sent to
+Signal. The Signal proto exposes `EncryptedMessage.key`,
+`EncryptedMessage.remoteKey`, and encrypted `EncryptedMessage.body`; the
+decrypted body contains offers, answers, candidates, mode changes, and related
+peer-connection data.
+
+The encryption implementation marshals the protobuf body and calls
+`golang.org/x/crypto/nacl/box` with the local WireGuard private key and the
+remote peer WireGuard public key. Decryption fails unless the peer keys match,
+so a Signal server without the peer WireGuard private keys cannot decrypt or
+forge valid message bodies.
+
+### Accepted Risk
+
+A rogue or compromised Signal server can still observe metadata such as sender
+and recipient WireGuard public keys, timing, stream presence, and message sizes.
+It can also drop, delay, replay, reorder, or withhold encrypted messages, which
+can degrade availability or peer-connectivity behavior. That is an accepted
+Signal/Relay control-plane risk inherited from upstream NetBird and does not
+grant Machine Tunnel mTLS registration, Management authentication, or access to
+decrypted ICE offers, answers, or candidates.
 
 ---
 
