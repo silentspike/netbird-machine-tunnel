@@ -13,6 +13,23 @@ This is a fork of [NetBird](https://github.com/netbirdio/netbird) — an outstan
 For a reviewer-focused summary of what this fork adds over upstream NetBird,
 see [FORK_DIFF.md](FORK_DIFF.md).
 
+---
+
+## Maintenance Status
+
+[![Linux](https://github.com/silentspike/netbird-machine-tunnel/actions/workflows/golang-test-linux.yml/badge.svg?branch=main)](https://github.com/silentspike/netbird-machine-tunnel/actions/workflows/golang-test-linux.yml)
+[![Windows](https://github.com/silentspike/netbird-machine-tunnel/actions/workflows/golang-test-windows.yml/badge.svg?branch=main)](https://github.com/silentspike/netbird-machine-tunnel/actions/workflows/golang-test-windows.yml)
+[![Secret Scan](https://github.com/silentspike/netbird-machine-tunnel/actions/workflows/secret-scan.yml/badge.svg?branch=main)](https://github.com/silentspike/netbird-machine-tunnel/actions/workflows/secret-scan.yml)
+
+| Area | Current Position |
+|------|------------------|
+| Upstream baseline | NetBird `v0.69.0`; upstream `v0.70.0` is tracked as the next follow-up sync after this public-readiness pass in [#189](https://github.com/silentspike/netbird-machine-tunnel/issues/189). |
+| Fork scope | Complete NetBird deployment plus Windows Machine Tunnel for pre-login Active Directory access. |
+| Maintenance model | Solo-maintained fork with tagged-upstream syncs, protected `main`, required CI, CodeQL, Dependabot, and secret scanning. |
+| Security response target | Critical/high CodeQL or Dependabot findings are release blockers until fixed or explicitly dispositioned; target triage is within 2 business days. |
+| Public release policy | Repository visibility and public binary releases are separate decisions. Do not treat this README as a tagged binary release announcement. |
+| Reviewer entry points | Start with [FORK_DIFF.md](FORK_DIFF.md), [docs/maintenance.md](docs/maintenance.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md). |
+
 ### What You Get
 
 | Feature | Included |
@@ -31,6 +48,7 @@ see [FORK_DIFF.md](FORK_DIFF.md).
 
 ## Table of Contents
 
+- [Maintenance Status](#maintenance-status)
 - [Why This Fork Exists](#why-this-fork-exists)
 - [How It Works](#how-it-works)
 - [For End Users](#for-end-users)
@@ -202,6 +220,14 @@ Windows Clients ──► WireGuard Mesh ──► Router-Peer VM ──► Doma
 - Clean audit trail (no NAT masking)
 
 > **Full details:** See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for network diagrams, port requirements, and design decisions.
+
+### Deployment Examples
+
+Copy-adaptable administrator examples are available for common rollout tasks:
+
+- [Router-Peer systemd unit](examples/router-peer-systemd.service)
+- [AD CS certificate template](examples/ad-cs-cert-template.md)
+- [Group Policy deployment](examples/group-policy-deploy.md)
 
 ### Installation
 
@@ -427,6 +453,7 @@ The following components are inherited from NetBird and verified through their C
 | Document | What's Inside |
 |----------|---------------|
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Network topology, component design, bootstrap sequence |
+| [maintenance.md](docs/maintenance.md) | Upstream sync cadence, security triage, CI gates, release policy |
 | [SECURITY-HARDENING.md](docs/SECURITY-HARDENING.md) | DPAPI, file permissions, mTLS setup, production checklist |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Health checks, diagnostics, common problems with solutions |
 | [CHANGELOG.md](CHANGELOG.md) | All changes from upstream with file listings |
