@@ -2,10 +2,6 @@ name: Check Proto Generation
 
 on:
   pull_request:
-    paths:
-      - 'shared/management/proto/*.proto'
-      - 'Makefile'
-      - '.github/workflows/**'
 
 permissions:
   contents: read
@@ -16,13 +12,34 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect relevant changes
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          if printf '%s\n' "$changed_files" | grep -Eq '^(shared/management/proto/.*\.proto|Makefile|\.github/workflows/)'; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "Relevant proto generation inputs changed"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "No proto generation inputs changed; required check passes without regeneration"
+          fi
 
       - name: Install Go
+        if: steps.changes.outputs.should_run == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
 
       - name: Install Protobuf Tools
+        if: steps.changes.outputs.should_run == 'true'
         run: |
           PROTOC_VERSION="33.3"
           curl -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip" -o /tmp/protoc.zip
@@ -32,9 +49,11 @@ jobs:
           go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
       - name: Run make generate
+        if: steps.changes.outputs.should_run == 'true'
         run: make generate
 
       - name: Check for changes
+        if: steps.changes.outputs.should_run == 'true'
         run: |
           git diff --exit-code
           if [ $? -ne 0 ]; then
