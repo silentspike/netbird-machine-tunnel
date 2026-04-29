@@ -164,7 +164,7 @@ jobs:
           docker system prune -af || true
           df -h
       - name: Cache Go modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/go/pkg/mod
@@ -345,7 +345,7 @@ jobs:
           go-version-file: "go.mod"
           cache: false
       - name: Cache Go modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/go/pkg/mod
@@ -438,7 +438,7 @@ jobs:
           go-version-file: "go.mod"
           cache: false
       - name: Cache Go modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/go/pkg/mod

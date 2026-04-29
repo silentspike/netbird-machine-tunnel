@@ -35,7 +35,7 @@ jobs:
           distribution: "adopt"
       - name: NDK Cache
         id: ndk-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /usr/local/lib/android/sdk/ndk
           key: ndk-cache-23.1.7779620
