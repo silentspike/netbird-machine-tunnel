@@ -14,14 +14,14 @@ hold and must be promoted separately.
 | Area | State | Evidence |
 |------|-------|----------|
 | Repository visibility | PASS / still private | `gh repo view silentspike/netbird-machine-tunnel` reports `visibility=PRIVATE`, `isPrivate=true`. |
-| Current launch candidate | PASS | Protected `main` is at `0acb92e1ac82bd65194a0b03f9864bda5b657011`, the merge commit for PR #191. |
+| Current launch candidate | PASS | The validated feature launch commit is `0acb92e1ac82bd65194a0b03f9864bda5b657011`, the merge commit for PR #191. Protected `main` may include later documentation-only readiness commits; the current protected `main` commit must have green post-merge CI immediately before the visibility flip. |
 | Upstream baseline | PASS | Fork is synced through upstream NetBird `v0.70.0`; `upstream/main` commits after the tag remain intentionally out of scope. |
 | PR #191 | PASS | PR #191 merged at `2026-04-29T06:44:54Z` with merge commit `0acb92e1ac82bd65194a0b03f9864bda5b657011`. |
 | PR #191 required checks | PASS | Final PR head `b7775adb` completed 48/48 required checks successfully. |
-| Post-merge main CI | PASS | Main push CI for `0acb92e1` completed 12/12 push workflows successfully. The Linux workflow was recovered by rerunning only the cancelled failed jobs after two unit jobs hung. |
+| Post-merge main CI | PASS | Main push CI for the feature launch commit `0acb92e1` completed 12/12 push workflows successfully. The Linux workflow was recovered by rerunning only the cancelled failed jobs after two unit jobs hung. The readiness-record update merge commit `0f9abc98a33a935770ce9cdc44d96d61e24fc0c9` also completed 12/12 post-merge `main` push workflows successfully. |
 | Branch protection | PASS | `main` uses strict required checks with 48 contexts, including `CodeQL (go)` and `CodeQL (javascript-typescript)`, with admin enforcement enabled. |
 | PR conversations | PASS | PR #191 has 0 unresolved review conversations after the CodeQL log-injection threads were fixed and resolved. |
-| CodeQL / code scanning | PASS | Open main code-scanning alerts by `rule.security_severity_level`: `99 medium`, `1 null`, `0 critical`, `0 high`. The PR-blocking `go/log-injection` alert for `management/server/policy.go` is not open on `main`. |
+| CodeQL / code scanning | PASS | Open main code-scanning alerts by `rule.security_severity_level`: `142 medium`, `2 null`, `0 critical`, `0 high`. The PR-blocking `go/log-injection` alert for `management/server/policy.go` is not open on `main`. |
 | Dependabot alerts | PASS | Open Dependabot alerts are `0`. |
 | Issue board public hygiene | PASS | Open `priority:critical` issue count is `0`; open `priority:high` issue count is `0`. Issue #189 remains open as a medium upstream-sync tracking issue, but the v0.70.0 sync implementation has merged via PR #191. |
 | Published releases | PASS | `gh release list` shows only draft `v0.1.0`; there is no published non-draft release that would become public accidentally. |
