@@ -158,6 +158,6 @@ Before public binary release:
 ```bash
 gh run list --repo silentspike/netbird-machine-tunnel --branch main --limit 20
 gh api repos/silentspike/netbird-machine-tunnel/dependabot/alerts --jq '[.[] | select(.state == "open")] | length'
-gh api 'repos/silentspike/netbird-machine-tunnel/code-scanning/alerts?state=open&per_page=100' --paginate --slurp \
+gh api 'repos/silentspike/netbird-machine-tunnel/code-scanning/alerts?state=open&ref=refs/heads/main&per_page=100' --paginate --slurp \
   | jq 'flatten | group_by(.rule.security_severity_level // "null") | map({level: (.[0].rule.security_severity_level // "null"), count: length})'
 ```
