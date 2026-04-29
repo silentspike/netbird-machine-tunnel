@@ -8,16 +8,16 @@ Baseline used for review: upstream NetBird `v0.70.0`.
 
 ## Generated Review Metrics
 
-The following values are generated from the current sprint branch against
+The following values are generated from the current protected `main` branch against
 upstream `v0.70.0`; they are review aids, not hand-maintained estimates:
 
 - `git diff --name-only v0.70.0...HEAD | wc -l`
-  - `263` changed files.
+  - `264` changed files.
 - `git diff --name-status v0.70.0...HEAD`
-  - `145` added files, `110` modified files, `8` deleted files.
+  - `145` added files, `111` modified files, `8` deleted files.
 - Top-level distribution:
   - `client`: `93`
-  - `management`: `57`
+  - `management`: `58`
   - `.github`: `35`
   - `scripts`: `20`
   - `docs`: `9`

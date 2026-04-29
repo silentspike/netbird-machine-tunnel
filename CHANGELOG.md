@@ -34,7 +34,7 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 ### Notes
 
 - CrowdSec code is included from upstream but is not enabled in the Machine Tunnel lab profile.
-- Machine Tunnel public release validation has passed local, CI, and lab gates on the upgrade branch; post-merge main smoke, release-candidate artifact validation, and final go-live approval remain required before publishing a public tag.
+- Machine Tunnel public visibility validation has passed PR CI, post-merge `main` CI, security, release-artifact, and VM102 downloaded-artifact lab gates. A public tagged binary release remains a separate HOLD decision until the tag, version, release notes, and final artifact promotion path are approved.
 
 ## [1.0.0-machine-tunnel] - 2026-02-05
 
