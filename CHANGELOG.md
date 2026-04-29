@@ -6,13 +6,14 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 
 ---
 
-## [Unreleased] - 2026-04-24
+## [Unreleased] - 2026-04-28
 
 ### Changed
 
-- Synced the fork base to upstream NetBird `v0.69.0`.
+- Synced the fork base through upstream NetBird `v0.70.0`.
 - Updated Machine Tunnel setup-key bootstrap to the new upstream management client API (`Login(sysInfo, sshKey, dnsLabels)` and `Register(setupKey, jwtToken, sysInfo, sshKey, dnsLabels)`).
 - Kept Machine Tunnel peer connections deterministic by explicitly leaving upstream `PortForwardManager` and `MetricsRecorder` disabled for the pre-login PeerEngine path.
+- Updated Machine Tunnel's PeerEngine to use upstream's new `SRWatcher.Start(disableICEMonitor bool)` signature and the same force-relay switch as the standard client.
 - Updated release workflow and GoReleaser configs to generate SPDX JSON SBOMs for release archives and Linux packages through Syft.
 - Fixed the upstream-sync workflow to merge the selected upstream release tag instead of `upstream/main`.
 - Documented the Signal server trust model: Signal uses standard TLS root CA validation when configured for HTTPS and NaCl box message-body encryption with WireGuard keys, but this fork does not implement Signal certificate pinning.
@@ -24,10 +25,11 @@ This project is a fork of [NetBird](https://github.com/netbirdio/netbird). The f
 - Fixed Darwin lint/typecheck coverage when CGO is disabled by enabling the sleep detector fallback for `darwin,!cgo` builds.
 - Fixed CGO-disabled CI coverage for system route tests by keeping packet-capture cases behind `cgo` build tags while retaining normal OS tests.
 - Fixed Dex SQLite storage typechecking for `!cgo` builds by routing SQLite opens through CGO-aware helpers that fail explicitly when SQLite is unavailable.
+- Fixed a brittle DNS parser test that assumed `/tmp/nothing` never exists; the test now uses a per-test missing path.
 
 ### Added
 
-- Upstream `v0.69.0` client and proxy features, including port-forwarding, client connection metrics, reverse-proxy L4/CrowdSec-related code, IDP migration helpers, and expanded management API tests.
+- Upstream `v0.69.0` and `v0.70.0` client, management, proxy, self-hosted, release, and CI improvements, including port-forwarding, client connection metrics, reverse-proxy L4/CrowdSec-related code, IDP migration helpers, DNS cache refresh, firewalld interface trust handling, policy-update optimization, PAT rate-limit configuration, and expanded management API tests.
 
 ### Notes
 
