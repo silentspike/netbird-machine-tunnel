@@ -57,7 +57,9 @@ func (am *DefaultAccountManager) SavePolicy(ctx context.Context, accountID, user
 
 		if isUpdate {
 			if policy.Equal(existingPolicy) {
-				logrus.WithContext(ctx).Tracef("policy update skipped because equal to stored one - policy id %s", policy.ID)
+				logrus.WithContext(ctx).
+					WithField("policy_id", policy.ID).
+					Trace("policy update skipped because equal to stored one")
 				unchanged = true
 				return nil
 			}
