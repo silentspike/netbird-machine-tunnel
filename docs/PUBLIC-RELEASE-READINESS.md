@@ -2,14 +2,16 @@
 
 Date: 2026-04-28
 Repository: `silentspike/netbird-machine-tunnel`
-Decision: **GO for public repository visibility after this refreshed decision record is merged and final maintainer approval is recorded**
+Decision: **HOLD for public repository visibility until the v0.70.0 sync branch has green post-merge CI, refreshed artifact evidence, and final maintainer approval**
 
 This record separates repository visibility from publishing a tagged binary
-release. The repository is ready to become public after this refreshed
-protected-branch documentation/governance update lands and the maintainer gives
-the final visibility-flip approval. A final tagged GitHub Release remains a
-separate promotion step because it needs a version/tag decision, release notes,
-and release-artifact promotion approval.
+release. The previous public-readiness pass was valid for the v0.69.0 baseline,
+but this branch intentionally moves the fork to upstream NetBird v0.70.0 before
+public visibility. That resets the final visibility decision until the v0.70.0
+sync lands on protected `main`, post-merge CI is green, release-candidate
+artifact checks are refreshed, and the maintainer gives final approval. A final
+tagged GitHub Release remains a separate promotion step because it needs a
+version/tag decision, release notes, and release-artifact promotion approval.
 
 ## Current Decision
 
@@ -29,7 +31,7 @@ and release-artifact promotion approval.
 | Machine Tunnel lab function | PASS / historical snapshot evidence | For the validated private Actions snapshot, `NetBirdMachine` was Running/Automatic, `wg-nb-machine` was Up, route `192.168.100.0/24` was installed via `wg-nb-machine`, and DC ports `53`, `88`, `389`, `445`, and `636` were reachable through the tunnel. Logs showed WireGuard handshake evidence after restart. |
 | Stale GitHub Release exposure | PASS | Old `v0.1.0` release from 2026-02-06 was moved to Draft; current release listing shows only draft `v0.1.0` and no published release. |
 | Public documentation | PASS / refreshed in current sprint branch | README/license/security/ADR/fork-diff documentation has been cleaned up. This decision record now distinguishes current `48f9f337` main/CI state from historical artifact/lab evidence at `600de696`. |
-| Upstream drift | PASS / tracked follow-up | The public-readiness sprint remains on upstream NetBird `v0.69.0`. Upstream `v0.70.0` is intentionally deferred until after this sprint and tracked in #189. |
+| Upstream drift | IN PROGRESS | This branch syncs upstream NetBird `v0.70.0` through #189. Final public visibility remains on HOLD until the v0.70.0 post-merge CI, security, RC artifact, and lab evidence are refreshed. |
 
 ## Go Conditions
 
@@ -79,14 +81,14 @@ binary release.
 | #167 | Closed completed after dependency remediation, no-patch/transitive alert disposition, and default-branch open Dependabot alert count `0`. |
 | #168 | Closed completed after final `48f9f337` CI, draft-release exposure check, dependency/CodeQL status, and historical artifact/lab evidence were recorded. |
 | #170 | Closed completed after CodeQL PR scanning was re-enabled, branch protection required both CodeQL contexts, and the final baseline reached `0` critical/high. |
-| #189 | Open backlog follow-up for upstream NetBird v0.70.0 sync after this public-readiness sprint. |
+| #189 | In progress for upstream NetBird v0.70.0 sync before public visibility. |
 
 ## Final Position
 
-The project is **GO for public repository visibility** after this refreshed
-decision record merges through the protected branch, the post-merge checks are
-green, and final maintainer approval is recorded immediately before the
-visibility flip.
+The project is **HOLD for public repository visibility** until the v0.70.0 sync
+branch merges through the protected branch, post-merge checks are green, final
+artifact/lab/security evidence is refreshed, and final maintainer approval is
+recorded immediately before the visibility flip.
 
 The project is **HOLD for a public tagged binary release** until the explicit
 release-promotion decision above is made.

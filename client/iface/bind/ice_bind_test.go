@@ -249,9 +249,12 @@ func TestICEBind_HandlesConcurrentMixedTraffic(t *testing.T) {
 		ipv6Count++
 	}
 
+	// Allow UDP packet loss under load (e.g. FreeBSD/QEMU runners). The
+	// routing-correctness checks above are the real assertions; the counts
+	// are a sanity bound to catch a totally silent path.
 	const minPacketsPerFamily = packetsPerFamily / 2
-	assert.GreaterOrEqual(t, ipv4Count, minPacketsPerFamily, "IPv4 peer received too few packets")
-	assert.GreaterOrEqual(t, ipv6Count, minPacketsPerFamily, "IPv6 peer received too few packets")
+	assert.GreaterOrEqual(t, ipv4Count, minPacketsPerFamily, "IPv4 delivery below threshold")
+	assert.GreaterOrEqual(t, ipv6Count, minPacketsPerFamily, "IPv6 delivery below threshold")
 }
 
 func setLargeUDPReadBuffer(t *testing.T, conn *net.UDPConn) {

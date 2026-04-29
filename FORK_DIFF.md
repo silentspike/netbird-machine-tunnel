@@ -4,37 +4,33 @@ This document summarizes what this fork adds on top of upstream NetBird. It is
 written for reviewers who need to understand the fork-specific contribution
 quickly without reading the full upstream-sized repository.
 
-Baseline used for review: upstream NetBird `v0.69.0`.
-
-Upstream NetBird `v0.70.0` is intentionally not part of this public-readiness
-snapshot. It is tracked as a follow-up in
-`https://github.com/silentspike/netbird-machine-tunnel/issues/189`.
+Baseline used for review: upstream NetBird `v0.70.0`.
 
 ## Generated Review Metrics
 
 The following values are generated from the current sprint branch against
-upstream `v0.69.0`; they are review aids, not hand-maintained estimates:
+upstream `v0.70.0`; they are review aids, not hand-maintained estimates:
 
-- `git diff --name-only v0.69.0...HEAD | wc -l`
-  - `257` changed files.
-- `git diff --name-status v0.69.0...HEAD`
-  - `140` added files, `109` modified files, `8` deleted files.
+- `git diff --name-only v0.70.0...HEAD | wc -l`
+  - `263` changed files.
+- `git diff --name-status v0.70.0...HEAD`
+  - `145` added files, `110` modified files, `8` deleted files.
 - Top-level distribution:
   - `client`: `93`
-  - `management`: `56`
+  - `management`: `57`
   - `.github`: `35`
   - `scripts`: `20`
+  - `docs`: `9`
   - `test`: `8`
   - `shared`: `7`
-  - `docs`: `6`
 - Core Machine Tunnel/runtime review slice:
-  - `64` changed files across client auth/tunnel code, management mTLS/RPC
+  - `74` changed files across client auth/tunnel code, management mTLS/RPC
     code, peer/activity integration, and management protobufs.
-  - `20,085` insertions and `2,560` deletions in that focused slice.
+  - `22,038` insertions and `2,549` deletions in that focused slice.
 - Test coverage footprint:
-  - `63` changed `*_test.go` files.
+  - `64` changed `*_test.go` files.
 - Public-readiness/governance slice:
-  - `49` changed files across `.github`, public docs, security/release
+  - `84` changed files across `.github`, public docs, security/release
     metadata, and related repository governance files.
 
 Submodule boundary:
@@ -219,11 +215,11 @@ Use path review and upstream comparison as the source of truth.
 Useful review commands:
 
 ```bash
-git diff --name-only v0.69.0...HEAD | wc -l
-git diff --name-status v0.69.0...HEAD | awk '{count[$1]++} END {for (s in count) print s, count[s]}' | sort
-git diff --name-only v0.69.0...HEAD | awk -F/ '{print $1}' | sort | uniq -c | sort -nr
+git diff --name-only v0.70.0...HEAD | wc -l
+git diff --name-status v0.70.0...HEAD | awk '{count[$1]++} END {for (s in count) print s, count[s]}' | sort
+git diff --name-only v0.70.0...HEAD | awk -F/ '{print $1}' | sort | uniq -c | sort -nr
 
-git diff --name-status v0.69.0...HEAD -- \
+git diff --name-status v0.70.0...HEAD -- \
   client/cmd/netbird-machine \
   client/internal/tunnel \
   client/internal/auth \

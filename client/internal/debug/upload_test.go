@@ -3,7 +3,7 @@ package debug
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -16,27 +16,15 @@ import (
 	"github.com/netbirdio/netbird/upload-server/types"
 )
 
-// waitForServer waits for the server to be ready by polling the health endpoint.
-func waitForServer(url string, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		resp, err := http.Get(url)
-		if err == nil {
-			resp.Body.Close()
-			return nil
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-	return fmt.Errorf("server did not become ready within %v", timeout)
-}
-
 func TestUpload(t *testing.T) {
 	if os.Getenv("DOCKER_CI") == "true" {
 		t.Skip("Skipping upload test on docker ci")
 	}
 	testDir := t.TempDir()
-	testURL := "http://localhost:8080"
+	addr := reserveLoopbackPort(t)
+	testURL := "http://" + addr
 	t.Setenv("SERVER_URL", testURL)
+	t.Setenv("SERVER_ADDRESS", addr)
 	t.Setenv("STORE_DIR", testDir)
 	srv := server.NewServer()
 	go func() {
@@ -49,14 +37,11 @@ func TestUpload(t *testing.T) {
 			t.Errorf("Failed to stop server: %v", err)
 		}
 	})
-
-	// Wait for the server to be ready before proceeding with the test
-	err := waitForServer(testURL, 5*time.Second)
-	require.NoError(t, err, "Server did not start in time")
+	waitForServer(t, addr)
 
 	file := filepath.Join(t.TempDir(), "tmpfile")
 	fileContent := []byte("test file content")
-	err = os.WriteFile(file, fileContent, 0640)
+	err := os.WriteFile(file, fileContent, 0640)
 	require.NoError(t, err)
 	key, err := UploadDebugBundle(context.Background(), testURL+types.GetURLPath, testURL, file)
 	require.NoError(t, err)
@@ -66,4 +51,31 @@ func TestUpload(t *testing.T) {
 	createdFileContent, err := os.ReadFile(expectedFilePath)
 	require.NoError(t, err)
 	require.Equal(t, fileContent, createdFileContent)
+}
+
+// reserveLoopbackPort binds an ephemeral port on loopback to learn a free
+// address, then releases it so the server under test can rebind. The close/
+// rebind window is racy in theory; on loopback with a kernel-assigned port
+// it's essentially never contended in practice.
+func reserveLoopbackPort(t *testing.T) string {
+	t.Helper()
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	addr := l.Addr().String()
+	require.NoError(t, l.Close())
+	return addr
+}
+
+func waitForServer(t *testing.T, addr string) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		c, err := net.DialTimeout("tcp", addr, 100*time.Millisecond)
+		if err == nil {
+			_ = c.Close()
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("server did not start listening on %s in time", addr)
 }

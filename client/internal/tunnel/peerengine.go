@@ -237,7 +237,7 @@ func (pe *PeerEngine) Start() error {
 	}()
 
 	// 5. Start SRWatcher (Engine calls this explicitly)
-	pe.srWatcher.Start()
+	pe.srWatcher.Start(peer.IsForceRelayed())
 
 	log.Info("PeerEngine started successfully")
 	return nil

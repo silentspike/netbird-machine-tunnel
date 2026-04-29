@@ -23,7 +23,7 @@ see [FORK_DIFF.md](FORK_DIFF.md).
 
 | Area | Current Position |
 |------|------------------|
-| Upstream baseline | NetBird `v0.69.0`; upstream `v0.70.0` is tracked as the next follow-up sync after this public-readiness pass in [#189](https://github.com/silentspike/netbird-machine-tunnel/issues/189). |
+| Upstream baseline | NetBird `v0.70.0`, synced through [#189](https://github.com/silentspike/netbird-machine-tunnel/issues/189). |
 | Fork scope | Complete NetBird deployment plus Windows Machine Tunnel for pre-login Active Directory access. |
 | Maintenance model | Solo-maintained fork with tagged-upstream syncs, protected `main`, required CI, CodeQL, Dependabot, and secret scanning. |
 | Security response target | Critical/high CodeQL or Dependabot findings are release blockers until fixed or explicitly dispositioned; target triage is within 2 business days. |
