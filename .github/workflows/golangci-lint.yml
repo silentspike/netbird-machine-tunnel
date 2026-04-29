@@ -45,7 +45,7 @@ jobs:
           DUPS=$(grep -oE 'Activity[[:space:]]*=[[:space:]]*[0-9]+' management/server/activity/codes.go | sed -E 's/.*=[[:space:]]*//' | sort | uniq -d)
           test -z "$DUPS" || { echo "DUPLICATE ACTIVITY IDS: $DUPS"; exit 1; }
       - name: Install Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
           cache: false

@@ -85,7 +85,7 @@ jobs:
 
     - name: Set up Go
       if: needs.detect-changes.outputs.should_run == 'true'
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: 'go.mod'
         cache: true

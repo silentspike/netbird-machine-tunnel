@@ -99,7 +99,7 @@ jobs:
 
       - name: Install Go
         if: env.RUN_INFRASTRUCTURE_TESTS == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: "go.mod"
 
