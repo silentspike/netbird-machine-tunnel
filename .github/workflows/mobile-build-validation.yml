@@ -25,7 +25,7 @@ jobs:
         with:
           go-version-file: "go.mod"
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           cmdline-tools-version: 8512546
       - name: Setup Java
