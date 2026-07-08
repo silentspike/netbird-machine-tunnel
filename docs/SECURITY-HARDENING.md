@@ -14,7 +14,8 @@ All information in this guide has been verified against the actual codebase and 
 4. [Certificate Requirements](#certificate-requirements)
 5. [Multi-Tenant Isolation](#multi-tenant-isolation)
 6. [Signal and Relay Trust Model](#signal-and-relay-trust-model)
-7. [Security Checklist](#security-checklist)
+7. [Supply-Chain and Developer-Environment Security](#supply-chain-and-developer-environment-security)
+8. [Security Checklist](#security-checklist)
 
 ---
 
@@ -398,6 +399,61 @@ Successful authentication looks like:
 ```
 INFO grpc/machine_tunnel.go: Machine peer registration: hostname=DESKTOP-ABC domain=corp.local account=abc123...
 ```
+
+---
+
+## Supply-Chain and Developer-Environment Security
+
+Recent self-replicating worms in the JavaScript and Go ecosystems (the
+Shai-Hulud / "Miasma mini" family) have moved their target from application
+**dependencies** to the **developer environment itself**. Instead of malicious
+code in `node_modules`, the payload is hidden inside repository configuration
+that runs automatically when a project is opened or a coding session starts:
+
+- `.vscode/tasks.json` folder-open tasks
+- editor/agent hooks (for example an AI coding-tool `settings.json` session hook)
+- CI/CD workflow files
+
+Because the code runs from project config rather than from an install step,
+`--ignore-scripts` does **not** stop it. The worm scans for credentials
+(SCM tokens, cloud keys, SSH keys), exfiltrates them, and republishes poisoned
+artifacts using the stolen tokens.
+
+This repository is a Go project that ships editor/agent configuration and
+GitHub Actions workflows, so it is in scope for this class of attack. The
+following controls apply.
+
+### For Contributors and Maintainers
+
+| Control | Why |
+|---------|-----|
+| **Treat cloned repo config as executable code.** Review `.vscode/`, editor/agent config, and `.github/workflows/` **before** opening a freshly cloned repo or a pulled dependency's source in your editor. | The payload fires on folder-open / session-start, before you run anything. |
+| **Disable automatic tasks in VS Code** (`"task.allowAutomaticTasks": "off"`). | A folder-open task cannot run without explicit confirmation. |
+| **Use short-lived, least-privilege tokens; prefer OIDC over long-lived PATs.** | A token that cannot be stolen and reused breaks the worm's replication path. |
+| **Never store long-lived secrets in the developer or CI environment.** Use a password manager / secret store; rotate on any suspicion. | Limits blast radius if a session is compromised. |
+| **Pin third-party GitHub Actions to a full commit SHA**, not a moving tag. | A hijacked action tag cannot silently push new code into CI. |
+
+### CI/CD Controls
+
+- **Egress filtering on runners.** Workflows use `step-security/harden-runner`
+  (SHA-pinned) so that, even if malicious code executes, it cannot send stolen
+  credentials to an attacker-controlled host. The policy starts in `audit` mode
+  to establish a baseline of legitimate egress, then moves to `block` with an
+  explicit allowlist.
+- **Fork-safe secret guards.** Release/signing jobs are gated so that pull
+  requests and forks never require or expose Docker/registry/signing secrets.
+- **Least-privilege `GITHUB_TOKEN`.** Workflows declare minimal `permissions`.
+- **Untrusted PR code stays on GitHub-hosted runners.** PRs are not executed on
+  self-hosted runners that have internal network reachability.
+
+### Upstream-Sync IoC Scan
+
+On every upstream sync, maintainers run a supply-chain indicator-of-compromise
+scan over the incoming diff before merging. It flags newly added JavaScript,
+injected editor/agent config, known-malicious module names, and credential-
+exfiltration patterns (`atob(`, base64-decoded buffers, `child_process`,
+`trufflehog`, webhook exfil endpoints, `bun` staging). A merge does not proceed
+until the scan is clean and the result is recorded in the sync evidence log.
 
 ---
 
