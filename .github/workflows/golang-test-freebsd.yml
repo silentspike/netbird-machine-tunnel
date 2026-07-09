@@ -17,6 +17,12 @@ jobs:
   test:
     name: "FreeBSD / Client / Unit"
     runs-on: ubuntu-22.04
+    strategy:
+      # Test every FreeBSD release users may run; do not cancel the other leg
+      # when one fails.
+      fail-fast: false
+      matrix:
+        release: ["14.2", "15.0"]
     steps:
       - uses: actions/checkout@v4
       - name: Test in FreeBSD
@@ -25,7 +31,7 @@ jobs:
         with:
           usesh: true
           copyback: false
-          release: "14.3"
+          release: ${{ matrix.release }}
           prepare: |
             retry() {
               attempts=0
@@ -38,12 +44,18 @@ jobs:
               done
             }
 
+            # FreeBSD point-release VM images can report an OS version that the
+            # pkg repo rejects ("repository FreeBSD contains packages for wrong OS
+            # version: FreeBSD:14:amd64"), breaking bootstrap. IGNORE_OSVERSION
+            # skips that check; the packages we need (curl, pkgconf, xorg, go
+            # tooling) are ABI-compatible across a major FreeBSD release.
+            export IGNORE_OSVERSION=yes
             retry pkg update -f
             retry pkg install -y curl pkgconf xorg
             GO_TARBALL="go1.25.5.freebsd-amd64.tar.gz"
             GO_URL="https://go.dev/dl/$GO_TARBALL"
             curl -vLO "$GO_URL"
-            tar -C /usr/local -vxzf "$GO_TARBALL"            
+            tar -C /usr/local -vxzf "$GO_TARBALL"
 
           # -x - to print all executed commands
           # -e - to fail on first error
