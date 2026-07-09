@@ -45,8 +45,13 @@ jobs:
           curl -sSL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip" -o /tmp/protoc.zip
           sudo unzip -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*'
           rm /tmp/protoc.zip
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          # Pinned instead of `@latest`: the committed generated files declare
+          # protoc-gen-go v1.36.11 and protoc-gen-go-grpc v1.6.1 (see the allowlist
+          # in proto-version-check.yml). `@latest` pulled protoc-gen-go-grpc v1.6.2,
+          # whose version comment differs from the committed files, so `make generate`
+          # + `git diff --exit-code` failed on every PR without any proto change.
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.1
 
       - name: Run make generate
         if: steps.changes.outputs.should_run == 'true'
