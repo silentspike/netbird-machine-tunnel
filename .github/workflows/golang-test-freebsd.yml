@@ -17,19 +17,21 @@ jobs:
   test:
     name: "FreeBSD / Client / Unit"
     runs-on: ubuntu-22.04
+    strategy:
+      # Test every FreeBSD release users may run; do not cancel the other leg
+      # when one fails.
+      fail-fast: false
+      matrix:
+        release: ["14.2", "15.0"]
     steps:
       - uses: actions/checkout@v4
       - name: Test in FreeBSD
         id: test
         uses: vmactions/freebsd-vm@v1
-        # release 14.3 was dropped: its pkg repo now returns
-        # "repository FreeBSD contains packages for wrong OS version: FreeBSD:14:amd64",
-        # breaking `pkg update` during VM bootstrap. The whole FreeBSD:14 pkg branch is
-        # affected (14.2 too), so use 15.0 which resolves to a working FreeBSD:15 repo.
         with:
           usesh: true
           copyback: false
-          release: "15.0"
+          release: ${{ matrix.release }}
           prepare: |
             retry() {
               attempts=0
@@ -42,12 +44,24 @@ jobs:
               done
             }
 
+            # The default quarterly pkg branch can lag a new release and return
+            # "repository FreeBSD contains packages for wrong OS version" during
+            # VM bootstrap. Point pkg at the "latest" branch for the VM's own ABI.
+            mkdir -p /usr/local/etc/pkg/repos
+            cat > /usr/local/etc/pkg/repos/FreeBSD.conf <<'PKGCONF'
+            FreeBSD: {
+              url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest",
+              mirror_type: "srv",
+              enabled: yes
+            }
+            PKGCONF
+
             retry pkg update -f
             retry pkg install -y curl pkgconf xorg
             GO_TARBALL="go1.25.5.freebsd-amd64.tar.gz"
             GO_URL="https://go.dev/dl/$GO_TARBALL"
             curl -vLO "$GO_URL"
-            tar -C /usr/local -vxzf "$GO_TARBALL"            
+            tar -C /usr/local -vxzf "$GO_TARBALL"
 
           # -x - to print all executed commands
           # -e - to fail on first error
