@@ -22,10 +22,13 @@ jobs:
       - name: Test in FreeBSD
         id: test
         uses: vmactions/freebsd-vm@v1
+        # release 14.3 was dropped: its pkg repo now returns
+        # "repository FreeBSD contains packages for wrong OS version: FreeBSD:14:amd64",
+        # breaking `pkg update` during VM bootstrap. Track upstream (14.2).
         with:
           usesh: true
           copyback: false
-          release: "14.3"
+          release: "14.2"
           prepare: |
             retry() {
               attempts=0
