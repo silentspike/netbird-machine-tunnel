@@ -24,11 +24,12 @@ jobs:
         uses: vmactions/freebsd-vm@v1
         # release 14.3 was dropped: its pkg repo now returns
         # "repository FreeBSD contains packages for wrong OS version: FreeBSD:14:amd64",
-        # breaking `pkg update` during VM bootstrap. Track upstream (14.2).
+        # breaking `pkg update` during VM bootstrap. The whole FreeBSD:14 pkg branch is
+        # affected (14.2 too), so use 15.0 which resolves to a working FreeBSD:15 repo.
         with:
           usesh: true
           copyback: false
-          release: "14.2"
+          release: "15.0"
           prepare: |
             retry() {
               attempts=0
