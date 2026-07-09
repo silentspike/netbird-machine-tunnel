@@ -27,6 +27,12 @@ concurrency:
 jobs:
   release_freebsd_port:
     name: "FreeBSD Port / Build & Test"
+    # Upstream-only: this job generates a FreeBSD ports-tree submission diff and
+    # test-builds the published netbirdio/netbird release. A fork does not submit
+    # to the FreeBSD ports tree and its version is not published under that module
+    # path, so the build fetch 404s. FreeBSD builds themselves are covered by the
+    # golang-test-freebsd matrix (14.2 + 15.0). Runs only on the upstream repo.
+    if: github.repository == 'netbirdio/netbird'
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
