@@ -44,18 +44,12 @@ jobs:
               done
             }
 
-            # The default quarterly pkg branch can lag a new release and return
-            # "repository FreeBSD contains packages for wrong OS version" during
-            # VM bootstrap. Point pkg at the "latest" branch for the VM's own ABI.
-            mkdir -p /usr/local/etc/pkg/repos
-            cat > /usr/local/etc/pkg/repos/FreeBSD.conf <<'PKGCONF'
-            FreeBSD: {
-              url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest",
-              mirror_type: "srv",
-              enabled: yes
-            }
-            PKGCONF
-
+            # FreeBSD point-release VM images can report an OS version that the
+            # pkg repo rejects ("repository FreeBSD contains packages for wrong OS
+            # version: FreeBSD:14:amd64"), breaking bootstrap. IGNORE_OSVERSION
+            # skips that check; the packages we need (curl, pkgconf, xorg, go
+            # tooling) are ABI-compatible across a major FreeBSD release.
+            export IGNORE_OSVERSION=yes
             retry pkg update -f
             retry pkg install -y curl pkgconf xorg
             GO_TARBALL="go1.25.5.freebsd-amd64.tar.gz"
