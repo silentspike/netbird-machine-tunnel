@@ -196,7 +196,11 @@ func (p *PKCEAuthorizationFlow) WaitToken(ctx context.Context, info AuthFlowInfo
 		return TokenInfo{}, fmt.Errorf("failed to parse redirect URL: %v", err)
 	}
 
-	server := &http.Server{Addr: fmt.Sprintf(":%s", parsedURL.Port())}
+	// Bind to the redirect URL's explicit host (e.g. 127.0.0.1) rather than an
+	// empty host (":port"). On FreeBSD `net.inet6.ip6.v6only` defaults to 1, so
+	// binding ":port" listens on IPv6 only, while the browser calls back to the
+	// IPv4 redirect URL (http://127.0.0.1:port/) and never reaches the server.
+	server := &http.Server{Addr: net.JoinHostPort(parsedURL.Hostname(), parsedURL.Port())}
 	defer func() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -360,7 +364,10 @@ func isRedirectURLPortUsed(redirectURL string, excludedRanges []excludedPortRang
 		return true
 	}
 
-	addr := fmt.Sprintf(":%s", port)
+	// Dial the redirect URL's explicit host (not an empty host), so the check
+	// matches the address family the callback server binds to. Dialing ":port"
+	// resolves to IPv6 loopback first on FreeBSD and misses an IPv4 listener.
+	addr := net.JoinHostPort(parsedURL.Hostname(), port)
 	conn, err := net.DialTimeout("tcp", addr, 3*time.Second)
 	if err != nil {
 		return false
