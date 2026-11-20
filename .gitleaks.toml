@@ -1,5 +1,8 @@
 title = "NetBird Machine Tunnel gitleaks configuration"
 
+[extend]
+useDefault = true
+
 [allowlist]
 description = "Known non-secret test fixtures and public test keys used by upstream NetBird and the Machine Tunnel fork"
 paths = [
@@ -15,7 +18,6 @@ paths = [
   '''^management/cmd/management_test\.go$''',
   '''^management/server/account_test\.go$''',
   '''^management/server/auth/manager_test\.go$''',
-  '''^management/server/auth/test_data/sample_key$''',
   '''^management/server/dns_test\.go$''',
   '''^management/server/management_proto_test\.go$''',
   '''^management/server/management_test\.go$''',
@@ -27,3 +29,15 @@ paths = [
   '''^management/server/types/proxy_access_token_test\.go$''',
   '''^shared/management/client/client_test\.go$''',
 ]
+
+[[rules]]
+id = "windows-answer-file-plaintext-password"
+description = "Plaintext password in a Windows setup answer file"
+path = '''(?i)(?:^|/)(?:auto)?unattend\.xml$'''
+regex = '''(?is)<(?:AdministratorPassword|Password)\b[^>]*>(?:\s|<!--.*?-->)*<Value>\s*([^<]+?)\s*</Value>(?:\s|<!--.*?-->)*<PlainText>\s*true\s*</PlainText>'''
+secretGroup = 1
+
+[[rules.allowlists]]
+description = "Public setup placeholder and literal replacement from credential redaction"
+regexTarget = "secret"
+regexes = ['''^CHANGE-ME-Lab-Password!$''', '''^\[redacted\]$''']

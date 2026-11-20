@@ -2,12 +2,15 @@ package auth_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -209,20 +212,31 @@ func TestAuthManager_EnsureUserAccessByJWTGroups(t *testing.T) {
 }
 
 func TestAuthManager_ValidateAndParseToken(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Cache-Control", "max-age=30") // set a 30s expiry to these keys
-		http.ServeFile(w, r, "test_data/jwks.json")
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	keyID := "test-key"
+	jwks, err := json.Marshal(map[string][]map[string]string{
+		"keys": {{
+			"kty": "RSA",
+			"alg": "RS256",
+			"kid": keyID,
+			"use": "sig",
+			"n":   base64.RawURLEncoding.EncodeToString(key.PublicKey.N.Bytes()),
+			"e":   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(key.PublicKey.E)).Bytes()),
+		}},
+	})
+	require.NoError(t, err)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "max-age=30")
+		_, _ = w.Write(jwks)
 	}))
 	defer server.Close()
 
 	issuer := "http://issuer.local"
 	audience := "http://audience.local"
 	userIdClaim := "" // defaults to "sub"
-
-	// we're only testing with RSA256
-	keyData, _ := os.ReadFile("test_data/sample_key")
-	key, _ := jwt.ParseRSAPrivateKeyFromPEM(keyData)
-	keyId := "test-key"
 
 	// note, we can use a nil store because ValidateAndParseToken does not use it in it's flow
 	manager := auth.NewManager(nil, issuer, audience, server.URL, userIdClaim, []string{audience}, false, nil)
@@ -242,7 +256,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Valid with custom claims",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss":                                   issuer,
 					"aud":                                   []string{audience},
@@ -271,7 +285,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Valid without custom claims",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss": issuer,
 					"aud": []string{audience},
@@ -290,7 +304,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Expired token",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss": issuer,
 					"aud": []string{audience},
@@ -306,7 +320,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Not yet valid",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss": issuer,
 					"aud": []string{audience},
@@ -322,7 +336,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Invalid signature",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss": issuer,
 					"aud": []string{audience},
@@ -340,7 +354,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Invalid issuer",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss": "not-the-issuer",
 					"aud": []string{audience},
@@ -356,7 +370,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Invalid audience",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss": issuer,
 					"aud": []string{"not-the-audience"},
@@ -372,7 +386,7 @@ func TestAuthManager_ValidateAndParseToken(t *testing.T) {
 			name: "Invalid user claim",
 			tokenFunc: func() string {
 				token := jwt.New(jwt.SigningMethodRS256)
-				token.Header["kid"] = keyId
+				token.Header["kid"] = keyID
 				token.Claims = jwt.MapClaims{
 					"iss":     issuer,
 					"aud":     []string{audience},
