@@ -28,6 +28,10 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 8512546
+          # === MACHINE-TUNNEL-FORK START ===
+          # The SDK index no longer includes the legacy tools package.
+          packages: platform-tools
+          # === MACHINE-TUNNEL-FORK END ===
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
